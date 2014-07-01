@@ -86,7 +86,6 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define MAX_MAPS                        (20)
 #define MAX_ADMIN_LEVEL         		(6)
 #define MAX_WARNINGS 					(3)
-#define FLARE                           (18728)
 #define ID_HUNTER                       (230)
 #define ID_BLOOMER                      (264)
 #define DEFAULT_INFESTATION_TIME        (65)
@@ -467,7 +466,7 @@ public OnPlayerRequestClass(playerid, classid)
     
     TogglePlayerControllable(playerid, true);
     
-    SetTimerEx("CSpawn", 15, false, "ii", playerid, YHash(__GetName(playerid)));
+    SetTimerEx("ForceClassSpawn", 15, false, "ii", playerid, YHash(__GetName(playerid)));
 	return 1;
 }
 
@@ -514,15 +513,13 @@ public OnPlayerConnect(playerid)
         PlayerData[playerid][VIPLabel] = Text3D:-1;
     }
 	
-	PlayAudioStreamForPlayer(playerid, "http://zombiemp.com/sjgs.mp3");
-	
 	if(bGlobalShutdown)
 	{
-	    SCM(playerid, RED, "Server is in going in maintenance mode, please try again later.");
-  		KickEx(playerid);
+  		Kick(playerid);
 	}
 	else
 	{
+        PlayAudioStreamForPlayer(playerid, "http://zombiemp.com/sjgs.mp3");
 		TogglePlayerSpectating(playerid, true);
 
         InitSession(playerid);
@@ -5174,14 +5171,16 @@ function:ZMP_SwitchMap()
     g_bAllowEnd = true;
     
     ZMP_BeginNewGame();
+    return 1;
 }
 
-function:CSpawn(playerid, namehash)
+function:ForceClassSpawn(playerid, namehash)
 {
 	if(IsPlayerConnected(playerid) && YHash(__GetName(playerid)) == namehash)
 	{
     	SpawnPlayer(playerid);
 	}
+	return 1;
 }
 
 PlayAudio(playerid, url[])
