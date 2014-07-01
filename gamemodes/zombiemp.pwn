@@ -41,9 +41,7 @@
 
 native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 
-// -
-// - General
-// -
+// General
 #define VERSION                         "1.0.0"
 #define VERSION_MAJOR                   1
 #define VERSION_MINOR                   0
@@ -55,9 +53,7 @@ native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 #define zmp                             "{FFFFFF}[{969696}ZombieMP{FFFFFF}]"
 #define server_sign                     "{FFFFFF}[{FF005F}SERVER{FFFFFF}]"
 
-// -
-// - Enviroment
-// -
+// Enviroment
 #define TEAM_Z                          (10)
 #define TEAM_H                          (20)
 #define MAX_ADMIN_LEVEL         		(6)
@@ -88,18 +84,14 @@ native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 			forward public %1(%2); \
 			public %1(%2)
 
-// -
-// - Other
-// -
+// Other
 #define er                      		"{F42626}[INFO] {D2D2D2}"
 #define NO_PERM                     	"{F42626}[INFO] {D2D2D2}Insufficient Permissions"
 #define dl                              "{969696}• {F0F0F0}"
 #define NOT_AVAIL                       "{2DFF00}Info: {D2D2D2}You can´t use this command now!"
 #define nocash(%1) GameTextForPlayer(%1, "~g~~h~~h~Not enough money!", 2000, 3)
 
-// -
-// - Colors
-// -
+// Colors
 #define SEMI_TRANS                      (0x0A0A0A55)
 #define SEMI_WHITE                      (0xFEFEFEC3)
 #define PURPLE                  		(0x7800FF85)
@@ -139,11 +131,9 @@ native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 #define lb_e 							"{15D4ED}"
 #define LG_E 							"{00FF00}"
 #define LB_E 							"{15D4ED}"
-
 #define COLOR_RED 						(0xFF0000FF)
 #define COLOR_HUMAN                     (0x3BBD44FF)
 #define COLOR_ZOMBIE                    (0xFF0000FF)
-
 #define RED_E 							"{FF0000}"
 #define BLUE_E 							"{004BFF}"
 #define PINK_E 							"{FFB6C1}"
@@ -160,14 +150,7 @@ native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 #define GREEN_E 						"{3BBD44}"
 #define PURPLE_E 						"{5A00FF}"
 
-// ===
-// Enums
-// ===
-
-// -
-// - PlayerData
-// -
-enum E_player_data
+enum E_PLAYER_DATA
 {
 	sName[25],
 	sIP[16],
@@ -214,9 +197,6 @@ enum E_player_data
 	bool:bExploded
 };
 
-// -
-// - ExitType
-// -
 enum
 {
 	EXIT_NONE,
@@ -224,10 +204,7 @@ enum
 	EXIT_FIRST_SPAWNED
 };
 
-// -
-// - DialogIDs
-// -
-enum (+= 56)
+enum (+= 21)
 {
 	NO_DIALOG_ID,
 	DIALOG_REGISTER,
@@ -239,9 +216,6 @@ enum (+= 56)
     DIALOG_LABEL
 };
 
-// -
-// - MySQL Threads
-// -
 enum
 {
     THREAD_IS_BANNED,
@@ -253,9 +227,6 @@ enum
     THREAD_CHECK_PLAYER_PASSWD
 };
 
-// -
-// - gTeam
-// -
 enum
 {
 	gNONE,
@@ -263,9 +234,6 @@ enum
 	gHUMAN
 };
 
-// -
-// - Zombie Type
-// -
 enum
 {
 	zedZOMBIE,
@@ -273,9 +241,6 @@ enum
 	zedBLOOMER,
 };
 
-// -
-// - Mapload Data
-// -
 enum E_mapload_data
 {
 	e_model_id,
@@ -287,9 +252,6 @@ enum E_mapload_data
 	Float:e_rot_z
 };
 
-// -
-// - Current map data
-// -
 enum E_map_data
 {
 	e_mapname[24],
@@ -306,9 +268,6 @@ enum E_map_data
 	e_time
 };
 
-// -
-// - Global status
-// -
 enum
 {
 	e_Status_Inactive,
@@ -317,9 +276,6 @@ enum
 	e_Status_RoundEnd
 };
 
-// -
-// - top stats
-// -
 enum e_top_richlist
 {
 	E_playerid,
@@ -356,9 +312,9 @@ enum e_top_rtests
 	E_test
 };
 
-new g_pSQL,
+new g_pSQL = -1, // g = Global, p = Pointer
     g_bAllowEnd = true,
-	PlayerInfo[MAX_PLAYERS][E_player_data],
+	PlayerData[MAX_PLAYERS][E_PLAYER_DATA],
 	gTeam[MAX_PLAYERS],
 	g_World = 0,
 	bool:GlobalMain = false,
@@ -525,12 +481,12 @@ public OnPlayerRequestSpawn(playerid)
 
 public OnPlayerFloodControl(playerid, iCount, iTimeSpan)
 {
-    PlayerInfo[playerid][bFloodDect] = false;
+    PlayerData[playerid][bFloodDect] = false;
     if(IsPlayerNPC(playerid)) return 1;
 
     if(iCount >= 2 && iTimeSpan < 8000)
 	{
-	    PlayerInfo[playerid][bFloodDect] = true;
+	    PlayerData[playerid][bFloodDect] = true;
 
 		new sz_BanCmd[30], p_IP[16];
 		GetPlayerIp(playerid, p_IP, 16);
@@ -552,14 +508,14 @@ public OnPlayerConnect(playerid)
     GetPlayerName(playerid, sz_Name, 25);
 	GetPlayerIp(playerid, sz_IP, 16);
 
-	PlayerInfo[playerid][sIP][0] = '\0';
-	PlayerInfo[playerid][sName][0] = '\0';
+	PlayerData[playerid][sIP][0] = '\0';
+	PlayerData[playerid][sName][0] = '\0';
 
-	strcat(PlayerInfo[playerid][sIP], sz_IP, 16);
-	strcat(PlayerInfo[playerid][sName], sz_Name, 25);
+	strcat(PlayerData[playerid][sIP], sz_IP, 16);
+	strcat(PlayerData[playerid][sName], sz_Name, 25);
 
 	if(IsPlayerNPC(playerid)) return 1;
-	if(PlayerInfo[playerid][bFloodDect]) return 1;
+	if(PlayerData[playerid][bFloodDect]) return 1;
 
 	new count_t = 0;
 	for(new i = 0; i < MAX_PLAYERS; i++)
@@ -579,10 +535,10 @@ public OnPlayerConnect(playerid)
 	
 	ResetPlayerVars(playerid);
 	
-    if(PlayerInfo[playerid][VIPLabel] != Text3D:-1)
+    if(PlayerData[playerid][VIPLabel] != Text3D:-1)
     {
-        DestroyDynamic3DTextLabel(PlayerInfo[playerid][VIPLabel]);
-        PlayerInfo[playerid][VIPLabel] = Text3D:-1;
+        DestroyDynamic3DTextLabel(PlayerData[playerid][VIPLabel]);
+        PlayerData[playerid][VIPLabel] = Text3D:-1;
     }
 	
 	PlayAudioStreamForPlayer(playerid, "http://zombiemp.com/sjgs.mp3");
@@ -615,9 +571,9 @@ public OnPlayerDisconnect(playerid, reason)
 {
     if(IsPlayerNPC(playerid)) return 1;
     
-    PlayerInfo[playerid][bLoadMap] = false;
+    PlayerData[playerid][bLoadMap] = false;
     
-   	if(PlayerInfo[playerid][iExitType] == EXIT_FIRST_SPAWNED && PlayerInfo[playerid][bLogged])
+   	if(PlayerData[playerid][iExitType] == EXIT_FIRST_SPAWNED && PlayerData[playerid][bLogged])
 	{
 		MySQL_SavePlayer(playerid);
 	    MySQL_LogPlayerOut(playerid);
@@ -723,27 +679,27 @@ public OnPlayerDisconnect(playerid, reason)
 	
 	gTeam[playerid] = gNONE;
 	
-    if(PlayerInfo[playerid][VIPLabel] != Text3D:-1)
+    if(PlayerData[playerid][VIPLabel] != Text3D:-1)
     {
-        DestroyDynamic3DTextLabel(PlayerInfo[playerid][VIPLabel]);
-        PlayerInfo[playerid][VIPLabel] = Text3D:-1;
+        DestroyDynamic3DTextLabel(PlayerData[playerid][VIPLabel]);
+        PlayerData[playerid][VIPLabel] = Text3D:-1;
     }
 	
-	if(PlayerInfo[playerid][bMuted]) KillTimer(PlayerInfo[playerid][tMute]);
+	if(PlayerData[playerid][bMuted]) KillTimer(PlayerData[playerid][tMute]);
     ResetPlayerVars(playerid);
 	return 1;
 }
 
 public OnPlayerSpawn(playerid)
 {
-	PlayerInfo[playerid][bIsDead] = false;
+	PlayerData[playerid][bIsDead] = false;
 
 	ZMP_HideLogo(playerid);
 	
-	if(PlayerInfo[playerid][bFirstSpawn])
+	if(PlayerData[playerid][bFirstSpawn])
 	{
-	    PlayerInfo[playerid][bFirstSpawn] = false;
-	    PlayerInfo[playerid][iExitType] = EXIT_FIRST_SPAWNED;
+	    PlayerData[playerid][bFirstSpawn] = false;
+	    PlayerData[playerid][iExitType] = EXIT_FIRST_SPAWNED;
 	    SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
 	    SetPlayerHealth(playerid, 100.0);
 	    SetCameraBehindPlayer(playerid);
@@ -795,32 +751,32 @@ public OnPlayerSpawn(playerid)
 public OnPlayerDeath(playerid, killerid, reason)
 {
     ShowPlayerDialog(playerid, -1, DIALOG_STYLE_LIST, "Close", "Close", "Close", "Close");
-    PlayerInfo[playerid][bIsDead] = true;
+    PlayerData[playerid][bIsDead] = true;
     
-	PlayerInfo[playerid][iCoolDownDeath]++;
+	PlayerData[playerid][iCoolDownDeath]++;
 	SetTimerEx("CoolDownDeath", COOLDOWN_DEATH, false, "i", playerid);
-	if(PlayerInfo[playerid][iCoolDownDeath] >= 2)
+	if(PlayerData[playerid][iCoolDownDeath] >= 2)
 	{
 		return Kick(playerid);
 	}
     
     SendDeathMessage(killerid, playerid, reason);
     
-    PlayerInfo[playerid][iDeaths]++;
+    PlayerData[playerid][iDeaths]++;
     ZMP_PlayerStatsUpdate(playerid);
     
-	if(PlayerInfo[playerid][bLoadMap])
+	if(PlayerData[playerid][bLoadMap])
 	{
-		KillTimer(PlayerInfo[playerid][tLoadMap]);
-		PlayerInfo[playerid][tLoadMap] = -1;
+		KillTimer(PlayerData[playerid][tLoadMap]);
+		PlayerData[playerid][tLoadMap] = -1;
 		TogglePlayerControllable(playerid, 1);
-		PlayerInfo[playerid][bLoadMap] = false;
+		PlayerData[playerid][bLoadMap] = false;
 		TextDrawHideForPlayer(playerid, TXTLoading);
 	}
     
     if(IsPlayerAvail(killerid))
     {
-        PlayerInfo[killerid][iKills]++;
+        PlayerData[killerid][iKills]++;
         ZMP_PlayerStatsUpdate(killerid);
 
 		if(gTeam[killerid] == gZOMBIE && gTeam[playerid] == gHUMAN)
@@ -863,7 +819,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 		}
 		else if(gTeam[playerid] == gZOMBIE && gTeam[killerid] == gHUMAN)
 		{
-		    switch(PlayerInfo[playerid][gSpecialZed])
+		    switch(PlayerData[playerid][gSpecialZed])
 		    {
 		        case zedZOMBIE:
 		        {
@@ -915,30 +871,30 @@ public OnPlayerDeath(playerid, killerid, reason)
 
 public OnPlayerText(playerid, text[])
 {
-	PlayerInfo[playerid][iCoolDownText]++;
+	PlayerData[playerid][iCoolDownText]++;
 	SetTimerEx("CoolDownText", COOLDOWN_TEXT, false, "i", playerid);
-	if(PlayerInfo[playerid][iCoolDownText] == 6)
+	if(PlayerData[playerid][iCoolDownText] == 6)
 	{
 	    GameTextForPlayer(playerid, "~b~~h~Do not spam!", 2000, 3);
 	    return 0;
 	}
-	else if(PlayerInfo[playerid][iCoolDownText] >= 15 && PlayerInfo[playerid][iAdminLevel] < 5)
+	else if(PlayerData[playerid][iCoolDownText] >= 15 && PlayerData[playerid][iAdminLevel] < 5)
 	{
 	    new string[100];
 		format(string, sizeof(string), "Chat-Spam detected! %s(%i) has been kicked!", __GetName(playerid), playerid);
 		AdminMSG(RED, string);
-		PlayerInfo[playerid][iCoolDownText] = 0;
+		PlayerData[playerid][iCoolDownText] = 0;
 		Kick(playerid);
 		return 0;
 	}
 
-	if(PlayerInfo[playerid][iExitType] != EXIT_FIRST_SPAWNED)
+	if(PlayerData[playerid][iExitType] != EXIT_FIRST_SPAWNED)
 	{
 	    SCM(playerid, -1, ""er"You need to spawn to use the chat!");
 	    return 0;
 	}
 
-	if(PlayerInfo[playerid][bMuted])
+	if(PlayerData[playerid][bMuted])
 	{
 	    SCM(playerid, RED, "You are muted! Please wait until the time is over!");
 	    return 0;
@@ -977,7 +933,7 @@ public OnPlayerText(playerid, text[])
         return 0;
 	}
 	
-	if(text[0] == '#' && PlayerInfo[playerid][iAdminLevel] >= 1)
+	if(text[0] == '#' && PlayerData[playerid][iAdminLevel] >= 1)
 	{
 	    new msgstring[144];
 		format(msgstring, sizeof(msgstring), "[ADMIN CHAT] "LG_E"%s(%i): "LB_E"%s", __GetName(playerid), playerid, text[1]);
@@ -987,19 +943,19 @@ public OnPlayerText(playerid, text[])
 	
     new tick = GetTickCount() + 3600000;
 
-	if((PlayerInfo[playerid][iChatWrote] >= 2) && ((PlayerInfo[playerid][tickLastChat] + COOLDOWN_CHAT) >= tick))
+	if((PlayerData[playerid][iChatWrote] >= 2) && ((PlayerData[playerid][tickLastChat] + COOLDOWN_CHAT) >= tick))
 	{
 		SCM(playerid, -1, ""er"Wait a bit before chatting again");
 	    return 0;
 	}
-	else if((PlayerInfo[playerid][iChatWrote] >= 2) && ((PlayerInfo[playerid][tickLastChat] + COOLDOWN_CHAT) <= tick))
+	else if((PlayerData[playerid][iChatWrote] >= 2) && ((PlayerData[playerid][tickLastChat] + COOLDOWN_CHAT) <= tick))
 	{
-        PlayerInfo[playerid][iChatWrote] = 0;
-        PlayerInfo[playerid][tickLastChat] = tick;
+        PlayerData[playerid][iChatWrote] = 0;
+        PlayerData[playerid][tickLastChat] = tick;
 	}
 	else
 	{
-	    PlayerInfo[playerid][iChatWrote]++;
+	    PlayerData[playerid][iChatWrote]++;
 	}
 	
 	new string[144];
@@ -1017,10 +973,10 @@ public OnPlayerText(playerid, text[])
 
         new tmp[144];
 		tmp[0] = EOS;
-		if(PlayerInfo[playerid][iAdminLevel] != 0) strcat(tmp, "{A8DBFF}");
+		if(PlayerData[playerid][iAdminLevel] != 0) strcat(tmp, "{A8DBFF}");
 		strcat(tmp, text[pos]);
 		text[pos] = EOS;
-		if(PlayerInfo[playerid][iAdminLevel] == 0)
+		if(PlayerData[playerid][iAdminLevel] == 0)
 		{
 			format(string, sizeof(string), "{%06x}%s"white"(%i): %s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, text);
 			SCMToAll(-1, string);
@@ -1035,7 +991,7 @@ public OnPlayerText(playerid, text[])
 	}
 	else
 	{
-		if(PlayerInfo[playerid][iAdminLevel] == 0)
+		if(PlayerData[playerid][iAdminLevel] == 0)
 		{
 	 		format(string, sizeof(string), "{%06x}%s"white"(%i): %s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, text);
 			SCMToAll(-1, string);
@@ -1087,7 +1043,7 @@ public OnVehicleMod(playerid, vehicleid, componentid)
 
 public OnPlayerUpdate(playerid)
 {
-    PlayerInfo[playerid][tickPlayerUpdate] = GetTickCount() + 3600000;
+    PlayerData[playerid][tickPlayerUpdate] = GetTickCount() + 3600000;
     
     if(IsPlayerAvail(playerid))
     {
@@ -1105,9 +1061,9 @@ public OnPlayerUpdate(playerid)
 		    {
 		        case 38, 37, 36, 35:
 		        {
-		            if(!PlayerInfo[playerid][KBMarked])
+		            if(!PlayerData[playerid][KBMarked])
 		            {
-		                PlayerInfo[playerid][KBMarked] = true;
+		                PlayerData[playerid][KBMarked] = true;
 			            ResetPlayerWeapons(playerid);
 			            new string[144];
 			            format(string, sizeof(string), ""yellow"** "red"%s(%i) has been auto-kicked by BitchOnDuty [Reason: Weapon cheats]", __GetName(playerid), playerid);
@@ -1131,10 +1087,10 @@ public OnPlayerInteriorChange(playerid, newinteriorid, oldinteriorid)
 Float:GetDistanceBetweenPlayers(p1,p2);
 public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
-	if(Key(KEY_JUMP) && gTeam[playerid] == gZOMBIE && PlayerInfo[playerid][gSpecialZed] == zedHUNTER && g_GlobalStatus == e_Status_Playing)
+	if(Key(KEY_JUMP) && gTeam[playerid] == gZOMBIE && PlayerData[playerid][gSpecialZed] == zedHUNTER && g_GlobalStatus == e_Status_Playing)
 	{
 	    new tick = GetTickCount() + 3600000;
-		if((PlayerInfo[playerid][tickLastJump] + COOLDOWN_JUMP) >= tick)
+		if((PlayerData[playerid][tickLastJump] + COOLDOWN_JUMP) >= tick)
 		{
 	    	return 1;
 		}
@@ -1143,13 +1099,13 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 		GetPlayerVelocity(playerid, POS[0], POS[1], POS[2]);
 		SetPlayerVelocity(playerid, POS[0], POS[1], floatadd(POS[2], 1.5));
 
-		PlayerInfo[playerid][tickLastJump] = tick;
+		PlayerData[playerid][tickLastJump] = tick;
 	}
-	if((Key(KEY_YES) || Key(KEY_NO)) && gTeam[playerid] == gZOMBIE && PlayerInfo[playerid][gSpecialZed] == zedBLOOMER && !PlayerInfo[playerid][bIsDead] && g_GlobalStatus == e_Status_Playing)
+	if((Key(KEY_YES) || Key(KEY_NO)) && gTeam[playerid] == gZOMBIE && PlayerData[playerid][gSpecialZed] == zedBLOOMER && !PlayerData[playerid][bIsDead] && g_GlobalStatus == e_Status_Playing)
 	{
-	    if(!PlayerInfo[playerid][bExploded])
+	    if(!PlayerData[playerid][bExploded])
 	    {
-	        PlayerInfo[playerid][bExploded] = true;
+	        PlayerData[playerid][bExploded] = true;
 
 			new Float:POS[3];
 			GetPlayerPos(playerid, POS[0], POS[1], POS[2]);
@@ -1167,7 +1123,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 
 			        GivePlayerCash(playerid, 2000);
 			        GivePlayerScore_(playerid, 5);
-			        PlayerInfo[playerid][iKills]++;
+			        PlayerData[playerid][iKills]++;
                     PlayInfectSound();
                     
 					if(ZMP_GetHumans() == 0)
@@ -1189,7 +1145,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			}
 		}
 	}
-	/*if(Key(KEY_FIRE) && gTeam[playerid] == gZOMBIE && !PlayerInfo[playerid][bIsDead])
+	/*if(Key(KEY_FIRE) && gTeam[playerid] == gZOMBIE && !PlayerData[playerid][bIsDead])
 	{
         if(GetPlayerWeapon(playerid) == 9 || GetPlayerWeapon(playerid) == 0)
 		{
@@ -1198,9 +1154,9 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			{
                 if(GetDistanceBetweenPlayers(playerid, victimid) < 1.5)
 				{
-				    if(PlayerInfo[victimid][iTimesHit] >= 2)
+				    if(PlayerData[victimid][iTimesHit] >= 2)
 				    {
-				        PlayerInfo[victimid][iTimesHit] = 0;
+				        PlayerData[victimid][iTimesHit] = 0;
 				        
 					    GameTextForPlayer(victimid, "~w~Infected!", 3000, 5);
 						SCM(victimid, -1, ""er"You have been infected! Now infect humans by punching them!");
@@ -1228,7 +1184,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 					}
 					else
 					{
-					    PlayerInfo[victimid][iTimesHit]++;
+					    PlayerData[victimid][iTimesHit]++;
 					}
                 }
             }
@@ -1268,7 +1224,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			        return 1;
 				}
 
-	            PlayerInfo[playerid][VIPLabel] = CreateDynamic3DTextLabel(text, -1, 0.0, 0.0, 0.65, 20.0, playerid, INVALID_VEHICLE_ID, 1, -1, -1, -1, 20.0);
+	            PlayerData[playerid][VIPLabel] = CreateDynamic3DTextLabel(text, -1, 0.0, 0.0, 0.65, 20.0, playerid, INVALID_VEHICLE_ID, 1, -1, -1, -1, 20.0);
 
                 SCM(playerid, -1, ""er"Label attached! Note: You can't see the label yourself");
 				return true;
@@ -1290,7 +1246,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			        return 1;
 				}
 
-				UpdateDynamic3DTextLabelText(PlayerInfo[playerid][VIPLabel], -1, text);
+				UpdateDynamic3DTextLabelText(PlayerData[playerid][VIPLabel], -1, text);
 	            SCM(playerid, -1, ""er"Label text changed!");
 	            return true;
 	        }
@@ -1376,7 +1332,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					case 3:
 					{
 			            if(GetPlayerCash(playerid) < 900) return nocash(playerid);
-			            PlayerInfo[playerid][iMedkits]++;
+			            PlayerData[playerid][iMedkits]++;
 			            GivePlayerCash(playerid, -900);
 			            SCM(playerid, -1, ""er"Use /mk to consume a medkit!");
 					}
@@ -1539,7 +1495,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			}
 			case DIALOG_SHOP + 3:
 			{
-			    if(PlayerInfo[playerid][iVIP] == 0) return SCM(playerid, -1, ""er"You need to be V.I.P");
+			    if(PlayerData[playerid][iVIP] == 0) return SCM(playerid, -1, ""er"You need to be V.I.P");
 			    switch(listitem)
 			    {
 			        case 0:
@@ -1754,11 +1710,11 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 	    }
 	    case THREAD_CREATE_ACCOUNT:
 	    {
-		    PlayerInfo[extraid][iRegDate] = gettime();
-			PlayerInfo[extraid][iExitType] = EXIT_LOGGED;
-			PlayerInfo[extraid][iConnectTime] = gettime();
-		    PlayerInfo[extraid][bLogged] = true;
-		    PlayerInfo[extraid][bFirstSpawn] = true;
+		    PlayerData[extraid][iRegDate] = gettime();
+			PlayerData[extraid][iExitType] = EXIT_LOGGED;
+			PlayerData[extraid][iConnectTime] = gettime();
+		    PlayerData[extraid][bLogged] = true;
+		    PlayerData[extraid][bFirstSpawn] = true;
 			TogglePlayerSpectating(extraid, false);
 
 		    new str[144];
@@ -1781,30 +1737,30 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 
 			if(rows > 0)
 			{
-			    PlayerInfo[extraid][iGlobalID] = cache_get_row_int(0, 0, g_pSQL);
-			    PlayerInfo[extraid][iScore] = cache_get_row_int(0, 5, g_pSQL);
-			    PlayerInfo[extraid][iAdminLevel] = cache_get_row_int(0, 6, g_pSQL);
-			    PlayerInfo[extraid][iMoney] = cache_get_row_int(0, 7, g_pSQL);
-			    PlayerInfo[extraid][iKills] = cache_get_row_int(0, 8, g_pSQL);
-			    PlayerInfo[extraid][iDeaths] = cache_get_row_int(0, 9, g_pSQL);
-			    PlayerInfo[extraid][iTime] = cache_get_row_int(0, 10, g_pSQL);
-			    PlayerInfo[extraid][iVIP] = cache_get_row_int(0, 11, g_pSQL);
-			    PlayerInfo[extraid][iMedkits] = cache_get_row_int(0, 12, g_pSQL);
-                PlayerInfo[extraid][iCookies] = cache_get_row_int(0, 13, g_pSQL);
-                PlayerInfo[extraid][iLastLogged] = cache_get_row_int(0, 14, g_pSQL);
-                PlayerInfo[extraid][iRegDate] = cache_get_row_int(0, 15, g_pSQL);
+			    PlayerData[extraid][iGlobalID] = cache_get_row_int(0, 0, g_pSQL);
+			    PlayerData[extraid][iScore] = cache_get_row_int(0, 5, g_pSQL);
+			    PlayerData[extraid][iAdminLevel] = cache_get_row_int(0, 6, g_pSQL);
+			    PlayerData[extraid][iMoney] = cache_get_row_int(0, 7, g_pSQL);
+			    PlayerData[extraid][iKills] = cache_get_row_int(0, 8, g_pSQL);
+			    PlayerData[extraid][iDeaths] = cache_get_row_int(0, 9, g_pSQL);
+			    PlayerData[extraid][iTime] = cache_get_row_int(0, 10, g_pSQL);
+			    PlayerData[extraid][iVIP] = cache_get_row_int(0, 11, g_pSQL);
+			    PlayerData[extraid][iMedkits] = cache_get_row_int(0, 12, g_pSQL);
+                PlayerData[extraid][iCookies] = cache_get_row_int(0, 13, g_pSQL);
+                PlayerData[extraid][iLastLogged] = cache_get_row_int(0, 14, g_pSQL);
+                PlayerData[extraid][iRegDate] = cache_get_row_int(0, 15, g_pSQL);
 
-			 	SetPlayerCash(extraid, PlayerInfo[extraid][iMoney]);
-			 	SetPlayerScore(extraid, PlayerInfo[extraid][iScore]);
-			 	PlayerInfo[extraid][iConnectTime] = gettime();
+			 	SetPlayerCash(extraid, PlayerData[extraid][iMoney]);
+			 	SetPlayerScore(extraid, PlayerData[extraid][iScore]);
+			 	PlayerData[extraid][iConnectTime] = gettime();
 
                 new string[128];
                 
-				if(PlayerInfo[extraid][iAdminLevel] > 0)
+				if(PlayerData[extraid][iAdminLevel] > 0)
 				{
-					format(string, sizeof(string), ""server_sign" "grey"Successfully logged in. (Adminlevel %i)", PlayerInfo[extraid][iAdminLevel]);
+					format(string, sizeof(string), ""server_sign" "grey"Successfully logged in. (Adminlevel %i)", PlayerData[extraid][iAdminLevel]);
 					SCM(extraid, -1, string);
-					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UnixTimeToDate(PlayerInfo[extraid][iLastLogged]), UnixTimeToDate(PlayerInfo[extraid][iRegDate]));
+					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UnixTimeToDate(PlayerData[extraid][iLastLogged]), UnixTimeToDate(PlayerData[extraid][iRegDate]));
   					SCM(extraid, -1, string);
 					format(string, sizeof(string), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(extraid));
 					SCM(extraid, -1, string);
@@ -1812,13 +1768,13 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 		   		else
 		   		{
 				   	SCM(extraid, -1, ""server_sign" "grey"Successfully logged in!");
-					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UnixTimeToDate(PlayerInfo[extraid][iLastLogged]), UnixTimeToDate(PlayerInfo[extraid][iRegDate]));
+					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UnixTimeToDate(PlayerData[extraid][iLastLogged]), UnixTimeToDate(PlayerData[extraid][iRegDate]));
   					SCM(extraid, -1, string);
 					format(string, sizeof(string), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(extraid));
 					SCM(extraid, -1, string);
 				}
 
-				if(PlayerInfo[extraid][iVIP] == 1)
+				if(PlayerData[extraid][iVIP] == 1)
 				{
                     format(string, sizeof(string), ""server_sign" "grey"VIP %s(%i) logged in!", __GetName(extraid), extraid);
                     SCMToAll(-1, string);
@@ -1834,9 +1790,9 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 		    {
 		        MySQL_LoadPlayer(extraid);
 		        MySQL_LogPlayerIn(extraid);
-		        PlayerInfo[extraid][bLogged] = true;
-		        PlayerInfo[extraid][bFirstSpawn] = true;
-                PlayerInfo[extraid][iExitType] = EXIT_LOGGED;
+		        PlayerData[extraid][bLogged] = true;
+		        PlayerData[extraid][bFirstSpawn] = true;
+                PlayerData[extraid][iExitType] = EXIT_LOGGED;
                 TogglePlayerSpectating(extraid, false);
 			}
 			else
@@ -1857,17 +1813,17 @@ public OnQueryError(errorid, error[], callback[], query[], connectionHandle)
 
 public OnPlayerCommandReceived(playerid, cmdtext[])
 {
-	if(PlayerInfo[playerid][bIsDead])
+	if(PlayerData[playerid][bIsDead])
 	{
 	    SCM(playerid, -1, ""er"You can´t use commands while being dead!");
 	    return 0;
 	}
-	if(PlayerInfo[playerid][iExitType] != EXIT_FIRST_SPAWNED)
+	if(PlayerData[playerid][iExitType] != EXIT_FIRST_SPAWNED)
 	{
 	    SCM(playerid, -1, ""er"You need to spawn to use commands!");
 	    return 0;
 	}
-	if(PlayerInfo[playerid][bLoadMap])
+	if(PlayerData[playerid][bLoadMap])
 	{
 	    SCM(playerid, -1, ""er"You can´t use commands now!");
 	    return 0;
@@ -1889,18 +1845,18 @@ public OnPlayerCommandPerformed(playerid, cmdtext[], success)
     fwrite(lFile, logData);
     fclose(lFile);
 
-	PlayerInfo[playerid][iCoolDownCommand]++;
+	PlayerData[playerid][iCoolDownCommand]++;
 	SetTimerEx("CoolDownCommand", COOLDOWN_CMD, false, "i", playerid);
-	if(PlayerInfo[playerid][iCoolDownCommand] == 8)
+	if(PlayerData[playerid][iCoolDownCommand] == 8)
 	{
 	    return GameTextForPlayer(playerid, "~b~~h~stop command spam!", 2000, 3);
 	}
-	else if(PlayerInfo[playerid][iCoolDownCommand] >= 12 && PlayerInfo[playerid][iAdminLevel] < 5)
+	else if(PlayerData[playerid][iCoolDownCommand] >= 12 && PlayerData[playerid][iAdminLevel] < 5)
 	{
 	    new string[100];
 		format(string, sizeof(string), "Command-Spam detected! %s(%i) has been kicked!", __GetName(playerid), playerid);
 		AdminMSG(RED, string);
-		PlayerInfo[playerid][iCoolDownCommand] = 0;
+		PlayerData[playerid][iCoolDownCommand] = 0;
 		return Kick(playerid);
 	}
 
@@ -1930,9 +1886,9 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid)
 	}
 	if(gTeam[playerid] == gZOMBIE && gTeam[damagedid] == gHUMAN)
 	{
-	    if(PlayerInfo[damagedid][iTimesHit] >= 2)
+	    if(PlayerData[damagedid][iTimesHit] >= 2)
 	    {
-	        PlayerInfo[damagedid][iTimesHit] = 0;
+	        PlayerData[damagedid][iTimesHit] = 0;
 
 		    GameTextForPlayer(damagedid, "~w~Infected!", 3000, 5);
 			SCM(damagedid, -1, ""er"You have been infected! Now infect humans by punching them!");
@@ -1940,7 +1896,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid)
 
 	        GivePlayerCash(playerid, 2000);
 	        GivePlayerScore_(playerid, 5);
-	        PlayerInfo[playerid][iKills]++;
+	        PlayerData[playerid][iKills]++;
 
 	        PlayInfectSound();
 			if(ZMP_GetHumans() == 0)
@@ -1961,7 +1917,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid)
 		}
 		else
 		{
-		    PlayerInfo[damagedid][iTimesHit]++;
+		    PlayerData[damagedid][iTimesHit]++;
 		}
 	}
 	return 1;
@@ -1986,7 +1942,7 @@ public OnPlayerTakeDamage(playerid, issuerid, Float: amount, weaponid)
 
 YCMD:main(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] == MAX_ADMIN_LEVEL && IsPlayerAdmin(playerid))
+	if(PlayerData[playerid][iAdminLevel] == MAX_ADMIN_LEVEL && IsPlayerAdmin(playerid))
 	{
 	    GlobalMain = true;
 	    SetTimer("mainmode", 60000, false);
@@ -2012,7 +1968,7 @@ YCMD:vips(playerid, params[], help)
 	for(new i = 0; i < MAX_PLAYERS; i++)
 	{
 	    if(!IsPlayerAvail(i)) continue;
-	    if(PlayerInfo[i][iVIP] == 1)
+	    if(PlayerData[i][iVIP] == 1)
 	    {
             if(IsPlayerOnDesktop(i))
             {
@@ -2055,9 +2011,9 @@ YCMD:vip(playerid, params[], help)
 
 YCMD:label(playerid, params[], help)
 {
-    if(PlayerInfo[playerid][iVIP] == 1)
+    if(PlayerData[playerid][iVIP] == 1)
 	{
-	    if(PlayerInfo[playerid][VIPLabel] == Text3D:-1)
+	    if(PlayerData[playerid][VIPLabel] == Text3D:-1)
 	    {
 	        ShowPlayerDialog(playerid, DIALOG_LABEL, DIALOG_STYLE_INPUT, ""zmp" - Attach VIP Label", ""white"Enter some text which your label shall display\n"blue"* "white"Input length: 3-35", "Next", "Cancel");
 	    }
@@ -2075,9 +2031,9 @@ YCMD:label(playerid, params[], help)
 
 YCMD:elabel(playerid, params[], help)
 {
-    if(PlayerInfo[playerid][iVIP] == 1)
+    if(PlayerData[playerid][iVIP] == 1)
 	{
-	    if(PlayerInfo[playerid][VIPLabel] != Text3D:-1)
+	    if(PlayerData[playerid][VIPLabel] != Text3D:-1)
 	    {
 	        ShowPlayerDialog(playerid, DIALOG_LABEL + 1, DIALOG_STYLE_INPUT, ""zmp" - Change VIP Label Text", ""white"Enter the new text which your label shall display\n"blue"* "white"Input length: 3-35", "Next", "Cancel");
 	    }
@@ -2095,12 +2051,12 @@ YCMD:elabel(playerid, params[], help)
 
 YCMD:dlabel(playerid, params[], help)
 {
-    if(PlayerInfo[playerid][iVIP] == 1)
+    if(PlayerData[playerid][iVIP] == 1)
 	{
-	    if(PlayerInfo[playerid][VIPLabel] != Text3D:-1)
+	    if(PlayerData[playerid][VIPLabel] != Text3D:-1)
 	    {
-	        DestroyDynamic3DTextLabel(PlayerInfo[playerid][VIPLabel]);
-	        PlayerInfo[playerid][VIPLabel] = Text3D:-1;
+	        DestroyDynamic3DTextLabel(PlayerData[playerid][VIPLabel]);
+	        PlayerData[playerid][VIPLabel] = Text3D:-1;
 	        SCM(playerid, -1, ""er"Label removed!");
 	    }
 	    else
@@ -2117,7 +2073,7 @@ YCMD:dlabel(playerid, params[], help)
 
 YCMD:p(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iVIP] != 1 && PlayerInfo[playerid][iAdminLevel] == 0) return Command_ReProcess(playerid, "/vip", false);
+	if(PlayerData[playerid][iVIP] != 1 && PlayerData[playerid][iAdminLevel] == 0) return Command_ReProcess(playerid, "/vip", false);
 
 	new msg[144];
 	if(sscanf(params, "s[144]", msg))
@@ -2166,16 +2122,16 @@ YCMD:stats(playerid, params[], help)
 			pDeaths,
 			finstring[sizeof(string1) + sizeof(string2) + sizeof(vip) + 35];
 
- 		if(PlayerInfo[player1][iDeaths] == 0)
+ 		if(PlayerData[player1][iDeaths] == 0)
 	 	{
 	 		pDeaths = 1;
 	 	}
 	 	else
 	 	{
-	 		pDeaths = PlayerInfo[player1][iDeaths];
+	 		pDeaths = PlayerData[player1][iDeaths];
 	 	}
 	 	
-		if(PlayerInfo[player1][iVIP] != 0)
+		if(PlayerData[player1][iVIP] != 0)
 		{
 		    strmid(vip, "Yes", 0, 5, 5);
 		}
@@ -2184,18 +2140,18 @@ YCMD:stats(playerid, params[], help)
  		format(string1, sizeof(string1), ""blue"Stats of the player: "white"%s\n\n\
 	 	Kills: %i\nDeaths: %i\nK/D: %0.2f\nScore: %i\nMoney: $%s\n",
    			__GetName(player1),
-	 		PlayerInfo[player1][iKills],
-        	PlayerInfo[player1][iDeaths],
-        	Float:PlayerInfo[player1][iKills] / Float:pDeaths,
-        	PlayerInfo[player1][iScore],
+	 		PlayerData[player1][iKills],
+        	PlayerData[player1][iDeaths],
+        	Float:PlayerData[player1][iKills] / Float:pDeaths,
+        	PlayerData[player1][iScore],
         	ToCurrency(GetPlayerCash(player1)));
 
         format(string2, sizeof(string2), "Playing Time: %s\nVIP: %s\nMedkits: %i\nRegister Date: %s\nLast log in: %s",
             GetPlayingTimeFormat(player1),
 			vip,
-			PlayerInfo[player1][iMedkits],
-			UnixTimeToDate(PlayerInfo[player1][iRegDate]),
-			UnixTimeToDate(PlayerInfo[player1][iLastLogged]));
+			PlayerData[player1][iMedkits],
+			UnixTimeToDate(PlayerData[player1][iRegDate]),
+			UnixTimeToDate(PlayerData[player1][iLastLogged]));
 
 		strcat(finstring, string1);
 		strcat(finstring, string2);
@@ -2211,7 +2167,7 @@ YCMD:stats(playerid, params[], help)
 
 YCMD:asay(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 1)
+	if(PlayerData[playerid][iAdminLevel] >= 1)
 	{
 	    extract params -> new string:text[144]; else
 	    {
@@ -2233,7 +2189,7 @@ YCMD:asay(playerid, params[], help)
 
 YCMD:warn(playerid, params[], help)
 {
-    if(PlayerInfo[playerid][iAdminLevel] >= 1)
+    if(PlayerData[playerid][iAdminLevel] >= 1)
 	{
  		new player, reason[144];
 		if(sscanf(params, "rs[144]", player, reason))
@@ -2244,7 +2200,7 @@ YCMD:warn(playerid, params[], help)
 	    if(player == INVALID_PLAYER_ID) return SCM(playerid, -1, ""er"Invalid player!");
 		if(!IsPlayerConnected(player)) return SCM(playerid, -1, ""er"Player not connected!");
 
-		if(PlayerInfo[player][iAdminLevel] == MAX_ADMIN_LEVEL)
+		if(PlayerData[player][iAdminLevel] == MAX_ADMIN_LEVEL)
 		{
 	 		return SCM(playerid, -1, ""er"You cannot use this command on this admin");
 		}
@@ -2252,17 +2208,17 @@ YCMD:warn(playerid, params[], help)
 	 	if(IsPlayerAvail(player) && player != playerid)
 	 	{
 	 	    new string[144];
-			PlayerInfo[player][iWarnings]++;
-			if(PlayerInfo[player][iWarnings] == MAX_WARNINGS)
+			PlayerData[player][iWarnings]++;
+			if(PlayerData[player][iWarnings] == MAX_WARNINGS)
 			{
-				format(string, sizeof(string), ""yellow"** "red"%s(%i) has been kicked. [Reason: %s] [Warning: %i/%i] [Warn by: %s(%i)]", __GetName(player), player, reason, PlayerInfo[player][iWarnings], MAX_WARNINGS, __GetName(playerid), playerid);
+				format(string, sizeof(string), ""yellow"** "red"%s(%i) has been kicked. [Reason: %s] [Warning: %i/%i] [Warn by: %s(%i)]", __GetName(player), player, reason, PlayerData[player][iWarnings], MAX_WARNINGS, __GetName(playerid), playerid);
 				SCMToAll(-1, string);
 				print(string);
 				Kick(player);
 			}
 			else
 			{
-				format(string, sizeof(string), ""yellow"** "red"Admin %s(%i) has given %s(%i) a kick warning. [Reason: %s] [Warning: %i/%i]", __GetName(playerid), playerid, __GetName(player), player, reason, PlayerInfo[player][iWarnings], MAX_WARNINGS);
+				format(string, sizeof(string), ""yellow"** "red"Admin %s(%i) has given %s(%i) a kick warning. [Reason: %s] [Warning: %i/%i]", __GetName(playerid), playerid, __GetName(player), player, reason, PlayerData[player][iWarnings], MAX_WARNINGS);
 				SCMToAll(-1, string);
 			}
 		}
@@ -2280,7 +2236,7 @@ YCMD:warn(playerid, params[], help)
 
 YCMD:slap(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 1)
+	if(PlayerData[playerid][iAdminLevel] >= 1)
 	{
 	    new player;
 	 	if(sscanf(params, "r", player))
@@ -2291,7 +2247,7 @@ YCMD:slap(playerid, params[], help)
 	    if(player == INVALID_PLAYER_ID) return SCM(playerid, -1, ""er"Invalid player!");
 		if(!IsPlayerConnected(player)) return SCM(playerid, -1, ""er"Player not connected!");
 
-		if(IsPlayerAvail(player) && PlayerInfo[player][iAdminLevel] != MAX_ADMIN_LEVEL)
+		if(IsPlayerAvail(player) && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 		{
 		    switch(gTeam[player])
 		    {
@@ -2322,7 +2278,7 @@ YCMD:slap(playerid, params[], help)
 
 YCMD:disarm(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 1)
+	if(PlayerData[playerid][iAdminLevel] >= 1)
 	{
 	    new player;
 		if(sscanf(params, "r", player))
@@ -2333,9 +2289,9 @@ YCMD:disarm(playerid, params[], help)
 	    if(player == INVALID_PLAYER_ID) return SCM(playerid, -1, ""er"Invalid player!");
 		if(!IsPlayerConnected(player)) return SCM(playerid, -1, ""er"Player not connected!");
 
-		if(IsPlayerAvail(player) && PlayerInfo[player][iAdminLevel] != MAX_ADMIN_LEVEL)
+		if(IsPlayerAvail(player) && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 		{
-		    if(!IsPlayerAvail(player) || PlayerInfo[player][iAdminLevel] >= PlayerInfo[playerid][iAdminLevel]) return SCM(playerid, -1, ""er"Player is not available or is an higher level admin than you");
+		    if(!IsPlayerAvail(player) || PlayerData[player][iAdminLevel] >= PlayerData[playerid][iAdminLevel]) return SCM(playerid, -1, ""er"Player is not available or is an higher level admin than you");
 
 			ResetPlayerWeapons(player);
 
@@ -2356,7 +2312,7 @@ YCMD:disarm(playerid, params[], help)
 
 YCMD:pweaps(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 1)
+	if(PlayerData[playerid][iAdminLevel] >= 1)
 	{
 	    new player;
 	    if(sscanf(params, "r", player))
@@ -2405,7 +2361,7 @@ YCMD:pweaps(playerid, params[], help)
 
 YCMD:mute(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 1)
+	if(PlayerData[playerid][iAdminLevel] >= 1)
 	{
  		new player, time, reason[144];
 		if(sscanf(params, "ris[144]", player, time, reason))
@@ -2418,18 +2374,18 @@ YCMD:mute(playerid, params[], help)
 
 		if(time < 1) return SCM(playerid, -1, ""er"seconds > 0 bitch please :p");
 
-		if(IsPlayerAvail(player) && player != playerid && PlayerInfo[player][iAdminLevel] != MAX_ADMIN_LEVEL)
+		if(IsPlayerAvail(player) && player != playerid && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 		{
-			if(PlayerInfo[player][bMuted])
+			if(PlayerData[player][bMuted])
 			{
 				return SCM(playerid, -1, ""er"This player is already muted");
 			}
 		    new string[144];
-  			PlayerInfo[player][bMuted] = true;
+  			PlayerData[player][bMuted] = true;
 	    	format(string, sizeof(string), ""yellow"** "red"%s(%i) has been muted by Admin %s(%i) for %i seconds [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, time, reason);
             SCMToAll(YELLOW, string);
             print(string);
-			PlayerInfo[player][tMute] = SetTimerEx("unmute", time * 1000, false, "i", player);
+			PlayerData[player][tMute] = SetTimerEx("unmute", time * 1000, false, "i", player);
 		}
 		else
 		{
@@ -2445,7 +2401,7 @@ YCMD:mute(playerid, params[], help)
 
 YCMD:unmute(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 1)
+	if(PlayerData[playerid][iAdminLevel] >= 1)
 	{
  		new player;
 		if(sscanf(params, "r", player))
@@ -2458,12 +2414,12 @@ YCMD:unmute(playerid, params[], help)
 
 		if(IsPlayerAvail(player) && player != playerid)
 		{
-			if(!PlayerInfo[player][bMuted])
+			if(!PlayerData[player][bMuted])
 			{
 				return SCM(playerid, -1, ""er"This player is not muted");
 			}
-			PlayerInfo[player][bMuted] = false;
-			KillTimer(PlayerInfo[player][tMute]);
+			PlayerData[player][bMuted] = false;
+			KillTimer(PlayerData[player][tMute]);
 			SCM(player, RED, "You have been unmuted!");
 			new string[128];
 			format(string, sizeof(string), ""yellow"** "red"%s(%i) has been unmuted by Admin %s(%i)", __GetName(player), player, __GetName(playerid), playerid);
@@ -2483,7 +2439,7 @@ YCMD:unmute(playerid, params[], help)
 
 YCMD:ncrecords(playerid, params[], help)
 {
-    if(PlayerInfo[playerid][iVIP] != 1 && PlayerInfo[playerid][iAdminLevel] == 0) return Command_ReProcess(playerid, "/vip", false);
+    if(PlayerData[playerid][iVIP] != 1 && PlayerData[playerid][iAdminLevel] == 0) return Command_ReProcess(playerid, "/vip", false);
 
 	new name[25];
 	if(sscanf(params, "s[24]", name))
@@ -2501,7 +2457,7 @@ YCMD:ncrecords(playerid, params[], help)
 
 YCMD:clearchat(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 3)
+	if(PlayerData[playerid][iAdminLevel] >= 3)
 	{
 		for(new i = 0; i < 129; i++)
 		{
@@ -2517,7 +2473,7 @@ YCMD:clearchat(playerid, params[], help)
 
 YCMD:announce(playerid, params[], help)
 {
-    if(PlayerInfo[playerid][iAdminLevel] >= 3 || IsPlayerAdmin(playerid))
+    if(PlayerData[playerid][iAdminLevel] >= 3 || IsPlayerAdmin(playerid))
 	{
 	    extract params -> new string:text[144]; else
 	    {
@@ -2543,7 +2499,7 @@ YCMD:announce(playerid, params[], help)
 
 YCMD:giveweapon(playerid, params[], help)
 {
-    if(PlayerInfo[playerid][iAdminLevel] >= 4)
+    if(PlayerData[playerid][iAdminLevel] >= 4)
     {
 		new weaponID, weaponName[20], player, ammo_a, str[144];
 
@@ -2601,7 +2557,7 @@ YCMD:giveweapon(playerid, params[], help)
 
 YCMD:sethealth(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 4)
+	if(PlayerData[playerid][iAdminLevel] >= 4)
 	{
 	    if(g_GlobalStatus != e_Status_Playing || g_GlobalStatus != e_Status_Prepare) return SCM(playerid, -1, ""er"Not possible now!");
 	    
@@ -2647,7 +2603,7 @@ YCMD:sethealth(playerid, params[], help)
 
 YCMD:ip(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 4)
+	if(PlayerData[playerid][iAdminLevel] >= 4)
 	{
 	    new player;
 	 	if(sscanf(params, "r", player))
@@ -2658,7 +2614,7 @@ YCMD:ip(playerid, params[], help)
 	    if(player == INVALID_PLAYER_ID) return SCM(playerid, -1, ""er"Invalid player!");
 		if(!IsPlayerConnected(player)) return SCM(playerid, -1, ""er"Player not connected!");
 
-		if(PlayerInfo[player][iAdminLevel] == MAX_ADMIN_LEVEL && PlayerInfo[playerid][iAdminLevel] != MAX_ADMIN_LEVEL)
+		if(PlayerData[player][iAdminLevel] == MAX_ADMIN_LEVEL && PlayerData[playerid][iAdminLevel] != MAX_ADMIN_LEVEL)
 		{
 			return SCM(playerid, -1, ""er"You cannot use this command on this admin");
 		}
@@ -2683,7 +2639,7 @@ YCMD:ip(playerid, params[], help)
 
 YCMD:setcash(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 5)
+	if(PlayerData[playerid][iAdminLevel] >= 5)
 	{
 	    new player, amount;
 	    if(sscanf(params, "ri", player, amount))
@@ -2730,7 +2686,7 @@ YCMD:setcash(playerid, params[], help)
 
 YCMD:setscore(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 5)
+	if(PlayerData[playerid][iAdminLevel] >= 5)
 	{
 	    new player, amount;
 	    if(sscanf(params, "ri", player, amount))
@@ -2777,7 +2733,7 @@ YCMD:setscore(playerid, params[], help)
 
 YCMD:setadminlevel(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] == MAX_ADMIN_LEVEL || IsPlayerAdmin(playerid))
+	if(PlayerData[playerid][iAdminLevel] == MAX_ADMIN_LEVEL || IsPlayerAdmin(playerid))
 	{
 	    new player, alevel;
 	 	if(sscanf(params, "ri", player, alevel))
@@ -2794,7 +2750,7 @@ YCMD:setadminlevel(playerid, params[], help)
 			{
 				return SCM(playerid, -1, ""er"Incorrect Level");
 			}
-			if(alevel == PlayerInfo[player][iAdminLevel])
+			if(alevel == PlayerData[player][iAdminLevel])
 			{
 				return SCM(playerid, -1, ""er"Player is already this level");
 			}
@@ -2811,7 +2767,7 @@ YCMD:setadminlevel(playerid, params[], help)
 			}
 			SCM(player, BLUE, string);
 
-			if(alevel > PlayerInfo[player][iAdminLevel])
+			if(alevel > PlayerData[player][iAdminLevel])
 			{
 				GameTextForPlayer(player, "Promoted", 5000, 3);
 			}
@@ -2824,7 +2780,7 @@ YCMD:setadminlevel(playerid, params[], help)
 			format(string, sizeof(string), "Admin %s has made %s Level %i at %i:%i:%i", __GetName(playerid), __GetName(player), alevel, time[0], time[1], time[2]);
             SCM(player, BLUE, string);
             print(string);
-			PlayerInfo[player][iAdminLevel] = alevel;
+			PlayerData[player][iAdminLevel] = alevel;
 		}
 		else
 		{
@@ -2840,7 +2796,7 @@ YCMD:setadminlevel(playerid, params[], help)
 
 YCMD:burn(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 2)
+	if(PlayerData[playerid][iAdminLevel] >= 2)
 	{
 	    new player;
 	 	if(sscanf(params, "r", player))
@@ -2853,7 +2809,7 @@ YCMD:burn(playerid, params[], help)
 
         if(IsPlayerAvail(player))
 		{
-			if(PlayerInfo[player][iAdminLevel] > 0)
+			if(PlayerData[player][iAdminLevel] > 0)
 			{
 				return SCM(playerid, -1, ""er"You cannot use this command on an admin");
 			}
@@ -2880,7 +2836,7 @@ YCMD:burn(playerid, params[], help)
 
 YCMD:healall(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 4)
+	if(PlayerData[playerid][iAdminLevel] >= 4)
 	{
 	   	for(new i = 0; i < MAX_PLAYERS; i++)
  		{
@@ -2905,7 +2861,7 @@ YCMD:healall(playerid, params[], help)
 
 YCMD:get(playerid, params[], help)
 {
-    if(PlayerInfo[playerid][iAdminLevel] >= 3)
+    if(PlayerData[playerid][iAdminLevel] >= 3)
 	{
 	    new player;
 	 	if(sscanf(params, "r", player))
@@ -2917,7 +2873,7 @@ YCMD:get(playerid, params[], help)
 		if(!IsPlayerConnected(player)) return SCM(playerid, -1, ""er"Player not connected!");
 		if(gTeam[playerid] == gNONE) return SCM(playerid, -1, ""er"Not useable on this player");
 
-		if(PlayerInfo[player][iAdminLevel] == MAX_ADMIN_LEVEL && PlayerInfo[playerid][iAdminLevel] != MAX_ADMIN_LEVEL)
+		if(PlayerData[player][iAdminLevel] == MAX_ADMIN_LEVEL && PlayerData[playerid][iAdminLevel] != MAX_ADMIN_LEVEL)
 		{
 			return SCM(playerid, -1, ""er"You cannot use this command on this admin");
 		}
@@ -2960,7 +2916,7 @@ YCMD:get(playerid, params[], help)
 
 YCMD:go(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 3 || IsPlayerAdmin(playerid))
+	if(PlayerData[playerid][iAdminLevel] >= 3 || IsPlayerAdmin(playerid))
 	{
 	    if(gTeam[playerid] == gNONE) return SCM(playerid, RED, NOT_AVAIL);
 	    
@@ -3010,7 +2966,7 @@ YCMD:go(playerid, params[], help)
 
 YCMD:kick(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 2)
+	if(PlayerData[playerid][iAdminLevel] >= 2)
 	{
  		new player, reason[144];
 		if(sscanf(params, "rs[144]", player, reason))
@@ -3023,11 +2979,11 @@ YCMD:kick(playerid, params[], help)
 
 		if(isnull(reason)) return SCM(playerid, YELLOW, "Usage: /kick <playerid> <reason>");
 
-		if(PlayerInfo[player][KBMarked]) return SCM(playerid, -1, ""er"Can't kick this player!");
+		if(PlayerData[player][KBMarked]) return SCM(playerid, -1, ""er"Can't kick this player!");
 
-		if(IsPlayerAvail(player) && player != playerid && PlayerInfo[player][iAdminLevel] != MAX_ADMIN_LEVEL)
+		if(IsPlayerAvail(player) && player != playerid && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 		{
-		    PlayerInfo[player][KBMarked] = true;
+		    PlayerData[player][KBMarked] = true;
 
 		    new string[144];
 			format(string, sizeof(string), ""yellow"** "red"%s(%i) has been kicked by Admin %s(%i) [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, reason);
@@ -3050,7 +3006,7 @@ YCMD:kick(playerid, params[], help)
 
 YCMD:offlineban(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 3)
+	if(PlayerData[playerid][iAdminLevel] >= 3)
 	{
 	    new player[144], reason[144];
 	    if(sscanf(params, "s[144]s[144]", player, reason))
@@ -3079,7 +3035,7 @@ YCMD:offlineban(playerid, params[], help)
 
 YCMD:unban(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 3)
+	if(PlayerData[playerid][iAdminLevel] >= 3)
 	{
 	    new player[144];
 	    if(sscanf(params, "s[144]", player))
@@ -3105,7 +3061,7 @@ YCMD:unban(playerid, params[], help)
 
 YCMD:ban(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 3)
+	if(PlayerData[playerid][iAdminLevel] >= 3)
 	{
 	    new player, reason[144];
 	    if(sscanf(params, "rs[144]", player, reason))
@@ -3120,7 +3076,7 @@ YCMD:ban(playerid, params[], help)
 	    if(player == playerid) return SCM(playerid, -1, ""er"Fail :P");
 	  	if(isnull(reason) || strlen(reason) < 2) return SCM(playerid, YELLOW, "Usage: /ban <playerid> <reason>");
 	  	if(IsPlayerNPC(player)) return SCM(playerid, -1, ""er"Invalid player!");
-        if(PlayerInfo[player][KBMarked]) return SCM(playerid, -1, ""er"Can't ban this player!");
+        if(PlayerData[player][KBMarked]) return SCM(playerid, -1, ""er"Can't ban this player!");
 
 	    if(strfind(reason, "-", false) != -1)
 		{
@@ -3151,11 +3107,11 @@ YCMD:ban(playerid, params[], help)
 	        return SCM(playerid, -1, ""er"`´ ist not allowed");
 		}
 
-	  	if(PlayerInfo[player][iAdminLevel] != MAX_ADMIN_LEVEL)
+	  	if(PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 	  	{
-		 	if(IsPlayerAvail(player) && player != playerid && PlayerInfo[player][iAdminLevel] != MAX_ADMIN_LEVEL)
+		 	if(IsPlayerAvail(player) && player != playerid && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 			{
-                PlayerInfo[player][KBMarked] = true;
+                PlayerData[player][KBMarked] = true;
 				new string[255];
 
 	   			MySQL_CreateBan(__GetName(player), __GetName(playerid), reason);
@@ -3194,7 +3150,7 @@ YCMD:ban(playerid, params[], help)
 
 YCMD:tban(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 3)
+	if(PlayerData[playerid][iAdminLevel] >= 3)
 	{
 	    new player, mins, reason[144];
 	    if(sscanf(params, "ris[144]", player, mins, reason))
@@ -3210,7 +3166,7 @@ YCMD:tban(playerid, params[], help)
 	    if(player == playerid) return SCM(playerid, -1, ""er"Fail :P");
 	  	if(isnull(reason) || strlen(reason) < 2) return SCM(playerid, YELLOW, "Usage: /tban <playerid> <minutes> <reason>");
 	  	if(IsPlayerNPC(player)) return SCM(playerid, -1, ""er"Invalid player!");
-        if(PlayerInfo[player][KBMarked]) return SCM(playerid, -1, ""er"Can't ban this player!");
+        if(PlayerData[player][KBMarked]) return SCM(playerid, -1, ""er"Can't ban this player!");
 
 	    if(strfind(reason, "-", false) != -1)
 		{
@@ -3241,11 +3197,11 @@ YCMD:tban(playerid, params[], help)
 	        return SCM(playerid, -1, ""er"`´ ist not allowed");
 		}
 
-	  	if(PlayerInfo[player][iAdminLevel] != MAX_ADMIN_LEVEL)
+	  	if(PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 	  	{
-		 	if(IsPlayerAvail(player) && player != playerid && PlayerInfo[player][iAdminLevel] != MAX_ADMIN_LEVEL)
+		 	if(IsPlayerAvail(player) && player != playerid && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 			{
-			    PlayerInfo[player][KBMarked] = true;
+			    PlayerData[player][KBMarked] = true;
 				new string[255];
 
 	   			MySQL_CreateBan(__GetName(player), __GetName(playerid), reason, gettime() + (mins * 60));
@@ -3283,7 +3239,7 @@ YCMD:tban(playerid, params[], help)
 
 YCMD:mapchange(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 2)
+	if(PlayerData[playerid][iAdminLevel] >= 2)
 	{
 	    new map[144];
 	    if(sscanf(params, "s[144]", map))
@@ -3317,7 +3273,7 @@ YCMD:mapchange(playerid, params[], help)
 
 YCMD:reloadmaps(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= MAX_ADMIN_LEVEL)
+	if(PlayerData[playerid][iAdminLevel] >= MAX_ADMIN_LEVEL)
 	{
 	    if(g_GlobalStatus == e_Status_RoundEnd)
 	    {
@@ -3343,7 +3299,7 @@ YCMD:reloadmaps(playerid, params[], help)
 
 YCMD:setvip(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] == MAX_ADMIN_LEVEL)
+	if(PlayerData[playerid][iAdminLevel] == MAX_ADMIN_LEVEL)
 	{
 	    new player;
 	    if(sscanf(params, "r", player))
@@ -3357,17 +3313,17 @@ YCMD:setvip(playerid, params[], help)
 		if(IsPlayerAvail(player))
 		{
 		    new str[144];
-		    if(PlayerInfo[player][iVIP] == 1)
+		    if(PlayerData[player][iVIP] == 1)
 		    {
 				format(str, sizeof(str), ""zmp" Admin %s(%i) has removed %s(%i) VIP status.", __GetName(playerid), playerid, __GetName(player), player);
 				SCMToAll(-1, str);
-				PlayerInfo[player][iVIP] = 0;
+				PlayerData[player][iVIP] = 0;
 		    }
 		    else
 		    {
 				format(str, sizeof(str), ""zmp" Admin %s(%i) has given %s(%i) VIP status.", __GetName(playerid), playerid, __GetName(player), player);
 				SCMToAll(-1, str);
-				PlayerInfo[player][iVIP] = 1;
+				PlayerData[player][iVIP] = 1;
 		    }
 		    MySQL_SavePlayer(player);
 		}
@@ -3381,7 +3337,7 @@ YCMD:setvip(playerid, params[], help)
 
 YCMD:adminhelp(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][iAdminLevel] >= 1)
+	if(PlayerData[playerid][iAdminLevel] >= 1)
 	{
 	    new string[1024];
 
@@ -3442,13 +3398,13 @@ YCMD:mk(playerid, params[], help)
 {
 	if(gTeam[playerid] == gZOMBIE) return SCM(playerid, -1, ""er"Not useable as zombie");
 	
-	if(PlayerInfo[playerid][iMedkits] <= 0)
+	if(PlayerData[playerid][iMedkits] <= 0)
 	{
 	    return SCM(playerid, -1, ""er"You don't own any medkits!");
 	}
 
 	new tick = GetTickCount() + 3600000;
-	if((PlayerInfo[playerid][tickLastMedkit] + COOLDOWN_CMD_MEDKIT) >= tick)
+	if((PlayerData[playerid][tickLastMedkit] + COOLDOWN_CMD_MEDKIT) >= tick)
 	{
     	return SCM(playerid, -1, ""er"Please wait a bit before using this cmd again!");
 	}
@@ -3460,15 +3416,15 @@ YCMD:mk(playerid, params[], help)
 	    return SCM(playerid, -1, ""er"You are already at full health");
 	}
 
-	PlayerInfo[playerid][iMedkitTime] = 50;
-	PlayerInfo[playerid][iMedkits]--;
+	PlayerData[playerid][iMedkitTime] = 50;
+	PlayerData[playerid][iMedkits]--;
 
 	PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
 
-	PlayerInfo[playerid][tMedkit] = SetTimerEx("p_medkit", 200, true, "i", playerid);
+	PlayerData[playerid][tMedkit] = SetTimerEx("p_medkit", 200, true, "i", playerid);
 
 	GameTextForPlayer(playerid, "~y~~h~Medkit used!", 3000, 5);
-	PlayerInfo[playerid][tickLastMedkit] = tick;
+	PlayerData[playerid][tickLastMedkit] = tick;
 	return 1;
 }
 
@@ -3500,7 +3456,7 @@ YCMD:changename(playerid, params[], help)
 YCMD:changepass(playerid, params[], help)
 {
     new tick = GetTickCount() + 3600000;
-	if((PlayerInfo[playerid][tickLastPW] + COOLDOWN_CMD_CHANGEPASS) >= tick)
+	if((PlayerData[playerid][tickLastPW] + COOLDOWN_CMD_CHANGEPASS) >= tick)
 	{
     	return SCM(playerid, -1, ""er"Please wait a bit before using this cmd again!");
 	}
@@ -3521,7 +3477,7 @@ YCMD:changepass(playerid, params[], help)
 	PlaySound(playerid, 1057);
     format(string, sizeof(string), ""server_sign" "r_besch"You have successfully changed your password to %s", pass);
 	SCM(playerid, -1, string);
-	PlayerInfo[playerid][tickLastPW] = tick;
+	PlayerData[playerid][tickLastPW] = tick;
 	return 1;
 }
 
@@ -3664,9 +3620,9 @@ YCMD:toptime(playerid, params[], help)
 	    if(IsPlayerAvail(i))
 	    {
 	        playingtime[i][E_playerid] = i;
-		    PlayerInfo[i][iTime] = PlayerInfo[i][iTime] + (gettime() - PlayerInfo[i][iConnectTime]);
-		    PlayerInfo[i][iConnectTime] = gettime();
-	        playingtime[i][E_time] = PlayerInfo[i][iTime];
+		    PlayerData[i][iTime] = PlayerData[i][iTime] + (gettime() - PlayerData[i][iConnectTime]);
+		    PlayerData[i][iConnectTime] = gettime();
+	        playingtime[i][E_time] = PlayerData[i][iTime];
 	    }
 	    else
 	    {
@@ -3706,7 +3662,7 @@ YCMD:deaths(playerid, params[], help)
 	    if(IsPlayerAvail(i))
 	    {
 	        deaths[i][E_playerid] = i;
-	        deaths[i][E_deaths] = PlayerInfo[i][iDeaths];
+	        deaths[i][E_deaths] = PlayerData[i][iDeaths];
 	    }
 	    else
 	    {
@@ -3746,7 +3702,7 @@ YCMD:kills(playerid, params[], help)
 	    if(IsPlayerAvail(i))
 	    {
 	        kills[i][E_playerid] = i;
-	        kills[i][E_kills] = PlayerInfo[i][iKills];
+	        kills[i][E_kills] = PlayerData[i][iKills];
 	    }
 	    else
 	    {
@@ -3786,7 +3742,7 @@ YCMD:richlist(playerid, params[], help)
 	    if(IsPlayerAvail(i))
 	    {
 	        richlist[i][E_playerid] = i;
-	        richlist[i][E_money] = PlayerInfo[i][iMoney];
+	        richlist[i][E_money] = PlayerData[i][iMoney];
 	    }
 	    else
 	    {
@@ -3919,7 +3875,7 @@ COMMAND:pornos(playerid, params[])
 YCMD:report(playerid, params[], help)
 {
 	new tick = GetTickCount() + 3600000;
-	if((PlayerInfo[playerid][tickLastReport] + COOLDOWN_CMD_REPORT) >= tick)
+	if((PlayerData[playerid][tickLastReport] + COOLDOWN_CMD_REPORT) >= tick)
 	{
     	return SCM(playerid, -1, ""er"Please wait a bit before using this cmd again!");
 	}
@@ -3933,7 +3889,7 @@ YCMD:report(playerid, params[], help)
     if(player == INVALID_PLAYER_ID) return SCM(playerid, -1, ""er"Invalid player!");
 	if(!IsPlayerConnected(player)) return SCM(playerid, -1, ""er"Player not connected!");
 
- 	if(IsPlayerAvail(player) && player != playerid && PlayerInfo[player][iAdminLevel] == 0)
+ 	if(IsPlayerAvail(player) && player != playerid && PlayerData[player][iAdminLevel] == 0)
 	{
 		if(strlen(reason) < 4) return SCM(playerid, -1, ""er"Please write more");
 
@@ -3952,7 +3908,7 @@ YCMD:report(playerid, params[], help)
         AdminMSG(-1, string);
 
 		SCM(playerid, YELLOW, "Your report has been sent to online Admins");
-		PlayerInfo[playerid][tickLastReport] = tick;
+		PlayerData[playerid][tickLastReport] = tick;
 	}
 	else
 	{
@@ -3963,7 +3919,7 @@ YCMD:report(playerid, params[], help)
 
 YCMD:reports(playerid, params[], help)
 {
-    if(PlayerInfo[playerid][iAdminLevel] >= 1)
+    if(PlayerData[playerid][iAdminLevel] >= 1)
 	{
         new ReportCount;
 		for(new i = 1; i < MAX_REPORTS; i++)
@@ -3995,15 +3951,15 @@ YCMD:admins(playerid, params[], help)
 	for(new i = 0; i < MAX_PLAYERS; i++)
 	{
 	    if(!IsPlayerAvail(i)) continue;
-	    if(PlayerInfo[i][iAdminLevel] > 0)
+	    if(PlayerData[i][iAdminLevel] > 0)
 	    {
 	        if(IsPlayerOnDesktop(i))
 	        {
-				format(tempstring, sizeof(tempstring), "%s(%i) | Level: %i | [AFK]\n", __GetName(i), i, PlayerInfo[i][iAdminLevel]);
+				format(tempstring, sizeof(tempstring), "%s(%i) | Level: %i | [AFK]\n", __GetName(i), i, PlayerData[i][iAdminLevel]);
 			}
 			else
 			{
-			    format(tempstring, sizeof(tempstring), "%s(%i) | Level: %i\n", __GetName(i), i, PlayerInfo[i][iAdminLevel]);
+			    format(tempstring, sizeof(tempstring), "%s(%i) | Level: %i\n", __GetName(i), i, PlayerData[i][iAdminLevel]);
 			}
 			strcat(finstring, tempstring);
 			count++;
@@ -4060,7 +4016,7 @@ YCMD:id(playerid, params[], help)
 
 YCMD:pm(playerid, params[], help)
 {
-	if(PlayerInfo[playerid][bMuted])
+	if(PlayerData[playerid][bMuted])
 	{
 	    SCM(playerid, RED, "You are muted! Please wait until the time is over!");
 	    return 0;
@@ -4154,15 +4110,15 @@ YCMD:r(playerid, params[], help)
 
 YCMD:sounds(playerid, params[], help)
 {
-    if(PlayerInfo[playerid][bSoundsDisabled])
+    if(PlayerData[playerid][bSoundsDisabled])
     {
         SCM(playerid, -1, ""er"You enabled all (streamed) sounds!");
-        PlayerInfo[playerid][bSoundsDisabled] = false;
+        PlayerData[playerid][bSoundsDisabled] = false;
 	}
 	else
 	{
 	    SCM(playerid, -1, ""er"You disabled all (streamed) sounds!");
-	    PlayerInfo[playerid][bSoundsDisabled] = true;
+	    PlayerData[playerid][bSoundsDisabled] = true;
 	}
 	return 1;
 }
@@ -4182,25 +4138,25 @@ YCMD:rules(playerid, params[], help)
 
 function:CoolDownCommand(playerid)
 {
-	PlayerInfo[playerid][iCoolDownCommand]--;
+	PlayerData[playerid][iCoolDownCommand]--;
 	return 1;
 }
 
 function:CoolDownText(playerid)
 {
-	PlayerInfo[playerid][iCoolDownText]--;
+	PlayerData[playerid][iCoolDownText]--;
 	return 1;
 }
 
 function:CoolDownDeath(playerid)
 {
-	PlayerInfo[playerid][iCoolDownDeath]--;
+	PlayerData[playerid][iCoolDownDeath]--;
 	return 1;
 }
 
 function:IsPlayerAvail(playerid)
 {
-	if(IsPlayerConnected(playerid) && playerid != INVALID_PLAYER_ID && PlayerInfo[playerid][iExitType] == EXIT_FIRST_SPAWNED && !IsPlayerNPC(playerid))
+	if(IsPlayerConnected(playerid) && playerid != INVALID_PLAYER_ID && PlayerData[playerid][iExitType] == EXIT_FIRST_SPAWNED && !IsPlayerNPC(playerid))
 	{
 	    return 1;
 	}
@@ -4211,7 +4167,7 @@ AdminMSG(color, const string[])
 {
 	for(new i = 0; i < MAX_PLAYERS; i++)
 	{
-		if((IsPlayerAvail(i)) && (PlayerInfo[i][iAdminLevel] >= 1))
+		if((IsPlayerAvail(i)) && (PlayerData[i][iAdminLevel] >= 1))
 		{
 			SCM(i, color, string);
 		}
@@ -4222,7 +4178,7 @@ VIPMSG(color, const msg[])
 {
 	for(new i = 0; i < MAX_PLAYERS; i++)
 	{
-		if((IsPlayerAvail(i)) && (PlayerInfo[i][iVIP] == 1 || PlayerInfo[i][iAdminLevel] > 0))
+		if((IsPlayerAvail(i)) && (PlayerData[i][iVIP] == 1 || PlayerData[i][iAdminLevel] > 0))
 		{
 			SCM(i, color, msg);
 		}
@@ -4231,44 +4187,44 @@ VIPMSG(color, const msg[])
 
 ResetPlayerVars(playerid)
 {
-    PlayerInfo[playerid][iExitType] = EXIT_NONE;
-	PlayerInfo[playerid][iKills] = 0;
-	PlayerInfo[playerid][iDeaths] = 0;
-	PlayerInfo[playerid][iCoolDownCommand] = 0;
-	PlayerInfo[playerid][iCoolDownText] = 0;
-	PlayerInfo[playerid][iCoolDownDeath] = 0;
-	PlayerInfo[playerid][bFloodDect] = false;
-	PlayerInfo[playerid][bIsDead] = false;
-	PlayerInfo[playerid][bLoadMap] = false;
-    PlayerInfo[playerid][iScore] = 0;
-    PlayerInfo[playerid][iAdminLevel] = 0;
-    PlayerInfo[playerid][iMoney] = 0;
-    PlayerInfo[playerid][iTime] = 0;
-    PlayerInfo[playerid][iVIP] = 0;
-    PlayerInfo[playerid][iWarnings] = 0;
-    PlayerInfo[playerid][iMedkits] = 0;
-    PlayerInfo[playerid][iCookies] = 0;
-    PlayerInfo[playerid][bMuted] = false;
-    PlayerInfo[playerid][bLogged] = false;
-   	PlayerInfo[playerid][iLastLogged] = 0;
-	PlayerInfo[playerid][iRegDate] = 0;
-	PlayerInfo[playerid][iConnectTime] = 0;
-	PlayerInfo[playerid][iChatWrote] = 0;
-	PlayerInfo[playerid][tickLastChat] = 0;
-	PlayerInfo[playerid][tickPlayerUpdate] = 0;
-	PlayerInfo[playerid][tickLastReport] = 0;
-	PlayerInfo[playerid][tickLastPW] = 0;
-	PlayerInfo[playerid][tickLastJump] = 0;
-	PlayerInfo[playerid][tickLastMedkit] = 0;
-	PlayerInfo[playerid][bSoundsDisabled] = false;
-	PlayerInfo[playerid][KBMarked] = false;
-	PlayerInfo[playerid][tLoadMap] = INVALID_TIMER;
-	PlayerInfo[playerid][tMedkit] = INVALID_TIMER;
-	PlayerInfo[playerid][tMute] = INVALID_TIMER;
-	PlayerInfo[playerid][iTimesHit] = 0;
+    PlayerData[playerid][iExitType] = EXIT_NONE;
+	PlayerData[playerid][iKills] = 0;
+	PlayerData[playerid][iDeaths] = 0;
+	PlayerData[playerid][iCoolDownCommand] = 0;
+	PlayerData[playerid][iCoolDownText] = 0;
+	PlayerData[playerid][iCoolDownDeath] = 0;
+	PlayerData[playerid][bFloodDect] = false;
+	PlayerData[playerid][bIsDead] = false;
+	PlayerData[playerid][bLoadMap] = false;
+    PlayerData[playerid][iScore] = 0;
+    PlayerData[playerid][iAdminLevel] = 0;
+    PlayerData[playerid][iMoney] = 0;
+    PlayerData[playerid][iTime] = 0;
+    PlayerData[playerid][iVIP] = 0;
+    PlayerData[playerid][iWarnings] = 0;
+    PlayerData[playerid][iMedkits] = 0;
+    PlayerData[playerid][iCookies] = 0;
+    PlayerData[playerid][bMuted] = false;
+    PlayerData[playerid][bLogged] = false;
+   	PlayerData[playerid][iLastLogged] = 0;
+	PlayerData[playerid][iRegDate] = 0;
+	PlayerData[playerid][iConnectTime] = 0;
+	PlayerData[playerid][iChatWrote] = 0;
+	PlayerData[playerid][tickLastChat] = 0;
+	PlayerData[playerid][tickPlayerUpdate] = 0;
+	PlayerData[playerid][tickLastReport] = 0;
+	PlayerData[playerid][tickLastPW] = 0;
+	PlayerData[playerid][tickLastJump] = 0;
+	PlayerData[playerid][tickLastMedkit] = 0;
+	PlayerData[playerid][bSoundsDisabled] = false;
+	PlayerData[playerid][KBMarked] = false;
+	PlayerData[playerid][tLoadMap] = INVALID_TIMER;
+	PlayerData[playerid][tMedkit] = INVALID_TIMER;
+	PlayerData[playerid][tMute] = INVALID_TIMER;
+	PlayerData[playerid][iTimesHit] = 0;
 	SetPVarInt(playerid, "LastID", -1);
 	PlayerHit[playerid] = false;
-	PlayerInfo[playerid][gSpecialZed] = zedZOMBIE;
+	PlayerData[playerid][gSpecialZed] = zedZOMBIE;
 	
 	strmid(LastPlayerText[playerid], " ", 0, 144, 144);
 }
@@ -4279,11 +4235,11 @@ __GetName(playerid, bool:escaped = false)
 
 	if(escaped)
 	{
-	    mysql_escape_string(PlayerInfo[playerid][sName], name, g_pSQL, 25);
+	    mysql_escape_string(PlayerData[playerid][sName], name, g_pSQL, 25);
 	}
 	else
 	{
-		strcat(name, PlayerInfo[playerid][sName], 25);
+		strcat(name, PlayerData[playerid][sName], 25);
 	}
 
     return name;
@@ -4292,18 +4248,18 @@ __GetName(playerid, bool:escaped = false)
 __GetIP(playerid)
 {
 	new ip[16];
-	strcat(ip, PlayerInfo[playerid][sIP], 16);
+	strcat(ip, PlayerData[playerid][sIP], 16);
 
     return ip;
 }
 
 MySQL_CreateAccount(playerid, password[])
 {
-	PlayerInfo[playerid][iLastLogged] = gettime();
+	PlayerData[playerid][iLastLogged] = gettime();
 
     new query[350], escape[33];
 	mysql_escape_string(password, escape, g_pSQL, 33);
-    format(query, sizeof(query), "INSERT INTO `accounts` (`name`, `logged`, `password`, `ip`, `reg_date`, `lastlogged`) VALUES ('%s', 1, MD5('%s'), '%s', %i, %i);", __GetName(playerid, true), escape, __GetIP(playerid), gettime(), PlayerInfo[playerid][iLastLogged]);
+    format(query, sizeof(query), "INSERT INTO `accounts` (`name`, `logged`, `password`, `ip`, `reg_date`, `lastlogged`) VALUES ('%s', 1, MD5('%s'), '%s', %i, %i);", __GetName(playerid, true), escape, __GetIP(playerid), gettime(), PlayerData[playerid][iLastLogged]);
 	mysql_tquery(g_pSQL, query, "OnQueryFinish", "siii", query, THREAD_CREATE_ACCOUNT, playerid, g_pSQL);
 }
 
@@ -4364,19 +4320,19 @@ MySQL_SavePlayer(playerid)
 {
 	new finquery[1024], tmp[512];
 	
-    PlayerInfo[playerid][iTime] = PlayerInfo[playerid][iTime] + (gettime() - PlayerInfo[playerid][iConnectTime]);
-    PlayerInfo[playerid][iConnectTime] = gettime();
+    PlayerData[playerid][iTime] = PlayerData[playerid][iTime] + (gettime() - PlayerData[playerid][iConnectTime]);
+    PlayerData[playerid][iConnectTime] = gettime();
 	
 	format(tmp, sizeof(tmp), "UPDATE `accounts` SET `score` = %i, `adminlevel` = %i, `money` = %i, `kills` = %i, `deaths` = %i, `time` = %i, `vip` = %i, `medkits` = %i, `cookies` = %i",
-	    PlayerInfo[playerid][iScore],
-	    PlayerInfo[playerid][iAdminLevel],
-	    PlayerInfo[playerid][iMoney],
-	    PlayerInfo[playerid][iKills],
-	    PlayerInfo[playerid][iDeaths],
-	    PlayerInfo[playerid][iTime],
-	    PlayerInfo[playerid][iVIP],
-	    PlayerInfo[playerid][iMedkits],
-	    PlayerInfo[playerid][iCookies]);
+	    PlayerData[playerid][iScore],
+	    PlayerData[playerid][iAdminLevel],
+	    PlayerData[playerid][iMoney],
+	    PlayerData[playerid][iKills],
+	    PlayerData[playerid][iDeaths],
+	    PlayerData[playerid][iTime],
+	    PlayerData[playerid][iVIP],
+	    PlayerData[playerid][iMedkits],
+	    PlayerData[playerid][iCookies]);
 	    
 	strcat(finquery, tmp);
 	
@@ -4406,7 +4362,7 @@ function:mainmode()
 
 function:KickEx(playerid)
 {
-	PlayerInfo[playerid][KBMarked] = true;
+	PlayerData[playerid][KBMarked] = true;
 	SetTimerEx("Kick_Delay", 3000, false, "ii", playerid, YHash(__GetName(playerid), false));
 	return 1;
 }
@@ -4501,9 +4457,9 @@ AutoLogin(playerid)
 {
     MySQL_LoadPlayer(playerid);
     MySQL_LogPlayerIn(playerid);
-    PlayerInfo[playerid][bLogged] = true;
-    PlayerInfo[playerid][bFirstSpawn] = true;
-    PlayerInfo[playerid][iExitType] = EXIT_LOGGED;
+    PlayerData[playerid][bLogged] = true;
+    PlayerData[playerid][bFirstSpawn] = true;
+    PlayerData[playerid][iExitType] = EXIT_LOGGED;
     TogglePlayerSpectating(playerid, false);
 	return 1;
 }
@@ -4522,8 +4478,8 @@ SetPlayerCash(playerid, amount)
 {
 	if(playerid == INVALID_PLAYER_ID) return 1;
     ResetPlayerMoney(playerid);
-	PlayerInfo[playerid][iMoney] = amount;
-    GivePlayerMoney(playerid, PlayerInfo[playerid][iMoney]);
+	PlayerData[playerid][iMoney] = amount;
+    GivePlayerMoney(playerid, PlayerData[playerid][iMoney]);
     ZMP_PlayerStatsUpdate(playerid);
     return 1;
 }
@@ -4534,9 +4490,9 @@ GivePlayerCash(playerid, amount, bool:populate = true)
 
     ResetPlayerMoney(playerid);
 
-    PlayerInfo[playerid][iMoney] += amount;
+    PlayerData[playerid][iMoney] += amount;
 
-    GivePlayerMoney(playerid, PlayerInfo[playerid][iMoney]);
+    GivePlayerMoney(playerid, PlayerData[playerid][iMoney]);
     
     ZMP_PlayerStatsUpdate(playerid);
     
@@ -4561,15 +4517,15 @@ GivePlayerCash(playerid, amount, bool:populate = true)
 GetPlayerCash(playerid)
 {
     if(playerid == INVALID_PLAYER_ID) return 1;
-	return (PlayerInfo[playerid][iMoney]);
+	return (PlayerData[playerid][iMoney]);
 }
 
 GivePlayerScore_(playerid, amount, bool:populate = true)
 {
     if(playerid == INVALID_PLAYER_ID) return 1;
 
-    PlayerInfo[playerid][iScore] += amount;
-	SetPlayerScore(playerid, PlayerInfo[playerid][iScore]);
+    PlayerData[playerid][iScore] += amount;
+	SetPlayerScore(playerid, PlayerData[playerid][iScore]);
 
     ZMP_PlayerStatsUpdate(playerid);
 
@@ -4594,8 +4550,8 @@ GivePlayerScore_(playerid, amount, bool:populate = true)
 SetPlayerScore_(playerid, amount)
 {
     if(playerid == INVALID_PLAYER_ID) return 1;
-	PlayerInfo[playerid][iScore] = amount;
-    SetPlayerScore(playerid, PlayerInfo[playerid][iScore]);
+	PlayerData[playerid][iScore] = amount;
+    SetPlayerScore(playerid, PlayerData[playerid][iScore]);
     ZMP_PlayerStatsUpdate(playerid);
 	return 1;
 }
@@ -4603,20 +4559,20 @@ SetPlayerScore_(playerid, amount)
 GetPlayerScore_(playerid)
 {
     if(playerid == INVALID_PLAYER_ID) return -1;
-	return PlayerInfo[playerid][iScore];
+	return PlayerData[playerid][iScore];
 }
 
 GetPlayingTimeFormat(playerid)
 {
-    PlayerInfo[playerid][iTime] = PlayerInfo[playerid][iTime] + (gettime() - PlayerInfo[playerid][iConnectTime]);
-    PlayerInfo[playerid][iConnectTime] = gettime();
+    PlayerData[playerid][iTime] = PlayerData[playerid][iTime] + (gettime() - PlayerData[playerid][iConnectTime]);
+    PlayerData[playerid][iConnectTime] = gettime();
 
     new ptime[32],
         time[3];
 
-    time[0] = floatround(PlayerInfo[playerid][iTime] / 3600, floatround_floor);
-    time[1] = floatround(PlayerInfo[playerid][iTime] / 60, floatround_floor) % 60;
-    time[2] = floatround(PlayerInfo[playerid][iTime] % 60, floatround_floor);
+    time[0] = floatround(PlayerData[playerid][iTime] / 3600, floatround_floor);
+    time[1] = floatround(PlayerData[playerid][iTime] / 60, floatround_floor) % 60;
+    time[2] = floatround(PlayerData[playerid][iTime] % 60, floatround_floor);
 
 	format(ptime, sizeof(ptime), "%ih %02im %02is", time[0], time[1], time[2]);
 	return ptime;
@@ -5037,7 +4993,7 @@ ZMP_SetPlayerHuman(playerid)
     SetPlayerSkin(playerid, humanskins[random(sizeof(humanskins))]);
     SetPlayerHealth(playerid, 100.0);
     
-	PlayerInfo[playerid][iTimesHit] = 0;
+	PlayerData[playerid][iTimesHit] = 0;
     
     TogglePlayerControllable(playerid, true);
 }
@@ -5068,19 +5024,19 @@ ZMP_SetPlayerZombie(playerid, bool:homespawn = true)
 		{
 		    GameTextForPlayer(playerid, "~r~~h~~h~You spawned as a Hunter!~n~~w~You can now jump higher!", 3000, 3);
 		    SetPlayerSkin(playerid, ID_HUNTER);
-		    PlayerInfo[playerid][gSpecialZed] = zedHUNTER;
+		    PlayerData[playerid][gSpecialZed] = zedHUNTER;
 		}
 		case 8, 5: // Bloomer
 		{
 		    GameTextForPlayer(playerid, "~r~~h~~h~You spawned as a Bloomer!~n~~w~Press ~k~~CONVERSATION_NO~ or ~k~~CONVERSATION_YES~ to explode!", 3000, 3);
 		    SetPlayerSkin(playerid, ID_BLOOMER);
-		    PlayerInfo[playerid][gSpecialZed] = zedBLOOMER;
-		    PlayerInfo[playerid][bExploded] = false;
+		    PlayerData[playerid][gSpecialZed] = zedBLOOMER;
+		    PlayerData[playerid][bExploded] = false;
 		}
 		case 0, 2, 3, 4, 7, 9: // Normal Zombie
 		{
 		    SetPlayerSkin(playerid, zedskins[random(sizeof(zedskins))]);
-		    PlayerInfo[playerid][gSpecialZed] = zedZOMBIE;
+		    PlayerData[playerid][gSpecialZed] = zedZOMBIE;
 		}
     }
     
@@ -5101,7 +5057,7 @@ ZMP_EndGame()
 	{
 		if(IsPlayerAvail(i))
 		{
-	    	if(!PlayerInfo[i][bIsDead]) TogglePlayerControllable(i, false);
+	    	if(!PlayerData[i][bIsDead]) TogglePlayerControllable(i, false);
 	    	PlayAudio(i, "http://zombiemp.com/re.mp3");
 		}
 	}
@@ -5377,7 +5333,7 @@ function:CSpawn(playerid, namehash)
 
 PlayAudio(playerid, url[])
 {
-	if(!PlayerInfo[playerid][bSoundsDisabled] && !IsPlayerOnDesktop(playerid, 3000))
+	if(!PlayerData[playerid][bSoundsDisabled] && !IsPlayerOnDesktop(playerid, 3000))
 	{
 	    PlayAudioStreamForPlayer(playerid, url);
 	}
@@ -5385,7 +5341,7 @@ PlayAudio(playerid, url[])
 
 PlaySound(playerid, id)
 {
-	if(!PlayerInfo[playerid][bSoundsDisabled] && !IsPlayerOnDesktop(playerid, 1000))
+	if(!PlayerData[playerid][bSoundsDisabled] && !IsPlayerOnDesktop(playerid, 1000))
 	{
 	    PlayerPlaySound(playerid, id, 0.0, 0.0, 0.0);
 	}
@@ -5417,14 +5373,14 @@ function:OnMapAdded(playerid)
 
 IsPlayerOnDesktop(playerid, afktimems = 5000)
 {
-	if((PlayerInfo[playerid][tickPlayerUpdate] + afktimems) < (GetTickCount() + 3600000)) return 1;
+	if((PlayerData[playerid][tickPlayerUpdate] + afktimems) < (GetTickCount() + 3600000)) return 1;
 	return 0;
 }
 
 function:unmute(playerid)
 {
-    PlayerInfo[playerid][bMuted] = false;
-    PlayerInfo[playerid][tMute] = -1;
+    PlayerData[playerid][bMuted] = false;
+    PlayerData[playerid][tMute] = -1;
     return 1;
 }
 
@@ -5479,11 +5435,11 @@ ZMP_PlayerStatsUpdate(playerid)
 	new string[255];
 	
 	format(string, sizeof(string), "~w~Score: %i~n~Money: $%s~n~Kills: %i~n~Deaths: %i~n~K/D: %.2f",
-	    PlayerInfo[playerid][iScore],
-	    ToCurrency(PlayerInfo[playerid][iMoney]),
-	    PlayerInfo[playerid][iKills],
-	    PlayerInfo[playerid][iDeaths],
-        Float:PlayerInfo[playerid][iKills] / (PlayerInfo[playerid][iDeaths] == 0 ? 1.00 : Float:PlayerInfo[playerid][iDeaths]));
+	    PlayerData[playerid][iScore],
+	    ToCurrency(PlayerData[playerid][iMoney]),
+	    PlayerData[playerid][iKills],
+	    PlayerData[playerid][iDeaths],
+        Float:PlayerData[playerid][iKills] / (PlayerData[playerid][iDeaths] == 0 ? 1.00 : Float:PlayerData[playerid][iDeaths]));
 
 	PlayerTextDrawSetString(playerid, TXTPlayerStats[playerid], string);
 }
@@ -5540,12 +5496,12 @@ function:ProcessTick()
 		
 		if(g_GlobalStatus == e_Status_Playing)
 		{
-			if(gTeam[i] == gHUMAN && IsPlayerConnected(i) && !PlayerInfo[i][KBMarked])
+			if(gTeam[i] == gHUMAN && IsPlayerConnected(i) && !PlayerData[i][KBMarked])
 			{
-				if(IsPlayerOnDesktop(i, 10000) && bad_afk_detect() && !PlayerInfo[i][KBMarked])
+				if(IsPlayerOnDesktop(i, 10000) && bad_afk_detect() && !PlayerData[i][KBMarked])
 				{
 				    // Kick afk players
-				    PlayerInfo[i][KBMarked] = true;
+				    PlayerData[i][KBMarked] = true;
 
 				    new string[144];
 					format(string, sizeof(string), ""yellow"** "red"%s(%i) has been auto-kicked by BitchOnDuty [Reason: Critical AFK time]", __GetName(i), i);
@@ -5613,8 +5569,8 @@ function:OnPlayerNameChangeRequest(newname[], playerid)
         {
 			new cname[25];
 		    GetPlayerName(playerid, cname, 25);
-			PlayerInfo[playerid][sName][0] = '\0';
-			strcat(PlayerInfo[playerid][sName], cname, 25);
+			PlayerData[playerid][sName][0] = '\0';
+			strcat(PlayerData[playerid][sName], cname, 25);
 			GivePlayerCash(playerid, -50000);
 
             format(query, sizeof(query), "UPDATE `accounts` SET `name` = '%s' WHERE `name` = '%s' LIMIT 1;", newname, oldname);
@@ -5671,33 +5627,33 @@ Float:GetDistanceBetweenPlayers(p1,p2)
 LoadMap(playerid)
 {
 	Streamer_Update(playerid);
-	PlayerInfo[playerid][bLoadMap] = true;
+	PlayerData[playerid][bLoadMap] = true;
 	TogglePlayerControllable(playerid, false);
 	TextDrawShowForPlayer(playerid, TXTLoading);
 	new ping = GetPlayerPing(playerid);
 	if(ping < 50)
 	{
-		PlayerInfo[playerid][tLoadMap] = SetTimerEx("FreePlayer", 1500, false, "i", playerid);
+		PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 1500, false, "i", playerid);
 	}
 	else if(ping < 100)
 	{
-	    PlayerInfo[playerid][tLoadMap] = SetTimerEx("FreePlayer", 2100, false, "i", playerid);
+	    PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 2100, false, "i", playerid);
 	}
 	else if(ping < 200)
 	{
-	    PlayerInfo[playerid][tLoadMap] = SetTimerEx("FreePlayer", 2500, false, "i", playerid);
+	    PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 2500, false, "i", playerid);
 	}
-	else PlayerInfo[playerid][tLoadMap] = SetTimerEx("FreePlayer", 3100, false, "i", playerid);
+	else PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 3100, false, "i", playerid);
 }
 
 function:FreePlayer(playerid)
 {
-	if(PlayerInfo[playerid][bLoadMap])
+	if(PlayerData[playerid][bLoadMap])
 	{
 		TogglePlayerControllable(playerid, 1);
 		TextDrawHideForPlayer(playerid, TXTLoading);
-		PlayerInfo[playerid][tLoadMap] = -1;
-		PlayerInfo[playerid][bLoadMap] = false;
+		PlayerData[playerid][tLoadMap] = -1;
+		PlayerData[playerid][bLoadMap] = false;
 	}
 	return 1;
 }
@@ -5715,12 +5671,12 @@ PlayInfectSound()
 
 function:p_medkit(playerid)
 {
-	if(PlayerInfo[playerid][iMedkitTime] > 0)
+	if(PlayerData[playerid][iMedkitTime] > 0)
 	{
 	    if(!IsPlayerConnected(playerid))
 	    {
-			KillTimer(PlayerInfo[playerid][tMedkit]);
-			PlayerInfo[playerid][tMedkit] = -1;
+			KillTimer(PlayerData[playerid][tMedkit]);
+			PlayerData[playerid][tMedkit] = -1;
 			return 1;
 	    }
 
@@ -5729,8 +5685,8 @@ function:p_medkit(playerid)
 
 		if(health + 1.0 >= 100.0)
 		{
-			KillTimer(PlayerInfo[playerid][tMedkit]);
-			PlayerInfo[playerid][tMedkit] = -1;
+			KillTimer(PlayerData[playerid][tMedkit]);
+			PlayerData[playerid][tMedkit] = -1;
 			GameTextForPlayer(playerid, "~g~~h~~h~Max. Health reached!", 3000, 5);
 			return 1;
 		}
@@ -5738,12 +5694,12 @@ function:p_medkit(playerid)
 		SetPlayerHealth(playerid, health + 1.0);
 		SetPlayerChatBubble(playerid, ""green"Used 1 Medkit!", -1, 15.0, 200);
 
-		PlayerInfo[playerid][iMedkitTime]--;
+		PlayerData[playerid][iMedkitTime]--;
 	}
 	else
 	{
-	    KillTimer(PlayerInfo[playerid][tMedkit]);
-	    PlayerInfo[playerid][tMedkit] = -1;
+	    KillTimer(PlayerData[playerid][tMedkit]);
+	    PlayerData[playerid][tMedkit] = -1;
 	    GameTextForPlayer(playerid, "~g~~h~~h~Medkit depleted!", 3000, 5);
 	}
 	return 1;
