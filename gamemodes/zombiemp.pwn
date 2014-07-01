@@ -52,6 +52,7 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define VERSION_PATCH                   0
 #define URL                     		"www.zombiemp.com"
 #define FURL                            "www.ZombieMP.com"
+#define HOSTNAME                        "« "R_ZMP_NAME" "VERSION" (0.3z) »"
 #define R_ZMP_NAME              		"Zombie Multiplayer"
 #define R_ZMP_SIGN              		"ZMP"
 #define zmp                             "{FFFFFF}[{969696}ZombieMP{FFFFFF}]"
@@ -344,7 +345,8 @@ enum e_top_rtests
 
 new g_pSQL = -1, // g = Global, p = Pointer
     g_bAllowEnd = true,
-    gstr2[255],
+	gstr[144],
+	gstr2[255],
 	PlayerData[MAX_PLAYERS][E_PLAYER_DATA],
 	gTeam[MAX_PLAYERS],
 	g_World = 0,
@@ -376,7 +378,7 @@ new g_pSQL = -1, // g = Global, p = Pointer
 	iInfestaion = DEFAULT_INFESTATION_TIME,
 	tRescue = INVALID_TIMER,
 	iRescue = DEFAULT_RESCUE_TIME,
-	StartTime,
+	g_iStartTime,
 	iOldMap;
 	
 new zedskins[7] =
@@ -436,28 +438,8 @@ public OnGameModeInit()
 
     MySQL_Connect();
     
-    new string[255];
-	format(string, sizeof(string), "hostname %s");
+    server_initialize();
 
-	SendRconCommand("hostname « "R_ZMP_NAME" "VERSION" (0.3x) »");
-    SendRconCommand("weburl "FURL"");
-    SendRconCommand("mapname ZombieMPSurvivalFunHorror");
-	SetGameModeText("(-|-) ZombieMPSurvivalFunHorror");
-
-    EnableVehicleFriendlyFire();
-    ShowPlayerMarkers(1);
-    DisableInteriorEnterExits();
-    ShowNameTags(1);
-    SetNameTagDrawDistance(70.0);
-    AllowInteriorWeapons(1);
-    UsePlayerPedAnims();
-    EnableStuntBonusForAll(0);
-    CreateTextdraws();
-    SollIchDirMaEtWatSagen();
-	SetWeather(43);
-    SetWorldTime(7);
-    StartTime = gettime();
-    
     SetTimer("ProcessTick", 1000, true);
     SetTimer("server_random_broadcast", SERVERMSGS_TIME, true);
 
@@ -476,8 +458,7 @@ public OnGameModeInit()
 	Command_AddAltNamed("stopanim", "stopanims");
 	Command_AddAltNamed("mk", "medkit");
 	Command_AddAltNamed("mk", "medkits");
-	
-	print("====================="R_ZMP_NAME" "VERSION"=====================");
+
 	return 1;
 }
 
@@ -5495,7 +5476,7 @@ function:ProcessTick()
 GetUptime()
 {
     new Result[128],
-        Remaining = gettime() - StartTime,
+        Remaining = gettime() - g_iStartTime,
         Time[4];
 
     Time[0] = Remaining % 60;
@@ -5797,6 +5778,35 @@ function:_server_shutdown()
 	Log(LOG_EXIT, "server_shutdown called");
 	SendRconCommand("exit");
 	return 1;
+}
+
+server_initialize()
+{
+	format(gstr, sizeof(gstr), "hostname %s", HOSTNAME);
+	SendRconCommand(gstr);
+	SendRconCommand("weburl "URL"");
+    SetGameModeText("(-|-) ZombieMPSurvivalFunHorror");
+	SendRconCommand("mapname ZombieMPSurvivalFunHorror");
+	SendRconCommand("playertimeout 7000");
+	SendRconCommand("ackslimit 4000");
+	SendRconCommand("messageslimit 500");
+	SendRconCommand("messageholelimit 1800");
+	SendRconCommand("rcon 0");
+	SendRconCommand("maxnpc 0");
+	
+    EnableVehicleFriendlyFire();
+    ShowPlayerMarkers(1);
+    DisableInteriorEnterExits();
+    ShowNameTags(1);
+    SetNameTagDrawDistance(70.0);
+    AllowInteriorWeapons(1);
+    UsePlayerPedAnims();
+    EnableStuntBonusForAll(0);
+    CreateTextdraws();
+    SollIchDirMaEtWatSagen();
+	SetWeather(43);
+    SetWorldTime(7);
+    g_iStartTime = gettime();
 }
 
 GetTickCountEx()
