@@ -37,7 +37,6 @@
 #include <a_mysql_R38>
 #include <md-sort>
 #include <unixtimetodate> 	// 2.0
-#include <floodcontrol>     // 28/06/2012
 
 native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 
@@ -90,6 +89,7 @@ native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 #define dl                              "{969696}• {F0F0F0}"
 #define NOT_AVAIL                       "{2DFF00}Info: {D2D2D2}You can´t use this command now!"
 #define nocash(%1) GameTextForPlayer(%1, "~g~~h~~h~Not enough money!", 2000, 3)
+#define MAX_PLAYER_IP                   (16)
 
 // Colors
 #define SEMI_TRANS                      (0x0A0A0A55)
@@ -154,8 +154,8 @@ enum E_PLAYER_DATA
 {
 	/* ACCOUNT */
     iAccountID, // i = Integer, s = String, b = bool, f = Float
-	sName[25],
-	sIP[16],
+	sName[MAX_PLAYER_NAME],
+	sIP[MAX_PLAYER_IP],
 	iKills,
 	iDeaths,
 	iAdminLevel,
@@ -189,7 +189,6 @@ enum E_PLAYER_DATA
 	iCoolDownCommand,
 	iCoolDownText,
 	iCoolDownDeath,
-	bool:bFloodDect,
 	bool:bIsDead,
 	bool:bLoadMap,
 	bool:bMuted,
@@ -242,6 +241,18 @@ enum
 	zedZOMBIE,
 	zedHUNTER,
 	zedBLOOMER,
+};
+
+enum E_LOG_LEVEL
+{
+	LOG_INIT,
+	LOG_EXIT,
+	LOG_ONLINE,
+	LOG_NET,
+	LOG_PLAYER,
+	LOG_WORLD,
+	LOG_FAIL,
+	LOG_SUSPECT
 };
 
 enum E_mapload_data
@@ -317,6 +328,7 @@ enum e_top_rtests
 
 new g_pSQL = -1, // g = Global, p = Pointer
     g_bAllowEnd = true,
+    gstr2[255],
 	PlayerData[MAX_PLAYERS][E_PLAYER_DATA],
 	gTeam[MAX_PLAYERS],
 	g_World = 0,
@@ -482,61 +494,37 @@ public OnPlayerRequestSpawn(playerid)
 	return 0; // Yes we block it
 }
 
-public OnPlayerFloodControl(playerid, iCount, iTimeSpan)
+public OnIncomingConnection(playerid, ip_address[], port)
 {
-    PlayerData[playerid][bFloodDect] = false;
-    if(IsPlayerNPC(playerid)) return 1;
+	Log(LOG_NET, "OnIncomingConnection(%i, %s, %i)", playerid, ip_address, port);
 
-    if(iCount >= 2 && iTimeSpan < 8000)
+	new connections = 0, buffer[16];
+	for(new i = 0; i < MAX_PLAYERS; i++)
 	{
-	    PlayerData[playerid][bFloodDect] = true;
+	    if(i == playerid || !IsPlayerConnected(i))
+	        continue;
 
-		new sz_BanCmd[30], p_IP[16];
-		GetPlayerIp(playerid, p_IP, 16);
+	    GetPlayerIp(i, buffer, sizeof(buffer)); // Not save to use __GetIP here
 
-		format(sz_BanCmd, sizeof(sz_BanCmd), "banip %s", p_IP);
-		SendRconCommand(sz_BanCmd);
+	    if(!strcmp(buffer, ip_address))
+			connections++;
+	}
 
-		Kick(playerid);
-    }
-    return 1;
+	if(connections >= 3)
+	{
+	    BlockIpAddress(ip_address, 60000);
+	    Log(LOG_NET, "%i connections detected by (%s, %i, %i), hard ipban issued for 60 seconds", connections, ip_address, port, playerid);
+	    Kick(playerid);
+	}
+	return 1;
 }
 
 public OnPlayerConnect(playerid)
 {
-	gTeam[playerid] = gNONE;
-
-	new sz_IP[16], sz_Name[25];
-
-    GetPlayerName(playerid, sz_Name, 25);
-	GetPlayerIp(playerid, sz_IP, 16);
-
-	PlayerData[playerid][sIP][0] = '\0';
-	PlayerData[playerid][sName][0] = '\0';
-
-	strcat(PlayerData[playerid][sIP], sz_IP, 16);
-	strcat(PlayerData[playerid][sName], sz_Name, 25);
-
-	if(IsPlayerNPC(playerid)) return 1;
-	if(PlayerData[playerid][bFloodDect]) return 1;
-
-	new count_t = 0;
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-	    if(!IsPlayerConnected(i) || IsPlayerNPC(i) || i == playerid) continue;
-	    if(!strcmp(__GetIP(i), sz_IP))
-	    {
-	        count_t++;
-	    }
-	}
-
-	if(count_t > 2)
-	{
-		Kick(playerid);
-		return 1;
-	}
-	
 	ResetPlayerVars(playerid);
+	
+    GetPlayerName(playerid, PlayerData[playerid][sName], MAX_PLAYER_NAME + 1);
+    GetPlayerIp(playerid, PlayerData[playerid][sIP], MAX_PLAYER_IP + 1);
 	
     if(PlayerData[playerid][VIPLabel] != Text3D:-1)
     {
@@ -545,10 +533,6 @@ public OnPlayerConnect(playerid)
     }
 	
 	PlayAudioStreamForPlayer(playerid, "http://zombiemp.com/sjgs.mp3");
-	for(new i = 0; i < 129; i++)
-	{
-		SCM(playerid, -1, " ");
-	}
 	
 	if(GlobalMain)
 	{
@@ -4196,7 +4180,6 @@ ResetPlayerVars(playerid)
 	PlayerData[playerid][iCoolDownCommand] = 0;
 	PlayerData[playerid][iCoolDownText] = 0;
 	PlayerData[playerid][iCoolDownDeath] = 0;
-	PlayerData[playerid][bFloodDect] = false;
 	PlayerData[playerid][bIsDead] = false;
 	PlayerData[playerid][bLoadMap] = false;
     PlayerData[playerid][iScore] = 0;
@@ -5794,6 +5777,24 @@ function:OnOfflineBanAttempt2(playerid, ban[], reason[])
 	    SCM(playerid, -1, ""er"Player does not exist!");
 	}
 	return 1;
+}
+
+Log(E_LOG_LEVEL:log_level, const fmat[], va_args<>)
+{
+	va_format(gstr2, sizeof(gstr2), fmat, va_start<2>);
+
+	switch(log_level)
+	{
+	    case LOG_INIT: strins(gstr2, "LogInit: ", 0, sizeof(gstr2));
+		case LOG_EXIT: strins(gstr2, "LogExit: ", 0, sizeof(gstr2));
+		case LOG_ONLINE: strins(gstr2, "LogOnline: ", 0, sizeof(gstr2));
+		case LOG_NET: strins(gstr2, "LogNet: ", 0, sizeof(gstr2));
+		case LOG_PLAYER: strins(gstr2, "LogPlayer: ", 0, sizeof(gstr2));
+		case LOG_WORLD: strins(gstr2, "LogWorld: ", 0, sizeof(gstr2));
+		case LOG_FAIL: strins(gstr2, "LogError: ", 0, sizeof(gstr2));
+		case LOG_SUSPECT: strins(gstr2, "LogSuspect: ", 0, sizeof(gstr2));
+	}
+	return print(gstr2);
 }
 
 /*1. Do not map objects away from the mainland or the map gets bugged
