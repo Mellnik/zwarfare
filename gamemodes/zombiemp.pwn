@@ -152,16 +152,13 @@ native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 
 enum E_PLAYER_DATA
 {
+	/* ACCOUNT */
+    iAccountID, // i = Integer, s = String, b = bool, f = Float
 	sName[25],
 	sIP[16],
-	iGlobalID,
 	iKills,
 	iDeaths,
 	iAdminLevel,
-	iExitType,
-	iCoolDownCommand,
-	iCoolDownText,
-	iCoolDownDeath,
 	iScore,
 	iMoney,
 	iTime,
@@ -169,7 +166,9 @@ enum E_PLAYER_DATA
 	iMedkits,
 	iCookies,
 	iLastLogged,
-	iRegDate,
+	iRegisterDate,
+	
+	/* INTERNAL */
 	iWarnings,
 	iConnectTime,
 	iChatWrote,
@@ -186,6 +185,10 @@ enum E_PLAYER_DATA
 	tMedkit,
 	iMedkitTime,
 	Text3D:VIPLabel,
+	iExitType,
+	iCoolDownCommand,
+	iCoolDownText,
+	iCoolDownDeath,
 	bool:bFloodDect,
 	bool:bIsDead,
 	bool:bLoadMap,
@@ -1710,7 +1713,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 	    }
 	    case THREAD_CREATE_ACCOUNT:
 	    {
-		    PlayerData[extraid][iRegDate] = gettime();
+		    PlayerData[extraid][iRegisterDate] = gettime();
 			PlayerData[extraid][iExitType] = EXIT_LOGGED;
 			PlayerData[extraid][iConnectTime] = gettime();
 		    PlayerData[extraid][bLogged] = true;
@@ -1737,7 +1740,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 
 			if(rows > 0)
 			{
-			    PlayerData[extraid][iGlobalID] = cache_get_row_int(0, 0, g_pSQL);
+			    PlayerData[extraid][iAccountID] = cache_get_row_int(0, 0, g_pSQL);
 			    PlayerData[extraid][iScore] = cache_get_row_int(0, 5, g_pSQL);
 			    PlayerData[extraid][iAdminLevel] = cache_get_row_int(0, 6, g_pSQL);
 			    PlayerData[extraid][iMoney] = cache_get_row_int(0, 7, g_pSQL);
@@ -1748,7 +1751,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 			    PlayerData[extraid][iMedkits] = cache_get_row_int(0, 12, g_pSQL);
                 PlayerData[extraid][iCookies] = cache_get_row_int(0, 13, g_pSQL);
                 PlayerData[extraid][iLastLogged] = cache_get_row_int(0, 14, g_pSQL);
-                PlayerData[extraid][iRegDate] = cache_get_row_int(0, 15, g_pSQL);
+                PlayerData[extraid][iRegisterDate] = cache_get_row_int(0, 15, g_pSQL);
 
 			 	SetPlayerCash(extraid, PlayerData[extraid][iMoney]);
 			 	SetPlayerScore(extraid, PlayerData[extraid][iScore]);
@@ -1760,7 +1763,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 				{
 					format(string, sizeof(string), ""server_sign" "grey"Successfully logged in. (Adminlevel %i)", PlayerData[extraid][iAdminLevel]);
 					SCM(extraid, -1, string);
-					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UnixTimeToDate(PlayerData[extraid][iLastLogged]), UnixTimeToDate(PlayerData[extraid][iRegDate]));
+					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UnixTimeToDate(PlayerData[extraid][iLastLogged]), UnixTimeToDate(PlayerData[extraid][iRegisterDate]));
   					SCM(extraid, -1, string);
 					format(string, sizeof(string), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(extraid));
 					SCM(extraid, -1, string);
@@ -1768,7 +1771,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 		   		else
 		   		{
 				   	SCM(extraid, -1, ""server_sign" "grey"Successfully logged in!");
-					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UnixTimeToDate(PlayerData[extraid][iLastLogged]), UnixTimeToDate(PlayerData[extraid][iRegDate]));
+					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UnixTimeToDate(PlayerData[extraid][iLastLogged]), UnixTimeToDate(PlayerData[extraid][iRegisterDate]));
   					SCM(extraid, -1, string);
 					format(string, sizeof(string), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(extraid));
 					SCM(extraid, -1, string);
@@ -2150,7 +2153,7 @@ YCMD:stats(playerid, params[], help)
             GetPlayingTimeFormat(player1),
 			vip,
 			PlayerData[player1][iMedkits],
-			UnixTimeToDate(PlayerData[player1][iRegDate]),
+			UnixTimeToDate(PlayerData[player1][iRegisterDate]),
 			UnixTimeToDate(PlayerData[player1][iLastLogged]));
 
 		strcat(finstring, string1);
@@ -4207,7 +4210,7 @@ ResetPlayerVars(playerid)
     PlayerData[playerid][bMuted] = false;
     PlayerData[playerid][bLogged] = false;
    	PlayerData[playerid][iLastLogged] = 0;
-	PlayerData[playerid][iRegDate] = 0;
+	PlayerData[playerid][iRegisterDate] = 0;
 	PlayerData[playerid][iConnectTime] = 0;
 	PlayerData[playerid][iChatWrote] = 0;
 	PlayerData[playerid][tickLastChat] = 0;
