@@ -621,7 +621,9 @@ public OnPlayerDisconnect(playerid, reason)
         PlayerData[playerid][VIPLabel] = Text3D:-1;
     }
 	
-	if(PlayerData[playerid][bMuted]) KillTimer(PlayerData[playerid][tMute]);
+	if(PlayerData[playerid][bMuted])
+		KillTimer(PlayerData[playerid][tMute]);
+		
     ResetPlayerVars(playerid);
 	return 1;
 }
@@ -2265,12 +2267,12 @@ YCMD:mute(playerid, params[], help)
 			{
 				return SCM(playerid, -1, ""er"This player is already muted");
 			}
-		    new string[144];
+
   			PlayerData[player][bMuted] = true;
-	    	format(string, sizeof(string), ""yellow"** "red"%s(%i) has been muted by Admin %s(%i) for %i seconds [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, time, reason);
-            SCMToAll(YELLOW, string);
-            print(string);
-			PlayerData[player][tMute] = SetTimerEx("unmute", time * 1000, false, "i", player);
+	    	format(gstr, sizeof(gstr), ""yellow"** "red"%s(%i) has been muted by Admin %s(%i) for %i seconds [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, time, reason);
+            SCMToAll(YELLOW, gstr);
+            print(gstr);
+			PlayerData[player][tMute] = SetTimerEx("player_unmute", time * 1000, false, "i", player);
 		}
 		else
 		{
@@ -2303,12 +2305,13 @@ YCMD:unmute(playerid, params[], help)
 			{
 				return SCM(playerid, -1, ""er"This player is not muted");
 			}
+			
 			PlayerData[player][bMuted] = false;
 			KillTimer(PlayerData[player][tMute]);
 			SCM(player, RED, "You have been unmuted!");
-			new string[128];
-			format(string, sizeof(string), ""yellow"** "red"%s(%i) has been unmuted by Admin %s(%i)", __GetName(player), player, __GetName(playerid), playerid);
-			SCMToAll(RED, string);
+
+			format(gstr, sizeof(gstr), ""yellow"** "red"%s(%i) has been unmuted by Admin %s(%i)", __GetName(player), player, __GetName(playerid), playerid);
+			SCMToAll(RED, gstr);
 		}
 		else
 		{
@@ -5229,7 +5232,7 @@ IsPlayerOnDesktop(playerid, afktimems = 5000)
 	return 0;
 }
 
-function:unmute(playerid)
+function:player_unmute(playerid)
 {
     PlayerData[playerid][bMuted] = false;
     PlayerData[playerid][tMute] = -1;
