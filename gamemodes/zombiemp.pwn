@@ -343,11 +343,11 @@ enum e_top_rtests
 	E_test
 };
 
-new g_pSQL = -1, // g = Global, p = Pointer
+new	Iterator:g_MapObjects<40000>,
+	g_pSQL = -1, // g = Global, p = Pointer
     g_bAllowEnd = true,
 	gstr[144],
 	gstr2[255],
-	PlayerData[MAX_PLAYERS][E_PLAYER_DATA],
 	gTeam[MAX_PLAYERS],
 	g_World = 0,
 	bool:bGlobalShutdown = false,
@@ -363,16 +363,14 @@ new g_pSQL = -1, // g = Global, p = Pointer
 	PlayerText:TXTPlayerStats[MAX_PLAYERS],
 	PlayerText:TXTMoneyOverlay[MAX_PLAYERS],
 	PlayerText:TXTPlayerHealth[MAX_PLAYERS],
-	Iterator:g_MapObjects<40000>,
-	Iterator:FlareObjects<40000>,
-	Iterator:WeaponDrops<40000>,
+	PlayerData[MAX_PLAYERS][E_PLAYER_DATA],
 	g_ShopID = -1,
 	bool:g_bMapLoaded = false,
 	g_GlobalStatus = e_Status_Inactive,
 	g_MapCount = 0,
 	g_Maps[MAX_MAPS][E_map_data],
     g_ForceMap = -1,
-	Reports[MAX_REPORTS][144],
+	g_sReports[MAX_REPORTS][144],
 	CURRENT_MAP = -1,
 	tInfestation = INVALID_TIMER,
 	iInfestaion = DEFAULT_INFESTATION_TIME,
@@ -381,7 +379,7 @@ new g_pSQL = -1, // g = Global, p = Pointer
 	g_iStartTime,
 	iOldMap;
 	
-new zedskins[7] =
+new const zedskins[7] =
 {
     134,
     135,
@@ -392,7 +390,7 @@ new zedskins[7] =
     218
 };
 
-new humanskins[10] =
+new const humanskins[10] =
 {
 	1,
 	10,
@@ -437,6 +435,7 @@ public OnGameModeInit()
 	mysql_log(LOG_ERROR | LOG_WARNING, LOG_TYPE_TEXT);
 
     MySQL_Connect();
+    MySQL_CleanUp();
     
     server_initialize();
 
@@ -446,19 +445,6 @@ public OnGameModeInit()
     Map_Reload();
     
 	AddPlayerClass(0, 1958.3783, 1343.1572, 15.3746, 269.1425, 0, 0, 0, 0, 0, 0);
-
-	MySQL_ClearLoggedPlayers();
-	
-	Command_AddAltNamed("cmds", "commands");
-	Command_AddAltNamed("stats", "statistics");
-	Command_AddAltNamed("sounds", "sound");
-	Command_AddAltNamed("adminhelp", "ahelp");
-	Command_AddAltNamed("adminhelp", "acmds");
-	Command_AddAltNamed("go", "goto");
-	Command_AddAltNamed("stopanim", "stopanims");
-	Command_AddAltNamed("mk", "medkit");
-	Command_AddAltNamed("mk", "medkits");
-
 	return 1;
 }
 
@@ -568,20 +554,6 @@ public OnPlayerDisconnect(playerid, reason)
             {
 				if(ZMP_GetPlayers() == 0) // Going inactive
 				{
-					for(new i = Iter_First(FlareObjects), prev; i != Iter_End(FlareObjects); i = Iter_Next(FlareObjects, prev))
-					{
-					    DestroyDynamicObject(i);
-
-					    Iter_SafeRemove(FlareObjects, i, prev);
-					}
-					Iter_Clear(FlareObjects);
-					for(new i = Iter_First(WeaponDrops), prev; i != Iter_End(WeaponDrops); i = Iter_Next(WeaponDrops, prev))
-					{
-					    DestroyDynamicPickup(i);
-
-					    Iter_SafeRemove(WeaponDrops, i, prev);
-					}
-					Iter_Clear(WeaponDrops);
 					Map_Unload();
 					g_GlobalStatus = e_Status_Inactive;
 					
@@ -613,20 +585,6 @@ public OnPlayerDisconnect(playerid, reason)
             {
 				if(ZMP_GetPlayers() == 0) // Going inactive
 				{
-					for(new i = Iter_First(FlareObjects), prev; i != Iter_End(FlareObjects); i = Iter_Next(FlareObjects, prev))
-					{
-					    DestroyDynamicObject(i);
-
-					    Iter_SafeRemove(FlareObjects, i, prev);
-					}
-					Iter_Clear(FlareObjects);
-					for(new i = Iter_First(WeaponDrops), prev; i != Iter_End(WeaponDrops); i = Iter_Next(WeaponDrops, prev))
-					{
-					    DestroyDynamicPickup(i);
-
-					    Iter_SafeRemove(WeaponDrops, i, prev);
-					}
-					Iter_Clear(WeaponDrops);
 					Map_Unload();
 					g_GlobalStatus = e_Status_Inactive;
 					
@@ -760,17 +718,6 @@ public OnPlayerDeath(playerid, killerid, reason)
 
 		if(gTeam[killerid] == gZOMBIE && gTeam[playerid] == gHUMAN)
 		{
-			new Float:POS[3];
-			GetPlayerPos(playerid, POS[0], POS[1], POS[2]);
-			new objectid = CreateDynamicObject(FLARE, POS[0], POS[1], POS[2], 0.0, 0.0, 0.0);
-			Iter_Add(FlareObjects, objectid);
-			
-			if(GetPlayerWeapon(playerid) != 0)
-			{
-			    objectid = CreateDynamicPickup(GetWeaponModel(GetPlayerWeapon(playerid)), 2, POS[0], POS[1], POS[2]);
-			    Iter_Add(WeaponDrops, objectid);
-			}
-			
 			if(ZMP_GetHumans() == 0)
 			{
 		        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
@@ -985,11 +932,6 @@ public OnRconCommand(cmd[])
 
 public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 {
-	if(Iter_Contains(WeaponDrops, pickupid))
-	{
-	    Iter_Remove(WeaponDrops, pickupid);
-	    DestroyDynamicPickup(pickupid);
-	}
 	return 1;
 }
 
@@ -3845,9 +3787,9 @@ YCMD:report(playerid, params[], help)
 		format(string, sizeof(string), ""YELLOW_E"Report(%02i:%02i:%02i) "RED_E"%s(%i) -> %s(%i) -> %s", time[0], time[1], time[2], __GetName(playerid), playerid, __GetName(player), player, reason);
 		for(new i = 1; i < MAX_REPORTS - 1; i++)
 		{
-			Reports[i] = Reports[i + 1];
+			g_sReports[i] = g_sReports[i + 1];
 		}
-		Reports[MAX_REPORTS - 1] = string;
+		g_sReports[MAX_REPORTS - 1] = string;
 
         AdminMSG(-1, string);
 
@@ -3868,10 +3810,10 @@ YCMD:reports(playerid, params[], help)
         new ReportCount;
 		for(new i = 1; i < MAX_REPORTS; i++)
 		{
-			if(strcmp(Reports[i], "<none>", true) != 0)
+			if(strcmp(g_sReports[i], "<none>", true) != 0)
 			{
 				ReportCount++;
-				SCM(playerid, WHITE, Reports[i]);
+				SCM(playerid, WHITE, g_sReports[i]);
 			}
 		}
 
@@ -4220,7 +4162,7 @@ MySQL_CreateAccount(playerid, password[])
 	mysql_tquery(g_pSQL, query, "OnQueryFinish", "siii", query, THREAD_CREATE_ACCOUNT, playerid, g_pSQL);
 }
 
-MySQL_ClearLoggedPlayers()
+MySQL_CleanUp()
 {
 	new query[100];
 	format(query, sizeof(query), "UPDATE `accounts` SET `logged` = 0 WHERE `logged` = 1;");
@@ -5019,22 +4961,6 @@ ZMP_EndGame()
 		}
 	}
 	
-	for(new i = Iter_First(FlareObjects), prev; i != Iter_End(FlareObjects); i = Iter_Next(FlareObjects, prev))
-	{
-	    DestroyDynamicObject(i);
-
-	    Iter_SafeRemove(FlareObjects, i, prev);
-	}
-	Iter_Clear(FlareObjects);
-
-	for(new i = Iter_First(WeaponDrops), prev; i != Iter_End(WeaponDrops); i = Iter_Next(WeaponDrops, prev))
-	{
-	    DestroyDynamicPickup(i);
-
-	    Iter_SafeRemove(WeaponDrops, i, prev);
-	}
-	Iter_Clear(WeaponDrops);
-	
 	Map_Unload();
 
 	g_GlobalStatus = e_Status_RoundEnd;
@@ -5098,20 +5024,6 @@ ZMP_BeginNewGame()
 	}
 	if(count <= 0)
 	{
-		for(new i = Iter_First(FlareObjects), prev; i != Iter_End(FlareObjects); i = Iter_Next(FlareObjects, prev))
-		{
-		    DestroyDynamicObject(i);
-
-		    Iter_SafeRemove(FlareObjects, i, prev);
-		}
-		Iter_Clear(FlareObjects);
-		for(new i = Iter_First(WeaponDrops), prev; i != Iter_End(WeaponDrops); i = Iter_Next(WeaponDrops, prev))
-		{
-		    DestroyDynamicPickup(i);
-
-		    Iter_SafeRemove(WeaponDrops, i, prev);
-		}
-		Iter_Clear(WeaponDrops);
 		Map_Unload();
 		g_GlobalStatus = e_Status_Inactive;
 	    return 1;
@@ -5552,7 +5464,7 @@ function:OnPlayerNameChangeRequest(newname[], playerid)
 	return 1;
 }
 
-GetWeaponModel(weaponid)
+stock GetWeaponModel(weaponid)
 {
     switch(weaponid)
     {
@@ -5807,7 +5719,18 @@ server_initialize()
     SetWorldTime(7);
     
     CreateTextdraws();
-    g_iStartTime = gettime();
+
+	g_iStartTime = gettime();
+    
+ 	Command_AddAltNamed("cmds", "commands");
+	Command_AddAltNamed("stats", "statistics");
+	Command_AddAltNamed("sounds", "sound");
+	Command_AddAltNamed("adminhelp", "ahelp");
+	Command_AddAltNamed("adminhelp", "acmds");
+	Command_AddAltNamed("go", "goto");
+	Command_AddAltNamed("stopanim", "stopanims");
+	Command_AddAltNamed("mk", "medkit");
+	Command_AddAltNamed("mk", "medkits");
 }
 
 GetTickCountEx()
