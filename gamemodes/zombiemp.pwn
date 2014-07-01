@@ -1,35 +1,53 @@
 /*======================================================================*\
 || #################################################################### ||
-|| # Project Zombie Multiplayer - Version 0.2a             			  # ||
+|| # Project Zombie Multiplayer - Version 1.0.0            			  # ||
 || # ---------------------------------------------------------------- # ||
-|| # Copyright ©2013 Zombie Multiplayer				  				  # ||
+|| # Copyright ©2014 Zombie Multiplayer				  				  # ||
 || # Created by Mellnik                                               # ||
 || # ---------------------------------------------------------------- # ||
 || # http://ZombieMP.com		                          			  # ||
 || #################################################################### ||
 \*======================================================================*/
-// wetter 9 zeit 12
+
+
+/* Build Dependencies
+|| SA-MP Server 0.3z-R2-2
+|| YSI Library 3.1
+|| sscanf Plugin 2.8.1
+|| Streamer Plugin v2.7.2
+|| MySQL Plugin R38
+||
+|| Build specific:
+||
+*/
+
+#pragma dynamic 8192        // Required for md-sort
+
 #define YSI_IS_SERVER
 
-#include <a_samp>   		// 0.3x R1-2
+#include <a_samp>
 #undef MAX_PLAYERS
 #define MAX_PLAYERS (200)
-#include <YSI\y_iterate>	// 16/07/2013
-#include <YSI\y_commands>   // 16/07/2013
-#include <YSI\y_master>     // 16/07/2013
-#include <YSI\y_stringhash> // 16/07/2013
-#include <sscanf2>      	// 2.8.1
-#include <streamer>     	// 2.6.1 R84
-#include <a_mysql_R31>  	// R31
-#include <md-sort>      	// 16/07/2013
+#include <YSI\y_iterate>
+#include <YSI\y_commands>
+#include <YSI\y_master>
+#include <YSI\y_stringhash>
+#include <sscanf2>
+#include <streamer>
+#include <a_mysql_R38>
+#include <md-sort>
 #include <unixtimetodate> 	// 2.0
 #include <floodcontrol>     // 28/06/2012
-#include <ZMP\base>
+
+native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 
 // -
 // - General
 // -
-#define VERSION                 		"0.2a"
+#define VERSION                         "1.0.0"
+#define VERSION_MAJOR                   1
+#define VERSION_MINOR                   0
+#define VERSION_PATCH                   0
 #define URL                     		"www.zombiemp.com"
 #define FURL                            "www.ZombieMP.com"
 #define R_ZMP_NAME              		"Zombie Multiplayer"
@@ -463,8 +481,6 @@ public OnGameModeInit()
 
     Map_Reload();
     
-    ZMP_BuildBaseMap();
-    
 	AddPlayerClass(0, 1958.3783, 1343.1572, 15.3746, 269.1425, 0, 0, 0, 0, 0, 0);
 
 	MySQL_ClearLoggedPlayers();
@@ -485,7 +501,7 @@ public OnGameModeInit()
 
 public OnGameModeExit()
 {
-	mysql_close(g_pSQL, true);
+	mysql_close(g_pSQL);
 	return 1;
 }
 
@@ -1746,7 +1762,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 			TogglePlayerSpectating(extraid, false);
 
 		    new str[144];
-			format(str, sizeof str, ""zmp" %s(%i) "grey"registered, making the server have a total of "green"%i "grey"players registered.", __GetName(extraid), extraid, mysql_insert_id(g_pSQL));
+			format(str, sizeof str, ""zmp" %s(%i) "grey"registered, making the server have a total of "green"%i "grey"players registered.", __GetName(extraid), extraid, cache_insert_id());
 			SCMToAll(-1, str);
 
 		    GameTextForPlayer(extraid, "Welcome", 3000, 4);
