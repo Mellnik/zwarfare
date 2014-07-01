@@ -336,7 +336,7 @@ new g_pSQL = -1, // g = Global, p = Pointer
 	PlayerData[MAX_PLAYERS][E_PLAYER_DATA],
 	gTeam[MAX_PLAYERS],
 	g_World = 0,
-	bool:GlobalMain = false,
+	bool:bGlobalShutdown = false,
 	bool:InfestationArrived = false,
 	PlayerHit[MAX_PLAYERS],
 	Text:ZMPLogo[3],
@@ -481,7 +481,7 @@ public OnGameModeExit()
 
 public OnPlayerRequestClass(playerid, classid)
 {
-    if(GlobalMain) return 0;
+    if(bGlobalShutdown) return 0;
     if(IsPlayerNPC(playerid)) return 1;
     
     TogglePlayerControllable(playerid, true);
@@ -537,7 +537,7 @@ public OnPlayerConnect(playerid)
 	
 	PlayAudioStreamForPlayer(playerid, "http://zombiemp.com/sjgs.mp3");
 	
-	if(GlobalMain)
+	if(bGlobalShutdown)
 	{
 	    SCM(playerid, RED, "Server is in going in maintenance mode, please try again later.");
   		KickEx(playerid);
@@ -1899,23 +1899,19 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 	return 1;
 }
 
-YCMD:main(playerid, params[], help)
+YCMD:shutdown(playerid, params[], help)
 {
 	if(PlayerData[playerid][iAdminLevel] == MAX_ADMIN_LEVEL && IsPlayerAdmin(playerid))
 	{
-	    GlobalMain = true;
-	    SetTimer("mainmode", 60000, false);
-	    for(new i = 0; i < 20; i++)
-		{
-			SCMToAll(GREEN, " ");
-		}
-		SCMToAll(RED, "The server is going down in 1 minute. Please logout before that time.");
-	    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Notice", ""white"_______________________________________________________________________\n\nThe Server is going down in 1 minute. Please logout before that time.\n_______________________________________________________________________", "OK", "");
+	    bGlobalShutdown = true;
+
+	    for(new i = 0; i < MAX_PLAYERS; i++)
+	    {
+	        SCM(i, -1, "Server restart! Restart your game. IP: samp.nefserver.net:7777");
+	    }
+
+	    SetTimer("server_init_shutdown", 3000, false);
  	}
-	else
-	{
-		SCM(playerid, -1, NO_PERM);
-	}
 	return 1;
 }
 
@@ -5756,6 +5752,26 @@ function:OnOfflineBanAttempt2(playerid, ban[], reason[])
 	{
 	    SCM(playerid, -1, ""er"Player does not exist!");
 	}
+	return 1;
+}
+
+function:server_init_shutdown()
+{
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+	    if(IsPlayerConnected(i))
+	    {
+			Kick(i);
+		}
+	}
+	SetTimer("_server_shutdown", 2000, false);
+	return 1;
+}
+
+function:_server_shutdown()
+{
+	Log(LOG_EXIT, "server_shutdown called");
+	SendRconCommand("exit");
 	return 1;
 }
 
