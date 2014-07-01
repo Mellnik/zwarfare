@@ -918,7 +918,7 @@ public OnPlayerText(playerid, text[])
 		return 0;
 	}
 	
-    new tick = GetTickCount() + 3600000;
+    new tick = GetTickCountEx();
 
 	if((PlayerData[playerid][iChatWrote] >= 2) && ((PlayerData[playerid][tickLastChat] + COOLDOWN_CHAT) >= tick))
 	{
@@ -1020,7 +1020,7 @@ public OnVehicleMod(playerid, vehicleid, componentid)
 
 public OnPlayerUpdate(playerid)
 {
-    PlayerData[playerid][tickPlayerUpdate] = GetTickCount() + 3600000;
+    PlayerData[playerid][tickPlayerUpdate] = GetTickCountEx();
     
     if(IsPlayerAvail(playerid))
     {
@@ -1065,7 +1065,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	if(Key(KEY_JUMP) && gTeam[playerid] == gZOMBIE && PlayerData[playerid][gSpecialZed] == zedHUNTER && g_GlobalStatus == e_Status_Playing)
 	{
-	    new tick = GetTickCount() + 3600000;
+	    new tick = GetTickCountEx();
 		if((PlayerData[playerid][tickLastJump] + COOLDOWN_JUMP) >= tick)
 		{
 	    	return 1;
@@ -3366,7 +3366,7 @@ YCMD:mk(playerid, params[], help)
 	    return SCM(playerid, -1, ""er"You don't own any medkits!");
 	}
 
-	new tick = GetTickCount() + 3600000;
+	new tick = GetTickCountEx();
 	if((PlayerData[playerid][tickLastMedkit] + COOLDOWN_CMD_MEDKIT) >= tick)
 	{
     	return SCM(playerid, -1, ""er"Please wait a bit before using this cmd again!");
@@ -3418,7 +3418,7 @@ YCMD:changename(playerid, params[], help)
 
 YCMD:changepass(playerid, params[], help)
 {
-    new tick = GetTickCount() + 3600000;
+    new tick = GetTickCountEx();
 	if((PlayerData[playerid][tickLastPW] + COOLDOWN_CMD_CHANGEPASS) >= tick)
 	{
     	return SCM(playerid, -1, ""er"Please wait a bit before using this cmd again!");
@@ -3837,7 +3837,7 @@ COMMAND:pornos(playerid, params[])
 
 YCMD:report(playerid, params[], help)
 {
-	new tick = GetTickCount() + 3600000;
+	new tick = GetTickCountEx();
 	if((PlayerData[playerid][tickLastReport] + COOLDOWN_CMD_REPORT) >= tick)
 	{
     	return SCM(playerid, -1, ""er"Please wait a bit before using this cmd again!");
@@ -5349,7 +5349,7 @@ function:OnMapAdded(playerid)
 
 IsPlayerOnDesktop(playerid, afktimems = 5000)
 {
-	if((PlayerData[playerid][tickPlayerUpdate] + afktimems) < (GetTickCount() + 3600000)) return 1;
+	if((PlayerData[playerid][tickPlayerUpdate] + afktimems) < (GetTickCountEx())) return 1;
 	return 0;
 }
 
@@ -5797,6 +5797,11 @@ function:_server_shutdown()
 	Log(LOG_EXIT, "server_shutdown called");
 	SendRconCommand("exit");
 	return 1;
+}
+
+GetTickCountEx()
+{
+	return (GetTickCount() + 3600000);
 }
 
 Log(E_LOG_LEVEL:log_level, const fmat[], va_args<>)
