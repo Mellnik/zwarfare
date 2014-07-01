@@ -467,7 +467,7 @@ public OnPlayerRequestClass(playerid, classid)
     
     TogglePlayerControllable(playerid, true);
     
-    SetTimerEx("CSpawn", 15, false, "ii", playerid, YHash(__GetName(playerid), false));
+    SetTimerEx("CSpawn", 15, false, "ii", playerid, YHash(__GetName(playerid)));
 	return 1;
 }
 
@@ -4246,13 +4246,13 @@ MySQL_SavePlayer(playerid)
 function:KickEx(playerid)
 {
 	PlayerData[playerid][bOpenSeason] = true;
-	SetTimerEx("Kick_Delay", 3000, false, "ii", playerid, YHash(__GetName(playerid), false));
+	SetTimerEx("Kick_Delay", 3000, false, "ii", playerid, YHash(__GetName(playerid)));
 	return 1;
 }
 
 function:Kick_Delay(playerid, namehash)
 {
-	if(YHash(__GetName(playerid), false) == namehash)
+	if(YHash(__GetName(playerid)) == namehash)
 	{
 		Kick(playerid);
 	}
@@ -4392,7 +4392,7 @@ GivePlayerCash(playerid, amount, bool:populate = true)
 		}
 		PlayerTextDrawSetString(playerid, TXTMoney[playerid], str);
         PlayerTextDrawShow(playerid, TXTMoney[playerid]);
-		SetTimerEx("HideMoneyTD", 3000, false, "ii", playerid, YHash(__GetName(playerid), false));
+		SetTimerEx("HideMoneyTD", 3000, false, "ii", playerid, YHash(__GetName(playerid)));
     }
 	return 1;
 }
@@ -4425,7 +4425,7 @@ GivePlayerScore_(playerid, amount, bool:populate = true)
 		}
 		PlayerTextDrawSetString(playerid, TXTScore[playerid], str);
         PlayerTextDrawShow(playerid, TXTScore[playerid]);
-		SetTimerEx("HideScoreTD", 3000, false, "ii", playerid, YHash(__GetName(playerid), false));
+		SetTimerEx("HideScoreTD", 3000, false, "ii", playerid, YHash(__GetName(playerid)));
     }
 	return 1;
 }
@@ -5178,7 +5178,7 @@ function:ZMP_SwitchMap()
 
 function:CSpawn(playerid, namehash)
 {
-	if(IsPlayerConnected(playerid) && YHash(__GetName(playerid), false) == namehash)
+	if(IsPlayerConnected(playerid) && YHash(__GetName(playerid)) == namehash)
 	{
     	SpawnPlayer(playerid);
 	}
@@ -5202,7 +5202,7 @@ PlaySound(playerid, id)
 
 function:HideMoneyTD(playerid, namehash)
 {
-	if(IsPlayerConnected(playerid) && YHash(__GetName(playerid), false) == namehash)
+	if(IsPlayerConnected(playerid) && YHash(__GetName(playerid)) == namehash)
 	{
     	PlayerTextDrawHide(playerid, TXTMoney[playerid]);
 	}
@@ -5210,7 +5210,7 @@ function:HideMoneyTD(playerid, namehash)
 
 function:HideScoreTD(playerid, namehash)
 {
-	if(IsPlayerConnected(playerid) && YHash(__GetName(playerid), false) == namehash)
+	if(IsPlayerConnected(playerid) && YHash(__GetName(playerid)) == namehash)
 	{
     	PlayerTextDrawHide(playerid, TXTScore[playerid]);
 	}
