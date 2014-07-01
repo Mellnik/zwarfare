@@ -195,7 +195,7 @@ enum E_PLAYER_DATA
 	bool:bLogged,
 	bool:bFirstSpawn,
 	bool:bSoundsDisabled,
-	bool:KBMarked,
+	bool:bOpenSeason,
 	bool:bExploded
 };
 
@@ -334,7 +334,6 @@ new g_pSQL = -1, // g = Global, p = Pointer
 	g_World = 0,
 	bool:GlobalMain = false,
 	bool:InfestationArrived = false,
-	LastPlayerText[MAX_PLAYERS][144],
 	PlayerHit[MAX_PLAYERS],
 	Text:ZMPLogo[3],
 	Text:TXTHealthOverlay,
@@ -858,22 +857,8 @@ public OnPlayerDeath(playerid, killerid, reason)
 
 public OnPlayerText(playerid, text[])
 {
-	PlayerData[playerid][iCoolDownText]++;
-	SetTimerEx("CoolDownText", COOLDOWN_TEXT, false, "i", playerid);
-	if(PlayerData[playerid][iCoolDownText] == 6)
-	{
-	    GameTextForPlayer(playerid, "~b~~h~Do not spam!", 2000, 3);
-	    return 0;
-	}
-	else if(PlayerData[playerid][iCoolDownText] >= 15 && PlayerData[playerid][iAdminLevel] < 5)
-	{
-	    new string[100];
-		format(string, sizeof(string), "Chat-Spam detected! %s(%i) has been kicked!", __GetName(playerid), playerid);
-		AdminMSG(RED, string);
-		PlayerData[playerid][iCoolDownText] = 0;
-		Kick(playerid);
+    if(PlayerData[playerid][bOpenSeason])
 		return 0;
-	}
 
 	if(PlayerData[playerid][iExitType] != EXIT_FIRST_SPAWNED)
 	{
@@ -886,13 +871,6 @@ public OnPlayerText(playerid, text[])
 	    SCM(playerid, RED, "You are muted! Please wait until the time is over!");
 	    return 0;
 	}
-	
-	if(!strcmp(text, LastPlayerText[playerid], true))
-	{
-	    GameTextForPlayer(playerid, "~g~Do not repeat yourself!", 2000, 5);
-	    return 0;
-	}
-	strmid(LastPlayerText[playerid], text, 0, 144, 144);
 
 	if(strfind(text, "/q", true) != -1 || strfind(text, "/ q", true) != -1)
 	{
@@ -1048,9 +1026,9 @@ public OnPlayerUpdate(playerid)
 		    {
 		        case 38, 37, 36, 35:
 		        {
-		            if(!PlayerData[playerid][KBMarked])
+		            if(!PlayerData[playerid][bOpenSeason])
 		            {
-		                PlayerData[playerid][KBMarked] = true;
+		                PlayerData[playerid][bOpenSeason] = true;
 			            ResetPlayerWeapons(playerid);
 			            new string[144];
 			            format(string, sizeof(string), ""yellow"** "red"%s(%i) has been auto-kicked by BitchOnDuty [Reason: Weapon cheats]", __GetName(playerid), playerid);
@@ -2966,11 +2944,11 @@ YCMD:kick(playerid, params[], help)
 
 		if(isnull(reason)) return SCM(playerid, YELLOW, "Usage: /kick <playerid> <reason>");
 
-		if(PlayerData[player][KBMarked]) return SCM(playerid, -1, ""er"Can't kick this player!");
+		if(PlayerData[player][bOpenSeason]) return SCM(playerid, -1, ""er"Can't kick this player!");
 
 		if(IsPlayerAvail(player) && player != playerid && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 		{
-		    PlayerData[player][KBMarked] = true;
+		    PlayerData[player][bOpenSeason] = true;
 
 		    new string[144];
 			format(string, sizeof(string), ""yellow"** "red"%s(%i) has been kicked by Admin %s(%i) [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, reason);
@@ -3063,7 +3041,7 @@ YCMD:ban(playerid, params[], help)
 	    if(player == playerid) return SCM(playerid, -1, ""er"Fail :P");
 	  	if(isnull(reason) || strlen(reason) < 2) return SCM(playerid, YELLOW, "Usage: /ban <playerid> <reason>");
 	  	if(IsPlayerNPC(player)) return SCM(playerid, -1, ""er"Invalid player!");
-        if(PlayerData[player][KBMarked]) return SCM(playerid, -1, ""er"Can't ban this player!");
+        if(PlayerData[player][bOpenSeason]) return SCM(playerid, -1, ""er"Can't ban this player!");
 
 	    if(strfind(reason, "-", false) != -1)
 		{
@@ -3098,7 +3076,7 @@ YCMD:ban(playerid, params[], help)
 	  	{
 		 	if(IsPlayerAvail(player) && player != playerid && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 			{
-                PlayerData[player][KBMarked] = true;
+                PlayerData[player][bOpenSeason] = true;
 				new string[255];
 
 	   			MySQL_CreateBan(__GetName(player), __GetName(playerid), reason);
@@ -3153,7 +3131,7 @@ YCMD:tban(playerid, params[], help)
 	    if(player == playerid) return SCM(playerid, -1, ""er"Fail :P");
 	  	if(isnull(reason) || strlen(reason) < 2) return SCM(playerid, YELLOW, "Usage: /tban <playerid> <minutes> <reason>");
 	  	if(IsPlayerNPC(player)) return SCM(playerid, -1, ""er"Invalid player!");
-        if(PlayerData[player][KBMarked]) return SCM(playerid, -1, ""er"Can't ban this player!");
+        if(PlayerData[player][bOpenSeason]) return SCM(playerid, -1, ""er"Can't ban this player!");
 
 	    if(strfind(reason, "-", false) != -1)
 		{
@@ -3188,7 +3166,7 @@ YCMD:tban(playerid, params[], help)
 	  	{
 		 	if(IsPlayerAvail(player) && player != playerid && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 			{
-			    PlayerData[player][KBMarked] = true;
+			    PlayerData[player][bOpenSeason] = true;
 				new string[255];
 
 	   			MySQL_CreateBan(__GetName(player), __GetName(playerid), reason, gettime() + (mins * 60));
@@ -4203,7 +4181,7 @@ ResetPlayerVars(playerid)
 	PlayerData[playerid][tickLastJump] = 0;
 	PlayerData[playerid][tickLastMedkit] = 0;
 	PlayerData[playerid][bSoundsDisabled] = false;
-	PlayerData[playerid][KBMarked] = false;
+	PlayerData[playerid][bOpenSeason] = false;
 	PlayerData[playerid][tLoadMap] = INVALID_TIMER;
 	PlayerData[playerid][tMedkit] = INVALID_TIMER;
 	PlayerData[playerid][tMute] = INVALID_TIMER;
@@ -4211,8 +4189,6 @@ ResetPlayerVars(playerid)
 	SetPVarInt(playerid, "LastID", -1);
 	PlayerHit[playerid] = false;
 	PlayerData[playerid][gSpecialZed] = zedZOMBIE;
-	
-	strmid(LastPlayerText[playerid], " ", 0, 144, 144);
 }
 
 __GetName(playerid, bool:escaped = false)
@@ -4348,7 +4324,7 @@ function:mainmode()
 
 function:KickEx(playerid)
 {
-	PlayerData[playerid][KBMarked] = true;
+	PlayerData[playerid][bOpenSeason] = true;
 	SetTimerEx("Kick_Delay", 3000, false, "ii", playerid, YHash(__GetName(playerid), false));
 	return 1;
 }
@@ -5482,12 +5458,12 @@ function:ProcessTick()
 		
 		if(g_GlobalStatus == e_Status_Playing)
 		{
-			if(gTeam[i] == gHUMAN && IsPlayerConnected(i) && !PlayerData[i][KBMarked])
+			if(gTeam[i] == gHUMAN && IsPlayerConnected(i) && !PlayerData[i][bOpenSeason])
 			{
-				if(IsPlayerOnDesktop(i, 10000) && bad_afk_detect() && !PlayerData[i][KBMarked])
+				if(IsPlayerOnDesktop(i, 10000) && bad_afk_detect() && !PlayerData[i][bOpenSeason])
 				{
 				    // Kick afk players
-				    PlayerData[i][KBMarked] = true;
+				    PlayerData[i][bOpenSeason] = true;
 
 				    new string[144];
 					format(string, sizeof(string), ""yellow"** "red"%s(%i) has been auto-kicked by BitchOnDuty [Reason: Critical AFK time]", __GetName(i), i);
