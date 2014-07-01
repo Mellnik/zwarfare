@@ -5795,17 +5795,18 @@ server_initialize()
 	SendRconCommand("maxnpc 0");
 	
     EnableVehicleFriendlyFire();
-    ShowPlayerMarkers(1);
+    ShowPlayerMarkers(PLAYER_MARKERS_MODE_STREAMED);
     DisableInteriorEnterExits();
     ShowNameTags(1);
-    SetNameTagDrawDistance(70.0);
+    SetNameTagDrawDistance(50.0);
     AllowInteriorWeapons(1);
     UsePlayerPedAnims();
     EnableStuntBonusForAll(0);
-    CreateTextdraws();
     SollIchDirMaEtWatSagen();
 	SetWeather(43);
     SetWorldTime(7);
+    
+    CreateTextdraws();
     g_iStartTime = gettime();
 }
 
