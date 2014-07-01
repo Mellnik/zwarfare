@@ -346,13 +346,21 @@ enum e_top_rtests
 new	Iterator:g_MapObjects<40000>,
 	g_pSQL = -1, // g = Global, p = Pointer
     g_bAllowEnd = true,
+	g_World = 0,
+	g_ShopID = -1,
+	g_GlobalStatus = e_Status_Inactive,
+	g_MapCount = 0,
+	g_Maps[MAX_MAPS][E_map_data],
+    g_ForceMap = -1,
+	g_sReports[MAX_REPORTS][144],
+	g_iStartTime,
+	bool:g_bMapLoaded = false,
+	bool:g_bPlayerHit[MAX_PLAYERS],
+	bool:bGlobalShutdown = false,
+	bool:bInfestationArrived = false,
 	gstr[144],
 	gstr2[255],
 	gTeam[MAX_PLAYERS],
-	g_World = 0,
-	bool:bGlobalShutdown = false,
-	bool:InfestationArrived = false,
-	PlayerHit[MAX_PLAYERS],
 	Text:ZMPLogo[3],
 	Text:TXTHealthOverlay,
 	Text:TXTInfestationArrival,
@@ -364,19 +372,11 @@ new	Iterator:g_MapObjects<40000>,
 	PlayerText:TXTMoneyOverlay[MAX_PLAYERS],
 	PlayerText:TXTPlayerHealth[MAX_PLAYERS],
 	PlayerData[MAX_PLAYERS][E_PLAYER_DATA],
-	g_ShopID = -1,
-	bool:g_bMapLoaded = false,
-	g_GlobalStatus = e_Status_Inactive,
-	g_MapCount = 0,
-	g_Maps[MAX_MAPS][E_map_data],
-    g_ForceMap = -1,
-	g_sReports[MAX_REPORTS][144],
 	CURRENT_MAP = -1,
 	tInfestation = INVALID_TIMER,
 	iInfestaion = DEFAULT_INFESTATION_TIME,
 	tRescue = INVALID_TIMER,
 	iRescue = DEFAULT_RESCUE_TIME,
-	g_iStartTime,
 	iOldMap;
 	
 new const zedskins[7] =
@@ -564,7 +564,7 @@ public OnPlayerDisconnect(playerid, reason)
 	            {
 			        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
 
-			        if(!InfestationArrived) GameTextForAll("~w~Zombies win!", 10000, 5);
+			        if(!bInfestationArrived) GameTextForAll("~w~Zombies win!", 10000, 5);
 
 					ZMP_EndGame();
 
@@ -595,7 +595,7 @@ public OnPlayerDisconnect(playerid, reason)
 	            {
 			        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
 
-			        if(!InfestationArrived) GameTextForAll("~w~Humans win!", 10000, 5);
+			        if(!bInfestationArrived) GameTextForAll("~w~Humans win!", 10000, 5);
 
 					ZMP_EndGame();
 
@@ -1778,9 +1778,9 @@ public OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 {
 	if(damagedid == INVALID_PLAYER_ID || playerid == INVALID_PLAYER_ID) return 1;
-    if(!PlayerHit[damagedid])
+    if(!g_bPlayerHit[damagedid])
     {
-	    PlayerHit[damagedid] = true;
+	    g_bPlayerHit[damagedid] = true;
 	    SetPlayerAttachedObject(damagedid, 8, 1240, 2, 0.44099, 0.0000, 0.02300, -1.79999, 84.09998, 0.00000, 1.00000, 1.00000, 1.00000);
 	    SetTimerEx("remove_health_obj", 800, false, "i", damagedid);
 	}
@@ -4108,7 +4108,7 @@ ResetPlayerVars(playerid)
 	PlayerData[playerid][tMute] = INVALID_TIMER;
 	PlayerData[playerid][iTimesHit] = 0;
 	SetPVarInt(playerid, "LastID", -1);
-	PlayerHit[playerid] = false;
+	g_bPlayerHit[playerid] = false;
 	PlayerData[playerid][gSpecialZed] = zedZOMBIE;
 }
 
@@ -4554,7 +4554,7 @@ function:remove_health_obj(damagedid)
 	if(IsPlayerConnected(damagedid))
 	{
 	    RemovePlayerAttachedObject(damagedid, 8);
-	    PlayerHit[damagedid] = false;
+	    g_bPlayerHit[damagedid] = false;
 	}
 	return 1;
 }
@@ -4971,7 +4971,7 @@ ZMP_EndGame()
 ZMP_BeginNewGame()
 {
     g_GlobalStatus = e_Status_Prepare;
-    InfestationArrived = false;
+    bInfestationArrived = false;
     new bool:found = false;
     
     do
@@ -5066,7 +5066,7 @@ function:ZMP_InfestationCountDown()
 		}
 		else
 		{
-	        InfestationArrived = true;
+	        bInfestationArrived = true;
             g_GlobalStatus = e_Status_Playing;
             
 	        TextDrawHideForAll(TXTInfestationArrival);
@@ -5138,7 +5138,7 @@ ZMP_RandomInfection()
 	{
         TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
 
-        if(!InfestationArrived) GameTextForAll("~w~Humans win!", 10000, 5);
+        if(!bInfestationArrived) GameTextForAll("~w~Humans win!", 10000, 5);
 
 		ZMP_EndGame();
 
