@@ -23,6 +23,7 @@
 
 #pragma dynamic 8192        // Required for md-sort
 
+#define IS_RELEASE_BUILD (true)
 #define YSI_IS_SERVER
 
 #include <a_samp>
@@ -55,6 +56,17 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define R_ZMP_SIGN              		"ZMP"
 #define zmp                             "{FFFFFF}[{969696}ZombieMP{FFFFFF}]"
 #define server_sign                     "{FFFFFF}[{FF005F}SERVER{FFFFFF}]"
+#define SQL_HOST   						"127.0.0.1"
+#define SQL_PORT                        (3306)
+#if IS_RELEASE_BUILD == true
+#define SQL_USER   						"zmpserver"
+#define SQL_PASS   						"pass"
+#define SQL_DATA   						"zmpserver"
+#else
+#define SQL_USER   						"zmpdev"
+#define SQL_PASS   						"pass2"
+#define SQL_DATA                        "zmpdev"
+#endif
 
 // Enviroment
 #define TEAM_Z                          (10)
@@ -412,21 +424,17 @@ main()
 
 public OnGameModeInit()
 {
-    print("====================="R_ZMP_NAME" "VERSION"=====================");
-    
-    mysql_log(LOG_ERROR | LOG_WARNING);
-    
-	g_pSQL = mysql_connect("127.0.0.1", "zmp", "zombiemp", "Uh81Ki4&ss2tZz23q8rfh", 3306, true);
+	Log(LOG_INIT, "ZMP Server Copyright (c)2013 - 2014 "R_ZMP_NAME"");
+    Log(LOG_INIT, "Version: "VERSION"");
+	#if IS_RELEASE_BUILD == true
+	Log(LOG_INIT, "Build Configuration: Release");
+	#else
+	Log(LOG_INIT, "Build Configuration: Development");
+	#endif
+	Log(LOG_INIT, "MySQL: Logging: LOG_ERROR | LOG_WARNING");
+	mysql_log(LOG_ERROR | LOG_WARNING, LOG_TYPE_TEXT);
 
-	if(mysql_errno(g_pSQL) != 0)
-	{
-	    print("#Failed to connect to MySQL db");
-	    print("====================="R_ZMP_NAME" "VERSION"=====================");
-		SendRconCommand("exit");
-		return 1;
-	}
-    
-    print("#Connected to MySQL db");
+    MySQL_Connect();
     
     new string[255];
 	format(string, sizeof(string), "hostname %s");
@@ -451,7 +459,7 @@ public OnGameModeInit()
     StartTime = gettime();
     
     SetTimer("ProcessTick", 1000, true);
-    SetTimer("RandomSvrMsg", SERVERMSGS_TIME, true);
+    SetTimer("server_random_broadcast", SERVERMSGS_TIME, true);
 
     Map_Reload();
     
@@ -4205,6 +4213,22 @@ __GetIP(playerid)
     return ip;
 }
 
+MySQL_Connect()
+{
+    g_pSQL = mysql_connect(SQL_HOST, SQL_USER, SQL_DATA, SQL_PASS, SQL_PORT, true);
+
+    if(mysql_errno(g_pSQL) == 0)
+    {
+		Log(LOG_INIT, "MySQL: Connected @ "SQL_HOST":%i", SQL_PORT);
+    }
+    else
+    {
+        Log(LOG_INIT, "MySQL: Failed to connect. Error: ", mysql_errno(g_pSQL));
+
+        SendRconCommand("exit");
+    }
+}
+
 MySQL_CreateAccount(playerid, password[])
 {
 	PlayerData[playerid][iLastLogged] = gettime();
@@ -5667,19 +5691,19 @@ function:p_medkit(playerid)
 	return 1;
 }
 
-function:RandomSvrMsg()
+function:server_random_broadcast()
 {
     SCMToAll(WHITE, ServerMSGS[random(sizeof(ServerMSGS))]);
 	return 1;
 }
 
-__GetPlayerID(const PlayerName[])
+__GetPlayerID(const playername[])
 {
 	for(new i = 0; i < MAX_PLAYERS; i++)
     {
-    	if(IsPlayerConnected(i) && !IsPlayerNPC(i))
+    	if(IsPlayerConnected(i))
       	{
-        	if(!strcmp(PlayerName, __GetName(i), true))
+        	if(!strcmp(playername, __GetName(i), true))
         	{
           		return i;
         	}
