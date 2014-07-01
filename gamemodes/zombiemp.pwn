@@ -450,14 +450,20 @@ public OnGameModeInit()
 
 public OnGameModeExit()
 {
+	mysql_stat(gstr2, g_pSQL, sizeof(gstr2));
+	Log(LOG_EXIT, "MySQL: %s", gstr2);
+
+    Log(LOG_EXIT, "MySQL: Closing");
 	mysql_close(g_pSQL);
+	
+	Log(LOG_EXIT, "Now exiting.");
 	return 1;
 }
 
 public OnPlayerRequestClass(playerid, classid)
 {
-    if(bGlobalShutdown) return 0;
-    if(IsPlayerNPC(playerid)) return 1;
+    if(bGlobalShutdown)
+		return 0;
     
     TogglePlayerControllable(playerid, true);
     
@@ -467,8 +473,6 @@ public OnPlayerRequestClass(playerid, classid)
 
 public OnPlayerRequestSpawn(playerid)
 {
-    if(IsPlayerNPC(playerid)) return 1;
-
 	return 0; // Yes we block it
 }
 
@@ -534,8 +538,6 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason)
 {
-    if(IsPlayerNPC(playerid)) return 1;
-    
     PlayerData[playerid][bLoadMap] = false;
     
    	if(PlayerData[playerid][iExitType] == EXIT_FIRST_SPAWNED && PlayerData[playerid][bLogged])
@@ -2961,7 +2963,6 @@ YCMD:ban(playerid, params[], help)
 		if(strlen(reason) > 128) return SCM(playerid, -1, ""er"Keep the reason below 128");
 	    if(player == playerid) return SCM(playerid, -1, ""er"Fail :P");
 	  	if(isnull(reason) || strlen(reason) < 2) return SCM(playerid, YELLOW, "Usage: /ban <playerid> <reason>");
-	  	if(IsPlayerNPC(player)) return SCM(playerid, -1, ""er"Invalid player!");
         if(PlayerData[player][bOpenSeason]) return SCM(playerid, -1, ""er"Can't ban this player!");
 
 	    if(strfind(reason, "-", false) != -1)
@@ -3051,7 +3052,6 @@ YCMD:tban(playerid, params[], help)
 		if(strlen(reason) > 128) return SCM(playerid, -1, ""er"Keep the reason below 128");
 	    if(player == playerid) return SCM(playerid, -1, ""er"Fail :P");
 	  	if(isnull(reason) || strlen(reason) < 2) return SCM(playerid, YELLOW, "Usage: /tban <playerid> <minutes> <reason>");
-	  	if(IsPlayerNPC(player)) return SCM(playerid, -1, ""er"Invalid player!");
         if(PlayerData[player][bOpenSeason]) return SCM(playerid, -1, ""er"Can't ban this player!");
 
 	    if(strfind(reason, "-", false) != -1)
@@ -4042,7 +4042,7 @@ function:CoolDownDeath(playerid)
 
 function:IsPlayerAvail(playerid)
 {
-	if(IsPlayerConnected(playerid) && playerid != INVALID_PLAYER_ID && PlayerData[playerid][iExitType] == EXIT_FIRST_SPAWNED && !IsPlayerNPC(playerid))
+	if(IsPlayerConnected(playerid) && playerid != INVALID_PLAYER_ID && PlayerData[playerid][iExitType] == EXIT_FIRST_SPAWNED)
 	{
 	    return 1;
 	}
@@ -4241,22 +4241,6 @@ MySQL_SavePlayer(playerid)
     strcat(finquery, tmp);
 
     mysql_tquery(g_pSQL, finquery, "", "");
-}
-
-function:mainmode()
-{
-    SCMToAll(-1, ""server_sign" "grey"Maintenance initiated...");
-
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-		if(IsPlayerNPC(i)) continue;
-	    if(IsPlayerConnected(i))
-	    {
-			SCM(i, -1, "Your account has been saved and you have been disconnected");
-			KickEx(i);
-		}
-	}
-	return 1;
 }
 
 function:KickEx(playerid)
