@@ -40,6 +40,10 @@
 
 native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 
+// Protoypes
+Float:GetDistance3D(Float:x1, Float:y1, Float:z1, Float:x2, Float:y2, Float:z2);
+Float:GetDistanceBetweenPlayers(playerid1, playerid2);
+
 // General
 #define VERSION                         "1.0.0"
 #define VERSION_MAJOR                   1
@@ -1049,7 +1053,6 @@ public OnPlayerInteriorChange(playerid, newinteriorid, oldinteriorid)
 	return 1;
 }
 
-Float:GetDistanceBetweenPlayers(p1,p2);
 public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 {
 	if(Key(KEY_JUMP) && gTeam[playerid] == gZOMBIE && PlayerData[playerid][gSpecialZed] == zedHUNTER && g_GlobalStatus == e_Status_Playing)
@@ -1810,21 +1813,6 @@ public OnPlayerCommandPerformed(playerid, cmdtext[], success)
     fwrite(lFile, logData);
     fclose(lFile);
 
-	PlayerData[playerid][iCoolDownCommand]++;
-	SetTimerEx("CoolDownCommand", COOLDOWN_CMD, false, "i", playerid);
-	if(PlayerData[playerid][iCoolDownCommand] == 8)
-	{
-	    return GameTextForPlayer(playerid, "~b~~h~stop command spam!", 2000, 3);
-	}
-	else if(PlayerData[playerid][iCoolDownCommand] >= 12 && PlayerData[playerid][iAdminLevel] < 5)
-	{
-	    new string[100];
-		format(string, sizeof(string), "Command-Spam detected! %s(%i) has been kicked!", __GetName(playerid), playerid);
-		AdminMSG(RED, string);
-		PlayerData[playerid][iCoolDownCommand] = 0;
-		return Kick(playerid);
-	}
-
 	if(!success)
 	{
 	    SCM(playerid, -1, ""er" This command does not exist! Try /cmds and /help");
@@ -1833,7 +1821,30 @@ public OnPlayerCommandPerformed(playerid, cmdtext[], success)
 	return 1;
 }
 
-public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid)
+public OnPlayerEnterDynamicCP(playerid, checkpointid)
+{
+    if(GetPlayerState(playerid) == PLAYER_STATE_SPECTATING) return 1;
+    
+    if(checkpointid == g_ShopID && gTeam[playerid] == gHUMAN && g_GlobalStatus == e_Status_Prepare)
+    {
+        ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zmp" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900 Medkit", "Select", "Cancel");
+    }
+	return 1;
+}
+
+/* AUTHORITATIVE SERVER */
+public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
+{
+	return 1;
+}
+
+public OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
+{
+    ZMP_UpdatePlayerHealthTD(playerid);
+	return 1;
+}
+
+public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 {
 	if(damagedid == INVALID_PLAYER_ID || playerid == INVALID_PLAYER_ID) return 1;
     if(!PlayerHit[damagedid])
@@ -1885,23 +1896,6 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid)
 		    PlayerData[damagedid][iTimesHit]++;
 		}
 	}
-	return 1;
-}
-
-public OnPlayerEnterDynamicCP(playerid, checkpointid)
-{
-    if(GetPlayerState(playerid) == PLAYER_STATE_SPECTATING) return 1;
-    
-    if(checkpointid == g_ShopID && gTeam[playerid] == gHUMAN && g_GlobalStatus == e_Status_Prepare)
-    {
-        ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zmp" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900 Medkit", "Select", "Cancel");
-    }
-	return 1;
-}
-
-public OnPlayerTakeDamage(playerid, issuerid, Float: amount, weaponid)
-{
-    ZMP_UpdatePlayerHealthTD(playerid);
 	return 1;
 }
 
@@ -5575,15 +5569,25 @@ GetWeaponModel(weaponid)
     return 0;
 }
 
-Float:GetDistanceBetweenPlayers(p1,p2)
+stock Float:GetDistance3D(Float:x1, Float:y1, Float:z1, Float:x2, Float:y2, Float:z2)
 {
-    new Float:x1,Float:y1,Float:z1,Float:x2,Float:y2,Float:z2;
-    if(!IsPlayerConnected(p1) || !IsPlayerConnected(p2)) {
-        return -1.00;
-    }
-    GetPlayerPos(p1,x1,y1,z1);
-    GetPlayerPos(p2,x2,y2,z2);
-    return floatsqroot(floatpower(floatabs(floatsub(x2,x1)),2)+floatpower(floatabs(floatsub(y2,y1)),2)+floatpower(floatabs(floatsub(z2,z1)),2));
+	return VectorSize(x1 - x2, y1 - y2, z1 - z2);
+}
+
+Float:GetDistanceBetweenPlayers(playerid1, playerid2)
+{
+	if(playerid1 == INVALID_PLAYER_ID || playerid2 == INVALID_PLAYER_ID)
+	    return -1.00;
+	    
+	if(!IsPlayerConnected(playerid1) || !IsPlayerConnected(playerid2))
+	    return -1.00;
+	    
+	new Float:pPOS[2][3];
+
+	GetPlayerPos(playerid1, pPOS[0][0], pPOS[0][1], pPOS[0][2]);
+	GetPlayerPos(playerid2, pPOS[1][0], pPOS[1][1], pPOS[1][2]);
+	
+	return VectorSize(pPOS[0][0] - pPOS[1][0], pPOS[0][1] - pPOS[1][1], pPOS[0][2] - pPOS[1][2]);
 }
 
 LoadMap(playerid)
