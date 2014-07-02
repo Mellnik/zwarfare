@@ -16,6 +16,7 @@
 || sscanf Plugin 2.8.1
 || Streamer Plugin v2.7.2
 || MySQL Plugin R38
+|| hash-plugin 0.0.3
 ||
 || Build specific:
 ||
@@ -36,6 +37,7 @@
 #include <sscanf2>
 #include <streamer>
 #include <a_mysql_R38>
+#include <hash>
 #include <md-sort>
 #include <unixtimetodate> 	// 2.0
 
@@ -354,12 +356,12 @@ new	Iterator:g_MapObjects<40000>,
 	g_sReports[MAX_REPORTS][144],
 	g_iStartTime,
 	bool:g_bMapLoaded = false,
-	bool:g_bPlayerHit[MAX_PLAYERS],
+	bool:g_bPlayerHit[MAX_PLAYERS] = {false, ...},
 	bool:bGlobalShutdown = false,
 	bool:bInfestationArrived = false,
 	gstr[144],
 	gstr2[255],
-	gTeam[MAX_PLAYERS],
+	gTeam[MAX_PLAYERS] = {gNONE, ...},
 	Text:ZMPLogo[3],
 	Text:TXTHealthOverlay,
 	Text:TXTInfestationArrival,
