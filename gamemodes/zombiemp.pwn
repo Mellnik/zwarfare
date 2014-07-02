@@ -737,8 +737,8 @@ public OnPlayerDeath(playerid, killerid, reason)
 				PlayInfectSound();
 			}
 			
-            GivePlayerCash(killerid, 1700);
-            GivePlayerScore_(killerid, 4);
+            GivePlayerMoneyEx(killerid, 1700);
+            GivePlayerScoreEx(killerid, 4);
 		}
 		else if(gTeam[playerid] == gZOMBIE && gTeam[killerid] == gHUMAN)
 		{
@@ -746,18 +746,18 @@ public OnPlayerDeath(playerid, killerid, reason)
 		    {
 		        case zedZOMBIE:
 		        {
-		            GivePlayerCash(killerid, 1500);
-		            GivePlayerScore_(killerid, 3);
+		            GivePlayerMoneyEx(killerid, 1500);
+		            GivePlayerScoreEx(killerid, 3);
 		        }
 		        case zedHUNTER:
 		        {
-		            GivePlayerCash(killerid, 2000);
-		            GivePlayerScore_(killerid, 5);
+		            GivePlayerMoneyEx(killerid, 2000);
+		            GivePlayerScoreEx(killerid, 5);
 		        }
 		        case zedBLOOMER:
 		        {
-		            GivePlayerCash(killerid, 2000);
-		            GivePlayerScore_(killerid, 5);
+		            GivePlayerMoneyEx(killerid, 2000);
+		            GivePlayerScoreEx(killerid, 5);
 		        }
 		    }
 		}
@@ -1000,8 +1000,8 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 					SCM(i, -1, ""er"You have been infected! Now infect humans by punching them!");
 					ZMP_SetPlayerZombie(i, false);
 
-			        GivePlayerCash(playerid, 2000);
-			        GivePlayerScore_(playerid, 5);
+			        GivePlayerMoneyEx(playerid, 2000);
+			        GivePlayerScoreEx(playerid, 5);
 			        PlayerData[playerid][iKills]++;
                     PlayInfectSound();
                     
@@ -1041,8 +1041,8 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 						SCM(victimid, -1, ""er"You have been infected! Now infect humans by punching them!");
 						ZMP_SetPlayerZombie(victimid, false);
 
-				        GivePlayerCash(playerid, 2000);
-				        GivePlayerScore_(playerid, 5);
+				        GivePlayerMoneyEx(playerid, 2000);
+				        GivePlayerScoreEx(playerid, 5);
 
 	                    PlayInfectSound();
 						if(ZMP_GetHumans() == 0)
@@ -1214,9 +1214,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					}
 					case 3:
 					{
-			            if(GetPlayerCash(playerid) < 900) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 900) return nocash(playerid);
 			            PlayerData[playerid][iMedkits]++;
-			            GivePlayerCash(playerid, -900);
+			            GivePlayerMoneyEx(playerid, -900);
 			            SCM(playerid, -1, ""er"Use /mk to consume a medkit!");
 					}
 				}
@@ -1228,63 +1228,63 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			    {
 			        case 0: // Chainsaw
 			        {
-			            if(GetPlayerCash(playerid) < 500) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 500) return nocash(playerid);
 			            GivePlayerWeapon(playerid, 9, 1);
-			            GivePlayerCash(playerid, -500);
+			            GivePlayerMoneyEx(playerid, -500);
 			        }
 			        case 1: // Molotov Cocktail
 			        {
-			            if(GetPlayerCash(playerid) < 800) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 800) return nocash(playerid);
 			            GivePlayerWeapon(playerid, 18, 3);
-			            GivePlayerCash(playerid, -800);
+			            GivePlayerMoneyEx(playerid, -800);
 			        }
 			        case 2: // Desert Eaogle
 			        {
-			            if(GetPlayerCash(playerid) < 400) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 400) return nocash(playerid);
 			            GivePlayerWeapon(playerid, 24, 50);
-			            GivePlayerCash(playerid, -400);
+			            GivePlayerMoneyEx(playerid, -400);
 			        }
 			        case 3: // Shotgun
 			        {
-			            if(GetPlayerCash(playerid) < 320) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 320) return nocash(playerid);
 			            GivePlayerWeapon(playerid, 25, 45);
-			            GivePlayerCash(playerid, -320);
+			            GivePlayerMoneyEx(playerid, -320);
 			        }
 			        case 4: // Combat Shotgun
 			        {
-			            if(GetPlayerCash(playerid) < 550) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 550) return nocash(playerid);
 			            GivePlayerWeapon(playerid, 27, 65);
-			            GivePlayerCash(playerid, -550);
+			            GivePlayerMoneyEx(playerid, -550);
 			        }
 			        case 5: // MP5
 			        {
-			            if(GetPlayerCash(playerid) < 500) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 500) return nocash(playerid);
 			            GivePlayerWeapon(playerid, 29, 150);
-			            GivePlayerCash(playerid, -500);
+			            GivePlayerMoneyEx(playerid, -500);
 			        }
 			        case 6: // Ak-47
 			        {
-			            if(GetPlayerCash(playerid) < 600) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 600) return nocash(playerid);
 			            GivePlayerWeapon(playerid, 30, 170);
-			            GivePlayerCash(playerid, -600);
+			            GivePlayerMoneyEx(playerid, -600);
 			        }
 			        case 7: // M4
 			        {
-			            if(GetPlayerCash(playerid) < 620) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 620) return nocash(playerid);
 			            GivePlayerWeapon(playerid, 31, 170);
-			            GivePlayerCash(playerid, -620);
+			            GivePlayerMoneyEx(playerid, -620);
 			        }
 			        case 8: // TEC-9
 			        {
-			            if(GetPlayerCash(playerid) < 500) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 500) return nocash(playerid);
 			            GivePlayerWeapon(playerid, 32, 150);
-			            GivePlayerCash(playerid, -500);
+			            GivePlayerMoneyEx(playerid, -500);
 			        }
 			        case 9: // Sniper
 			        {
-			            if(GetPlayerCash(playerid) < 700) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 700) return nocash(playerid);
 			            GivePlayerWeapon(playerid, 34, 30);
-			            GivePlayerCash(playerid, -700);
+			            GivePlayerMoneyEx(playerid, -700);
 			        }
 			    }
 			    ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zmp" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900\tMedkit", "Select", "Cancel");
@@ -1296,81 +1296,81 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			    {
 			        case 0: // Andre
 			        {
-			            if(GetPlayerCash(playerid) < 50) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 50) return nocash(playerid);
 			            SetPlayerSkin(playerid, 3);
-			            GivePlayerCash(playerid, -50);
+			            GivePlayerMoneyEx(playerid, -50);
 			        }
 			        case 1: // Barry "Big Bear" Thorne [Big]
 			        {
-			            if(GetPlayerCash(playerid) < 75) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 75) return nocash(playerid);
 			            SetPlayerSkin(playerid, 5);
-						GivePlayerCash(playerid, -75);
+						GivePlayerMoneyEx(playerid, -75);
 			        }
 			        case 2: // Truth
 			        {
-			            if(GetPlayerCash(playerid) < 65) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 65) return nocash(playerid);
 			            SetPlayerSkin(playerid, 1);
-						GivePlayerCash(playerid, -65);
+						GivePlayerMoneyEx(playerid, -65);
 			        }
 			        case 3: // Unemployed
 			        {
-			            if(GetPlayerCash(playerid) < 30) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 30) return nocash(playerid);
 			            SetPlayerSkin(playerid, 78);
-						GivePlayerCash(playerid, -30);
+						GivePlayerMoneyEx(playerid, -30);
 			        }
 			        case 4: // Backpacker
 			        {
-			            if(GetPlayerCash(playerid) < 100) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 100) return nocash(playerid);
 			            SetPlayerSkin(playerid, 26);
-						GivePlayerCash(playerid, -100);
+						GivePlayerMoneyEx(playerid, -100);
 			        }
 			        case 5: // Mafia Boss
 			        {
-			            if(GetPlayerCash(playerid) < 80) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 80) return nocash(playerid);
 			            SetPlayerSkin(playerid, 112);
-						GivePlayerCash(playerid, -80);
+						GivePlayerMoneyEx(playerid, -80);
 			        }
 			        case 6: // Johhny Sindacco
 			        {
-			            if(GetPlayerCash(playerid) < 50) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 50) return nocash(playerid);
 			            SetPlayerSkin(playerid, 119);
-						GivePlayerCash(playerid, -50);
+						GivePlayerMoneyEx(playerid, -50);
 			        }
 			        case 7: // Farm Inhabitant
 			        {
-			            if(GetPlayerCash(playerid) < 75) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 75) return nocash(playerid);
 			            SetPlayerSkin(playerid, 128);
-						GivePlayerCash(playerid, -75);
+						GivePlayerMoneyEx(playerid, -75);
 			        }
 			        case 8: // Big Smoke Armored
 			        {
-			            if(GetPlayerCash(playerid) < 100) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 100) return nocash(playerid);
 			            SetPlayerSkin(playerid, 149);
-						GivePlayerCash(playerid, -100);
+						GivePlayerMoneyEx(playerid, -100);
 			        }
 			        case 9: // Black MIB agent
 			        {
-			            if(GetPlayerCash(playerid) < 90) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 90) return nocash(playerid);
 			            SetPlayerSkin(playerid, 166);
-						GivePlayerCash(playerid, -90);
+						GivePlayerMoneyEx(playerid, -90);
 			        }
 			        case 10: // Jeffery "OG Loc" Martin/Cross
 			        {
-			            if(GetPlayerCash(playerid) < 150) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 150) return nocash(playerid);
 			            SetPlayerSkin(playerid, 293);
-						GivePlayerCash(playerid, -150);
+						GivePlayerMoneyEx(playerid, -150);
 			        }
 			        case 11: // Claude Speed
 			        {
-			            if(GetPlayerCash(playerid) < 200) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 200) return nocash(playerid);
 			            SetPlayerSkin(playerid, 299);
-						GivePlayerCash(playerid, -200);
+						GivePlayerMoneyEx(playerid, -200);
 			        }
 			        case 12: // Michael Toreno
 			        {
-			            if(GetPlayerCash(playerid) < 190) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 190) return nocash(playerid);
 			            SetPlayerSkin(playerid, 295);
-						GivePlayerCash(playerid, -190);
+						GivePlayerMoneyEx(playerid, -190);
 			        }
 			    }
 			    ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zmp" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900 Medkit", "Select", "Cancel");
@@ -1387,9 +1387,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			        }
 			        case 1:
 			        {
-			            if(GetPlayerCash(playerid) < 300) return nocash(playerid);
+			            if(GetPlayerMoneyEx(playerid) < 300) return nocash(playerid);
 			            GivePlayerWeapon(playerid, 26, 46);
-						GivePlayerCash(playerid, -300);
+						GivePlayerMoneyEx(playerid, -300);
 			        }
 			        case 2:
 			        {
@@ -1577,8 +1577,8 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 			SCM(damagedid, -1, ""er"You have been infected! Now infect humans by punching them!");
 			ZMP_SetPlayerZombie(damagedid, false);
 
-	        GivePlayerCash(playerid, 2000);
-	        GivePlayerScore_(playerid, 5);
+	        GivePlayerMoneyEx(playerid, 2000);
+	        GivePlayerScoreEx(playerid, 5);
 	        PlayerData[playerid][iKills]++;
 
 	        PlayInfectSound();
@@ -1806,7 +1806,7 @@ YCMD:stats(playerid, params[], help)
         	PlayerData[player1][iDeaths],
         	Float:PlayerData[player1][iKills] / Float:pDeaths,
         	PlayerData[player1][iScore],
-        	ToCurrency(GetPlayerCash(player1)));
+        	ToCurrency(GetPlayerMoneyEx(player1)));
 
         format(string2, sizeof(string2), "Playing Time: %s\nVIP: %s\nMedkits: %i\nRegister Date: %s\nLast log in: %s",
             GetPlayingTimeFormat(player1),
@@ -2333,7 +2333,7 @@ YCMD:setcash(playerid, params[], help)
 				format(string, sizeof(string), "You have set your cash to $%s.", ToCurrency(amount));
 				SCM(playerid, YELLOW, string);
 			}
-			SetPlayerCash(player, amount);
+			SetPlayerMoneyEx(player, amount);
 		}
 		else
 		{
@@ -2380,7 +2380,7 @@ YCMD:setscore(playerid, params[], help)
 				format(string, sizeof(string), "You have set your score to %i.", amount);
 				SCM(playerid, YELLOW, string);
 			}
-			SetPlayerScore_(player, amount);
+			SetPlayerScoreEx(player, amount);
 		}
 	 	else
 	 	{
@@ -3101,7 +3101,7 @@ YCMD:unstuck(playerid, params[], help)
 YCMD:changename(playerid, params[], help)
 {
     new string[255];
-	if(GetPlayerCash(playerid) < 50000)
+	if(GetPlayerMoneyEx(playerid) < 50000)
 	{
 		format(string, sizeof(string), ""red"Namechange possible"white"\nCurrent Name: %s\nYou need $50,000 for a namechange!", __GetName(playerid));
 		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Namechange", string, "OK", "");
@@ -3443,7 +3443,7 @@ YCMD:score(playerid, params[], help)
 	    if(IsPlayerAvail(i))
 	    {
 	        score[i][E_playerid] = i;
-	        score[i][E_pscore] = GetPlayerScore_(i);
+	        score[i][E_pscore] = GetPlayerScoreEx(i);
 	    }
 	    else
 	    {
@@ -3501,7 +3501,7 @@ COMMAND:pay(playerid, params[])
 	
 	if(IsPlayerAvail(player))
 	{
-    	if(GetPlayerCash(playerid) < cash)
+    	if(GetPlayerMoneyEx(playerid) < cash)
 		{
 			return SCM(playerid, RED, "You don't have that much!");
 		}
@@ -3514,8 +3514,8 @@ COMMAND:pay(playerid, params[])
 			return SCM(playerid, RED, "You can't pay yourself");
 		}
 		new string[100];
-      	GivePlayerCash(playerid, -cash);
-      	GivePlayerCash(player, cash);
+      	GivePlayerMoneyEx(playerid, -cash);
+      	GivePlayerMoneyEx(player, cash);
         format(string, sizeof(string), "Info: %s paid you $%s", __GetName(playerid), ToCurrency(cash));
         SCM(player, YELLOW, string);
         SCM(playerid, YELLOW, "Successfully paid the money!");
@@ -3891,30 +3891,6 @@ ResetPlayerVars(playerid)
         DestroyDynamic3DTextLabel(PlayerData[playerid][txVIPLabel]);
         PlayerData[playerid][txVIPLabel] = Text3D:-1;
     }
-}
-
-__GetName(playerid)
-{
-    new name[MAX_PLAYER_NAME + 1];
-    
-	strcat(name, PlayerData[playerid][sName], MAX_PLAYER_NAME + 1);
-    return name;
-}
-
-__GetIP(playerid)
-{
-	new ip[MAX_PLAYER_IP + 1];
-	
-	strcat(ip, PlayerData[playerid][sIP], MAX_PLAYER_IP + 1);
-    return ip;
-}
-
-__GetSerial(playerid)
-{
-	new tmp[64];
-	
-    gpci(playerid, tmp, sizeof(tmp));
-    return tmp;
 }
 
 MySQL_Connect()
@@ -4430,7 +4406,7 @@ function:OnPlayerNameChangeRequest(newname[], playerid)
 	}
 	else
 	{
-		if(GetPlayerCash(playerid) < 50000) return 1;
+		if(GetPlayerMoneyEx(playerid) < 50000) return 1;
 
 	    new oldname[MAX_PLAYER_NAME+1], query[255];
 	    strmid(oldname, __GetName(playerid), 0, sizeof(oldname), sizeof(oldname));
@@ -4441,7 +4417,7 @@ function:OnPlayerNameChangeRequest(newname[], playerid)
 		    GetPlayerName(playerid, cname, 25);
 			PlayerData[playerid][sName][0] = '\0';
 			strcat(PlayerData[playerid][sName], cname, 25);
-			GivePlayerCash(playerid, -50000);
+			GivePlayerMoneyEx(playerid, -50000);
 
             format(query, sizeof(query), "UPDATE `accounts` SET `name` = '%s' WHERE `name` = '%s' LIMIT 1;", newname, oldname);
             mysql_tquery(g_pSQL, query, "", "");
@@ -4722,7 +4698,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 				orm_setkey(ormid, "id");
 				orm_apply_cache(ormid, 0);
 
-			 	SetPlayerCash(playerid, PlayerData[playerid][iMoney]);
+			 	SetPlayerMoneyEx(playerid, PlayerData[playerid][iMoney]);
 			 	SetPlayerScore(playerid, PlayerData[playerid][iScore]);
 			 	PlayerData[playerid][iConnectTime] = gettime();
 
@@ -4793,7 +4769,7 @@ function:OnPlayerRegister(playerid, namehash, hash[], playername[], ip_address[]
 		SCMToAll(-1, str);
 
 	    GameTextForPlayer(playerid, "Welcome", 3000, 4);
-  		GivePlayerCash(playerid, 10000);
+  		GivePlayerMoneyEx(playerid, 10000);
   		GameTextForPlayer(playerid, "~n~+$10,000~n~Startcash", 3000, 1);
 		SCM(playerid, -1, ""server_sign" "grey"You are now registered, and have been logged in!");
 		PlaySound(playerid, 1057);
@@ -4981,6 +4957,30 @@ __GetPlayerID(const playername[])
       	}
     }
     return INVALID_PLAYER_ID;
+}
+
+__GetName(playerid)
+{
+    new name[MAX_PLAYER_NAME + 1];
+
+	strcat(name, PlayerData[playerid][sName], MAX_PLAYER_NAME + 1);
+    return name;
+}
+
+__GetIP(playerid)
+{
+	new ip[MAX_PLAYER_IP + 1];
+
+	strcat(ip, PlayerData[playerid][sIP], MAX_PLAYER_IP + 1);
+    return ip;
+}
+
+__GetSerial(playerid)
+{
+	new tmp[64];
+
+    gpci(playerid, tmp, sizeof(tmp));
+    return tmp;
 }
 
 GetUptime()
@@ -5339,7 +5339,7 @@ RequestLogin(playerid)
     return 1;
 }
 
-SetPlayerCash(playerid, amount)
+SetPlayerMoneyEx(playerid, amount)
 {
 	if(playerid == INVALID_PLAYER_ID) return 1;
     ResetPlayerMoney(playerid);
@@ -5349,7 +5349,7 @@ SetPlayerCash(playerid, amount)
     return 1;
 }
 
-GivePlayerCash(playerid, amount, bool:populate = true)
+GivePlayerMoneyEx(playerid, amount, bool:populate = true)
 {
 	if(playerid == INVALID_PLAYER_ID) return 1;
 
@@ -5379,13 +5379,13 @@ GivePlayerCash(playerid, amount, bool:populate = true)
 	return 1;
 }
 
-GetPlayerCash(playerid)
+GetPlayerMoneyEx(playerid)
 {
     if(playerid == INVALID_PLAYER_ID) return 1;
 	return (PlayerData[playerid][iMoney]);
 }
 
-GivePlayerScore_(playerid, amount, bool:populate = true)
+GivePlayerScoreEx(playerid, amount, bool:populate = true)
 {
     if(playerid == INVALID_PLAYER_ID) return 1;
 
@@ -5412,7 +5412,7 @@ GivePlayerScore_(playerid, amount, bool:populate = true)
 	return 1;
 }
 
-SetPlayerScore_(playerid, amount)
+SetPlayerScoreEx(playerid, amount)
 {
     if(playerid == INVALID_PLAYER_ID) return 1;
 	PlayerData[playerid][iScore] = amount;
@@ -5421,7 +5421,7 @@ SetPlayerScore_(playerid, amount)
 	return 1;
 }
 
-GetPlayerScore_(playerid)
+GetPlayerScoreEx(playerid)
 {
     if(playerid == INVALID_PLAYER_ID) return -1;
 	return PlayerData[playerid][iScore];
