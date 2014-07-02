@@ -4117,454 +4117,6 @@ function:InitSession(playerid)
 	return 1;
 }
 
-trans(col)
-{
-	return (col - 0xBB);
-}
-
-RequestRegistration(playerid)
-{
-    format(gstr, sizeof(gstr), ""zmp" Registration - %s", __GetName(playerid));
-	format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"white" to Zombie "red"Multiplayer"white"!\n\nEnter a password for your new account below:", __GetName(playerid));
-	ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, gstr, gstr2, "Register", "");
-	return 1;
-}
-
-AutoLogin(playerid)
-{
-    MySQL_LoadAccount(playerid);
-    MySQL_LogPlayerIn(playerid);
-    PlayerData[playerid][bLogged] = true;
-    PlayerData[playerid][bFirstSpawn] = true;
-    PlayerData[playerid][iExitType] = EXIT_LOGGED;
-    TogglePlayerSpectating(playerid, false);
-	return 1;
-}
-
-RequestLogin(playerid)
-{
-	new newtext[1024], newtext2[128];
-
-    format(newtext2, sizeof(newtext2), ""zmp" Login - %s", __GetName(playerid));
-    format(newtext, sizeof(newtext), ""white"Welcome "grey"%s"white" to "blue"Zombie Multiplayer"white"!\n\nThe name you are using is registered! Please enter the password:", __GetName(playerid));
-	ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, newtext2, newtext, "Login", "");
-    return 1;
-}
-
-SetPlayerCash(playerid, amount)
-{
-	if(playerid == INVALID_PLAYER_ID) return 1;
-    ResetPlayerMoney(playerid);
-	PlayerData[playerid][iMoney] = amount;
-    GivePlayerMoney(playerid, PlayerData[playerid][iMoney]);
-    ZMP_PlayerStatsUpdate(playerid);
-    return 1;
-}
-
-GivePlayerCash(playerid, amount, bool:populate = true)
-{
-	if(playerid == INVALID_PLAYER_ID) return 1;
-
-    ResetPlayerMoney(playerid);
-
-    PlayerData[playerid][iMoney] += amount;
-
-    GivePlayerMoney(playerid, PlayerData[playerid][iMoney]);
-    
-    ZMP_PlayerStatsUpdate(playerid);
-    
-    if(populate)
-    {
-        new str[64];
-        if(amount < 0)
-        {
-            format(str, sizeof(str), "~r~~h~~h~-$%i", amount * -1);
-        }
-        else
-        {
-	        format(str, sizeof(str), "~g~~h~~h~+$%s", ToCurrency(amount));
-		}
-		PlayerTextDrawSetString(playerid, TXTMoney[playerid], str);
-        PlayerTextDrawShow(playerid, TXTMoney[playerid]);
-		SetTimerEx("HideMoneyTD", 3000, 0, "ii", playerid, YHash(__GetName(playerid)));
-    }
-	return 1;
-}
-
-GetPlayerCash(playerid)
-{
-    if(playerid == INVALID_PLAYER_ID) return 1;
-	return (PlayerData[playerid][iMoney]);
-}
-
-GivePlayerScore_(playerid, amount, bool:populate = true)
-{
-    if(playerid == INVALID_PLAYER_ID) return 1;
-
-    PlayerData[playerid][iScore] += amount;
-	SetPlayerScore(playerid, PlayerData[playerid][iScore]);
-
-    ZMP_PlayerStatsUpdate(playerid);
-
-    if(populate)
-    {
-        new str[64];
-        if(amount < 0)
-        {
-            format(str, sizeof(str), "~r~~h~~h~-%i Score", amount * -1);
-        }
-        else
-        {
-	        format(str, sizeof(str), "~y~~h~+%s Score", ToCurrency(amount));
-		}
-		PlayerTextDrawSetString(playerid, TXTScore[playerid], str);
-        PlayerTextDrawShow(playerid, TXTScore[playerid]);
-		SetTimerEx("HideScoreTD", 3000, 0, "ii", playerid, YHash(__GetName(playerid)));
-    }
-	return 1;
-}
-
-SetPlayerScore_(playerid, amount)
-{
-    if(playerid == INVALID_PLAYER_ID) return 1;
-	PlayerData[playerid][iScore] = amount;
-    SetPlayerScore(playerid, PlayerData[playerid][iScore]);
-    ZMP_PlayerStatsUpdate(playerid);
-	return 1;
-}
-
-GetPlayerScore_(playerid)
-{
-    if(playerid == INVALID_PLAYER_ID) return -1;
-	return PlayerData[playerid][iScore];
-}
-
-GetPlayingTimeFormat(playerid)
-{
-    PlayerData[playerid][iTime] = PlayerData[playerid][iTime] + (gettime() - PlayerData[playerid][iConnectTime]);
-    PlayerData[playerid][iConnectTime] = gettime();
-
-    new ptime[32],
-        time[3];
-
-    time[0] = floatround(PlayerData[playerid][iTime] / 3600, floatround_floor);
-    time[1] = floatround(PlayerData[playerid][iTime] / 60, floatround_floor) % 60;
-    time[2] = floatround(PlayerData[playerid][iTime] % 60, floatround_floor);
-
-	format(ptime, sizeof(ptime), "%ih %02im %02is", time[0], time[1], time[2]);
-	return ptime;
-}
-
-UTConvert(unixtime)
-{
-	new u_year,
-	    u_month,
-	    u_day,
-		u_hour,
-		u_minute,
-		u_second,
-		u_date[50];
-
-    TimestampToDate(unixtime, u_year, u_month, u_day, u_hour, u_minute, u_second, 1);
-
-    format(u_date, sizeof(u_date), "%02i/%02i/%i %02i:%02i:%02i", u_day, u_month, u_year, u_hour, u_minute, u_second);
-	return u_date;
-}
-
-ToCurrency(CCash)
-{
-    new szStr[16];
-    format(szStr, sizeof(szStr), "%i", CCash);
-
-    for(new iLen = strlen(szStr) - 3; iLen > 0; iLen -= 3)
-    {
-        strins(szStr, ",", iLen);
-    }
-    return szStr;
-}
-
-SollIchDirMaEtWatSagen()
-{
-	new a[][] =
-	{
-		"Unarmed (Fist)",
-		"Brass K"
-	};
-	#pragma unused a
-}
-
-IsAd(const text[])
-{
-	new is1 = 0,
-		r = 0,
-		strR[255];
-
- 	while(strlen(text[is1]))
- 	{
-  		if('0' <= text[is1] <= '9')
-  		{
- 			new is2 = is1 + 1,
-			 	p = 0;
-
-			while(p == 0)
-  			{
-   				if('0' <= text[is2] <= '9' && strlen(text[is2]))
-		   		{
-			  		is2++;
-				}
- 				else
-  				{
-				   	strmid(strR[r], text, is1, is2, sizeof(strR));
-				   	if(strval(strR[r]) < sizeof(strR)) r++;
-				    is1 = is2;
-				    p = 1;
-				}
-			}
-		}
- 		is1++;
- 	}
-	if(r >= 4 && r <= 8) return true;
-	return false;
-}
-
-function:remove_health_obj(damagedid)
-{
-	if(IsPlayerConnected(damagedid))
-	{
-	    RemovePlayerAttachedObject(damagedid, 8);
-	    g_bPlayerHit[damagedid] = false;
-	}
-	return 1;
-}
-
-ZMP_ConvertTime(seconds)
-{
-	new tmp[16];
- 	new minutes = floatround(seconds / 60);
-  	seconds -= minutes * 60;
-   	format(tmp, sizeof(tmp), "%02i:%02i", minutes, seconds);
-   	return tmp;
-}
-
-ZMP_ShowLogo(playerid)
-{
-	for(new i = 0; i < sizeof(ZMPLogo); i++)
-	{
- 		TextDrawShowForPlayer(playerid, ZMPLogo[i]);
-	}
-}
-
-ZMP_HideLogo(playerid)
-{
-	for(new i = 0; i < sizeof(ZMPLogo); i++)
-	{
-	    TextDrawHideForPlayer(playerid, ZMPLogo[i]);
-	}
-}
-
-CreateTextdraws()
-{
-	ZMPLogo[0] = TextDrawCreate(231.000000, 85.000000, "Zombie~n~   ~r~~h~~h~Multiplayer");
-	TextDrawBackgroundColor(ZMPLogo[0], 255);
-	TextDrawFont(ZMPLogo[0], 0);
-	TextDrawLetterSize(ZMPLogo[0], 0.959999, 3.899998);
-	TextDrawColor(ZMPLogo[0], -1);
-	TextDrawSetOutline(ZMPLogo[0], 1);
-	TextDrawSetProportional(ZMPLogo[0], 1);
-	TextDrawSetSelectable(ZMPLogo[0], 0);
-
-	ZMPLogo[1] = TextDrawCreate(324.000000, 99.000000, "zombie~r~~h~~h~mp~w~.com");
-	TextDrawBackgroundColor(ZMPLogo[1], 255);
-	TextDrawFont(ZMPLogo[1], 1);
-	TextDrawLetterSize(ZMPLogo[1], 0.299999, 1.699999);
-	TextDrawColor(ZMPLogo[1], -1);
-	TextDrawSetOutline(ZMPLogo[1], 1);
-	TextDrawSetProportional(ZMPLogo[1], 1);
-	TextDrawSetSelectable(ZMPLogo[1], 0);
-
-	ZMPLogo[2] = TextDrawCreate(231.000000, 132.000000, ""VERSION"");
-	TextDrawBackgroundColor(ZMPLogo[2], 255);
-	TextDrawFont(ZMPLogo[2], 1);
-	TextDrawLetterSize(ZMPLogo[2], 0.309999, 1.899999);
-	TextDrawColor(ZMPLogo[2], -1);
-	TextDrawSetOutline(ZMPLogo[2], 1);
-	TextDrawSetProportional(ZMPLogo[2], 1);
-	TextDrawSetSelectable(ZMPLogo[2], 0);
-	
-	TXTHealthOverlay = TextDrawCreate(546.000000, 67.000000, "~w~Zombie~r~~h~~h~MP~w~.com");
-	TextDrawBackgroundColor(TXTHealthOverlay, 255);
-	TextDrawFont(TXTHealthOverlay, 1);
-	TextDrawLetterSize(TXTHealthOverlay, 0.240000, 0.799999);
-	TextDrawColor(TXTHealthOverlay, -1);
-	TextDrawSetOutline(TXTHealthOverlay, 0);
-	TextDrawSetProportional(TXTHealthOverlay, 1);
-	TextDrawSetShadow(TXTHealthOverlay, 1);
-	TextDrawUseBox(TXTHealthOverlay, 1);
-	TextDrawBoxColor(TXTHealthOverlay, 255);
-	TextDrawTextSize(TXTHealthOverlay, 607.000000, 0.000000);
-	TextDrawSetSelectable(TXTHealthOverlay, 0);
-	
-	TXTInfestationArrival = TextDrawCreate(322.000000, 25.000000, "~w~Infestation arrival in ~r~~h~~h~65 ~w~seconds.~n~Prepare your ass!");
-	TextDrawAlignment(TXTInfestationArrival, 2);
-	TextDrawBackgroundColor(TXTInfestationArrival, 255);
-	TextDrawFont(TXTInfestationArrival, 1);
-	TextDrawLetterSize(TXTInfestationArrival, 0.209998, 0.999998);
-	TextDrawColor(TXTInfestationArrival, -1);
-	TextDrawSetOutline(TXTInfestationArrival, 1);
-	TextDrawSetProportional(TXTInfestationArrival, 1);
-	TextDrawSetSelectable(TXTInfestationArrival, 0);
-	
-	TXTRescue = TextDrawCreate(283.000000, 5.000000, "~w~Rescue in: ~r~~h~~h~7:00");
-	TextDrawBackgroundColor(TXTRescue, 255);
-	TextDrawFont(TXTRescue, 1);
-	TextDrawLetterSize(TXTRescue, 0.279999, 1.299998);
-	TextDrawColor(TXTRescue, -1);
-	TextDrawSetOutline(TXTRescue, 1);
-	TextDrawSetProportional(TXTRescue, 1);
-	TextDrawSetSelectable(TXTRescue, 0);
-	
-    TXTLoading = TextDrawCreate(319.000000, 208.000000, "Loading...");
-	TextDrawAlignment(TXTLoading, 2);
-	TextDrawBackgroundColor(TXTLoading, 255);
-	TextDrawFont(TXTLoading, 2);
-	TextDrawLetterSize(TXTLoading, 0.469998, 2.099998);
-	TextDrawColor(TXTLoading, -1);
-	TextDrawSetOutline(TXTLoading, 1);
-	TextDrawSetProportional(TXTLoading, 1);
-	TextDrawUseBox(TXTLoading, 1);
-	TextDrawBoxColor(TXTLoading, 170);
-	TextDrawTextSize(TXTLoading, -9.000000, -152.000000);
-}
-
-/*Map_Add(mapname[], realmapname[], objectfile[], Float:Spawns[4], Weather, Time, Float:Shop[3])
-{
-	new query[1024];
-	
-	mysql_format(g_pSQL, query, sizeof(query), "INSERT INTO `maps` VALUES (NULL, '%e', '%e', '%e', %.3f, %.3f, %.3f, %.3f, %i, %i, %.3f, %.3f, %.3f);",
-	    mapname,
-	    realmapname,
-	    objectfile,
-	    Spawns[0],
-	    Spawns[1],
-	    Spawns[2],
-	    Spawns[3],
-	    Weather,
-	    Time,
-	    Shop[0],
-	    Shop[1],
-	    Shop[2]);
-	
-	mysql_tquery(g_pSQL, query, "OnMapAdded", "i", playerid);
-	return true;
-}*/
-
-Map_Reload()
-{
-    mysql_tquery(g_pSQL, "SELECT * FROM `maps`;", "OnMapDataReceived", "");
-    return true;
-}
-
-Map_Unload()
-{
-	if(!g_bMapLoaded) return false;
-	
-	DestroyDynamicCP(g_ShopID);
-	g_ShopID = -1;
-	
-	g_bMapLoaded = false;
-	return true;
-}
-
-Map_Load(map_file[])
-{
-	if(!fexist(map_file)) return false;
-	if(g_bMapLoaded) return false;
-
-	g_ShopID = CreateDynamicCP(g_Maps[CURRENT_MAP][e_shop_x], g_Maps[CURRENT_MAP][e_shop_y], g_Maps[CURRENT_MAP][e_shop_z], 5.0);
-	
-	g_bMapLoaded = true;
-	return true;
-}
-/*
-[CENTER][ttable]
-[tr]
-
-[/tr]
-[tr]
-[td][B]Stunt Evolution[/B] - The original SE since 2009.[/td]
-[/tr]
-[tr]
-[td][CENTER]Derby, Race, Gungame, TDM and more.[/CENTER][/td]
-[/tr]
-[tr]
-[td][CENTER][URL="samp://samp.stunt-evolution.net:7777"]Connect[/URL] | [URL="http://forum.stunt-evolution.net/"]Forums[/URL][/CENTER][/td]
-[/tr]
-[/ttable][/CENTER]
-*/
-
-ZMP_GetZombies()
-{
-	new count = 0;
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-	    if(IsPlayerConnected(i) && gTeam[i] == gZOMBIE)
-	    {
-	        count++;
-	    }
-	}
-	return count;
-}
-
-bad_afk_detect()
-{
-	new count = 0;
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-	    if(IsPlayerConnected(i) && gTeam[i] == gHUMAN && IsPlayerOnDesktop(i, 10000))
-	    {
-	        count++;
-	    }
-	}
-	
-	if(count == ZMP_GetHumans())
-	{
-	    return 1;
-	}
-	return 0;
-}
-
-ZMP_GetHumans()
-{
-	new count = 0;
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-	    if(IsPlayerConnected(i) && gTeam[i] == gHUMAN)
-	    {
-	        count++;
-	    }
-	}
-	return count;
-}
-
-ZMP_GetPlayers()
-{
-	new count = 0;
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-	    if(IsPlayerConnected(i) && (gTeam[i] == gHUMAN || gTeam[i] == gZOMBIE))
-	    {
-	        count++;
-	    }
-	}
-	return count;
-}
-
-ZMP_SyncPlayer(playerid)
-{
-    SetPlayerTime(playerid, g_Maps[CURRENT_MAP][e_time], 0);
-	SetPlayerWeather(playerid, g_Maps[CURRENT_MAP][e_weather]);
-}
-
 // INSERT INTO `maps` VALUES (NULL, 'The Ships', 'zmp_theships', 'Maps/zmp_theships.map', 1908.7662, 1466.7018, 12.7591, 90.000, 10, 6, 1913.4165, 1493.0498, 14.0066);
 // INSERT INTO `maps` VALUES (NULL, 'Zombified', 'zmp_zombified', 'Maps/zmp_zombified.map', -2263.6882, 719.4948, 48.8338, 90.000, 20, 4, -2248.7073, 707.5730, 49.2045);
 // INSERT INTO `maps` VALUES (NULL, 'Mjcastillo Research', 'zmp_mjcastilloresearch', 'Maps/zmp_mjcastilloresearch.map', 965.1849, 2598.4795, 11.5496, 90.000, 54, 8, 982.7676, 2608.2666, 10.1896);
@@ -4649,168 +4201,6 @@ function:OnMapDataReceived() // INSERT INTO `maps` VALUES (NULL, 'Outpost', 'zmp
 	    
 	    printf("#Loaded %i maps", g_MapCount);
 	}
-}
-
-ZMP_SetPlayerHuman(playerid)
-{
-	ClearAnimations(playerid);
-	SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
-    SetPlayerVirtualWorld(playerid, g_World);
-	SetPlayerPos(playerid, g_Maps[CURRENT_MAP][e_spawn_x], g_Maps[CURRENT_MAP][e_spawn_y], g_Maps[CURRENT_MAP][e_spawn_z] + 4.0);
-	SetPlayerFacingAngle(playerid, g_Maps[CURRENT_MAP][e_spawn_a]);
-	SetCameraBehindPlayer(playerid);
-	
-    gTeam[playerid] = gHUMAN;
-    SetPlayerTeam(playerid, TEAM_H);
-    SetPlayerColor(playerid, trans(COLOR_HUMAN));
-    
-    ResetPlayerWeapons(playerid);
-    GivePlayerWeapon(playerid, 22, 999999);
-    GivePlayerWeapon(playerid, 25, 15);
-    SetPlayerSkin(playerid, humanskins[random(sizeof(humanskins))]);
-    SetPlayerHealth(playerid, 100.0);
-    
-	PlayerData[playerid][iTimesHit] = 0;
-    
-    TogglePlayerControllable(playerid, true);
-}
-
-ZMP_SetPlayerZombie(playerid, bool:homespawn = true)
-{
-	ClearAnimations(playerid);
-	SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
-    SetPlayerVirtualWorld(playerid, g_World);
-    
-    if(homespawn)
-    {
-		SetPlayerPos(playerid, g_Maps[CURRENT_MAP][e_spawn_x], g_Maps[CURRENT_MAP][e_spawn_y], g_Maps[CURRENT_MAP][e_spawn_z] + 4.0);
-		SetPlayerFacingAngle(playerid, g_Maps[CURRENT_MAP][e_spawn_a]);
-	}
-	
-	SetCameraBehindPlayer(playerid);
-
-    gTeam[playerid] = gZOMBIE;
-    SetPlayerTeam(playerid, TEAM_Z);
-    SetPlayerColor(playerid, trans(COLOR_ZOMBIE));
-    ResetPlayerWeapons(playerid);
-    SetPlayerHealth(playerid, 200.0);
-    
-    switch(random(10))
-    {
-		case 6, 1: // Hunter
-		{
-		    GameTextForPlayer(playerid, "~r~~h~~h~You spawned as a Hunter!~n~~w~You can now jump higher!", 3000, 3);
-		    SetPlayerSkin(playerid, ID_HUNTER);
-		    PlayerData[playerid][gSpecialZed] = zedHUNTER;
-		}
-		case 8, 5: // Bloomer
-		{
-		    GameTextForPlayer(playerid, "~r~~h~~h~You spawned as a Bloomer!~n~~w~Press ~k~~CONVERSATION_NO~ or ~k~~CONVERSATION_YES~ to explode!", 3000, 3);
-		    SetPlayerSkin(playerid, ID_BLOOMER);
-		    PlayerData[playerid][gSpecialZed] = zedBLOOMER;
-		    PlayerData[playerid][bExploded] = false;
-		}
-		case 0, 2, 3, 4, 7, 9: // Normal Zombie
-		{
-		    SetPlayerSkin(playerid, zedskins[random(sizeof(zedskins))]);
-		    PlayerData[playerid][gSpecialZed] = zedZOMBIE;
-		}
-    }
-    
-	TogglePlayerControllable(playerid, true);
-}
-
-ZMP_EndGame()
-{
-	if(!g_bAllowEnd)
-	{
-	    printf("also es wurde jetzt ZMP_EndGame() aufgerufen obwohls nicht frei ist");
-	    return 1;
-	}
-	
-	g_bAllowEnd = false;
-	
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-		if(IsPlayerAvail(i))
-		{
-	    	if(!PlayerData[i][bIsDead]) TogglePlayerControllable(i, false);
-	    	PlayAudio(i, "http://zombiemp.com/re.mp3");
-		}
-	}
-	
-	Map_Unload();
-
-	g_GlobalStatus = e_Status_RoundEnd;
-	SetTimer("ZMP_SwitchMap", 10000, 0);
-	return 1;
-}
-
-ZMP_BeginNewGame()
-{
-    g_GlobalStatus = e_Status_Prepare;
-    bInfestationArrived = false;
-    new bool:found = false;
-    
-    do
-    {
-        if(g_ForceMap != -1)
-        {
-            CURRENT_MAP = g_ForceMap;
-            g_ForceMap = -1;
-			iOldMap = CURRENT_MAP;
-			found = true;
-			break;
-        }
-        
-   		CURRENT_MAP = random(g_MapCount);
-    
-        if(CURRENT_MAP != iOldMap && fexist(g_Maps[CURRENT_MAP][e_objectfile]))
-        {
-            iOldMap = CURRENT_MAP;
-            found = true;
-		}
-		
-		printf("[DEBUG] new map: %i", CURRENT_MAP);
-    }
-    while(!found);
-    
-   	Map_Load(g_Maps[CURRENT_MAP][e_objectfile]);
-
-	TextDrawHideForAll(TXTRescue);
-    
-	new string[128];
-	format(string, sizeof(string), ""zmp" "green"Starting new round! Map: %s", g_Maps[CURRENT_MAP][e_mapname]);
-	SCMToAll(-1, string);
-	
-	g_World = random(990000) + 10000;
-	
-	new count = 0;
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-		if(IsPlayerAvail(i))
-		{
-		    ZMP_SetPlayerHuman(i);
-		    
-            ZMP_SyncPlayer(i);
-            
-            PlayAudio(i, "http://zombiemp.com/rs.mp3");
-            TogglePlayerControllable(i, true);
-			LoadMap(i);
-            count++;
-		}
-	}
-	if(count <= 0)
-	{
-		Map_Unload();
-		g_GlobalStatus = e_Status_Inactive;
-	    return 1;
-	}
-	
-	iInfestaion = DEFAULT_INFESTATION_TIME;
-    tInfestation = SetTimer("ZMP_InfestationCountDown", 1000, 1);
-	TextDrawShowForAll(TXTInfestationArrival);
-	return 1;
 }
 
 function:ZMP_InfestationCountDown()
@@ -4916,22 +4306,6 @@ function:ForceClassSpawn(playerid, namehash)
     	SpawnPlayer(playerid);
 	}
 	return 1;
-}
-
-PlayAudio(playerid, url[])
-{
-	if(!PlayerData[playerid][bSoundsDisabled] && !IsPlayerOnDesktop(playerid, 3000))
-	{
-	    PlayAudioStreamForPlayer(playerid, url);
-	}
-}
-
-PlaySound(playerid, id)
-{
-	if(!PlayerData[playerid][bSoundsDisabled] && !IsPlayerOnDesktop(playerid, 1000))
-	{
-	    PlayerPlaySound(playerid, id, 0.0, 0.0, 0.0);
-	}
 }
 
 function:HideMoneyTD(playerid, namehash)
@@ -5751,6 +5125,594 @@ ZMP_RandomInfection()
         GameTextForPlayer(pid, "~w~Infect others by punching them!", 3000, 5);
 	}
 	return 1;
+}
+
+ZMP_SetPlayerHuman(playerid)
+{
+	ClearAnimations(playerid);
+	SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
+    SetPlayerVirtualWorld(playerid, g_World);
+	SetPlayerPos(playerid, g_Maps[CURRENT_MAP][e_spawn_x], g_Maps[CURRENT_MAP][e_spawn_y], g_Maps[CURRENT_MAP][e_spawn_z] + 4.0);
+	SetPlayerFacingAngle(playerid, g_Maps[CURRENT_MAP][e_spawn_a]);
+	SetCameraBehindPlayer(playerid);
+
+    gTeam[playerid] = gHUMAN;
+    SetPlayerTeam(playerid, TEAM_H);
+    SetPlayerColor(playerid, trans(COLOR_HUMAN));
+
+    ResetPlayerWeapons(playerid);
+    GivePlayerWeapon(playerid, 22, 999999);
+    GivePlayerWeapon(playerid, 25, 15);
+    SetPlayerSkin(playerid, humanskins[random(sizeof(humanskins))]);
+    SetPlayerHealth(playerid, 100.0);
+
+	PlayerData[playerid][iTimesHit] = 0;
+
+    TogglePlayerControllable(playerid, true);
+}
+
+ZMP_SetPlayerZombie(playerid, bool:homespawn = true)
+{
+	ClearAnimations(playerid);
+	SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
+    SetPlayerVirtualWorld(playerid, g_World);
+
+    if(homespawn)
+    {
+		SetPlayerPos(playerid, g_Maps[CURRENT_MAP][e_spawn_x], g_Maps[CURRENT_MAP][e_spawn_y], g_Maps[CURRENT_MAP][e_spawn_z] + 4.0);
+		SetPlayerFacingAngle(playerid, g_Maps[CURRENT_MAP][e_spawn_a]);
+	}
+
+	SetCameraBehindPlayer(playerid);
+
+    gTeam[playerid] = gZOMBIE;
+    SetPlayerTeam(playerid, TEAM_Z);
+    SetPlayerColor(playerid, trans(COLOR_ZOMBIE));
+    ResetPlayerWeapons(playerid);
+    SetPlayerHealth(playerid, 200.0);
+
+    switch(random(10))
+    {
+		case 6, 1: // Hunter
+		{
+		    GameTextForPlayer(playerid, "~r~~h~~h~You spawned as a Hunter!~n~~w~You can now jump higher!", 3000, 3);
+		    SetPlayerSkin(playerid, ID_HUNTER);
+		    PlayerData[playerid][gSpecialZed] = zedHUNTER;
+		}
+		case 8, 5: // Bloomer
+		{
+		    GameTextForPlayer(playerid, "~r~~h~~h~You spawned as a Bloomer!~n~~w~Press ~k~~CONVERSATION_NO~ or ~k~~CONVERSATION_YES~ to explode!", 3000, 3);
+		    SetPlayerSkin(playerid, ID_BLOOMER);
+		    PlayerData[playerid][gSpecialZed] = zedBLOOMER;
+		    PlayerData[playerid][bExploded] = false;
+		}
+		case 0, 2, 3, 4, 7, 9: // Normal Zombie
+		{
+		    SetPlayerSkin(playerid, zedskins[random(sizeof(zedskins))]);
+		    PlayerData[playerid][gSpecialZed] = zedZOMBIE;
+		}
+    }
+
+	TogglePlayerControllable(playerid, true);
+}
+
+ZMP_EndGame()
+{
+	if(!g_bAllowEnd)
+	{
+	    printf("also es wurde jetzt ZMP_EndGame() aufgerufen obwohls nicht frei ist");
+	    return 1;
+	}
+
+	g_bAllowEnd = false;
+
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+		if(IsPlayerAvail(i))
+		{
+	    	if(!PlayerData[i][bIsDead]) TogglePlayerControllable(i, false);
+	    	PlayAudio(i, "http://zombiemp.com/re.mp3");
+		}
+	}
+
+	Map_Unload();
+
+	g_GlobalStatus = e_Status_RoundEnd;
+	SetTimer("ZMP_SwitchMap", 10000, 0);
+	return 1;
+}
+
+ZMP_BeginNewGame()
+{
+    g_GlobalStatus = e_Status_Prepare;
+    bInfestationArrived = false;
+    new bool:found = false;
+
+    do
+    {
+        if(g_ForceMap != -1)
+        {
+            CURRENT_MAP = g_ForceMap;
+            g_ForceMap = -1;
+			iOldMap = CURRENT_MAP;
+			found = true;
+			break;
+        }
+
+   		CURRENT_MAP = random(g_MapCount);
+
+        if(CURRENT_MAP != iOldMap && fexist(g_Maps[CURRENT_MAP][e_objectfile]))
+        {
+            iOldMap = CURRENT_MAP;
+            found = true;
+		}
+
+		printf("[DEBUG] new map: %i", CURRENT_MAP);
+    }
+    while(!found);
+
+   	Map_Load(g_Maps[CURRENT_MAP][e_objectfile]);
+
+	TextDrawHideForAll(TXTRescue);
+
+	new string[128];
+	format(string, sizeof(string), ""zmp" "green"Starting new round! Map: %s", g_Maps[CURRENT_MAP][e_mapname]);
+	SCMToAll(-1, string);
+
+	g_World = random(990000) + 10000;
+
+	new count = 0;
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+		if(IsPlayerAvail(i))
+		{
+		    ZMP_SetPlayerHuman(i);
+
+            ZMP_SyncPlayer(i);
+
+            PlayAudio(i, "http://zombiemp.com/rs.mp3");
+            TogglePlayerControllable(i, true);
+			LoadMap(i);
+            count++;
+		}
+	}
+	if(count <= 0)
+	{
+		Map_Unload();
+		g_GlobalStatus = e_Status_Inactive;
+	    return 1;
+	}
+
+	iInfestaion = DEFAULT_INFESTATION_TIME;
+    tInfestation = SetTimer("ZMP_InfestationCountDown", 1000, 1);
+	TextDrawShowForAll(TXTInfestationArrival);
+	return 1;
+}
+
+PlayAudio(playerid, url[])
+{
+	if(!PlayerData[playerid][bSoundsDisabled] && !IsPlayerOnDesktop(playerid, 3000))
+	{
+	    PlayAudioStreamForPlayer(playerid, url);
+	}
+}
+
+PlaySound(playerid, id)
+{
+	if(!PlayerData[playerid][bSoundsDisabled] && !IsPlayerOnDesktop(playerid, 1000))
+	{
+	    PlayerPlaySound(playerid, id, 0.0, 0.0, 0.0);
+	}
+}
+
+trans(col)
+{
+	return (col - 0xBB);
+}
+
+RequestRegistration(playerid)
+{
+    format(gstr, sizeof(gstr), ""zmp" Registration - %s", __GetName(playerid));
+	format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"white" to Zombie "red"Multiplayer"white"!\n\nEnter a password for your new account below:", __GetName(playerid));
+	ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, gstr, gstr2, "Register", "");
+	return 1;
+}
+
+AutoLogin(playerid)
+{
+    MySQL_LoadAccount(playerid);
+    MySQL_LogPlayerIn(playerid);
+    PlayerData[playerid][bLogged] = true;
+    PlayerData[playerid][bFirstSpawn] = true;
+    PlayerData[playerid][iExitType] = EXIT_LOGGED;
+    TogglePlayerSpectating(playerid, false);
+	return 1;
+}
+
+RequestLogin(playerid)
+{
+	new newtext[1024], newtext2[128];
+
+    format(newtext2, sizeof(newtext2), ""zmp" Login - %s", __GetName(playerid));
+    format(newtext, sizeof(newtext), ""white"Welcome "grey"%s"white" to "blue"Zombie Multiplayer"white"!\n\nThe name you are using is registered! Please enter the password:", __GetName(playerid));
+	ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, newtext2, newtext, "Login", "");
+    return 1;
+}
+
+SetPlayerCash(playerid, amount)
+{
+	if(playerid == INVALID_PLAYER_ID) return 1;
+    ResetPlayerMoney(playerid);
+	PlayerData[playerid][iMoney] = amount;
+    GivePlayerMoney(playerid, PlayerData[playerid][iMoney]);
+    ZMP_PlayerStatsUpdate(playerid);
+    return 1;
+}
+
+GivePlayerCash(playerid, amount, bool:populate = true)
+{
+	if(playerid == INVALID_PLAYER_ID) return 1;
+
+    ResetPlayerMoney(playerid);
+
+    PlayerData[playerid][iMoney] += amount;
+
+    GivePlayerMoney(playerid, PlayerData[playerid][iMoney]);
+
+    ZMP_PlayerStatsUpdate(playerid);
+
+    if(populate)
+    {
+        new str[64];
+        if(amount < 0)
+        {
+            format(str, sizeof(str), "~r~~h~~h~-$%i", amount * -1);
+        }
+        else
+        {
+	        format(str, sizeof(str), "~g~~h~~h~+$%s", ToCurrency(amount));
+		}
+		PlayerTextDrawSetString(playerid, TXTMoney[playerid], str);
+        PlayerTextDrawShow(playerid, TXTMoney[playerid]);
+		SetTimerEx("HideMoneyTD", 3000, 0, "ii", playerid, YHash(__GetName(playerid)));
+    }
+	return 1;
+}
+
+GetPlayerCash(playerid)
+{
+    if(playerid == INVALID_PLAYER_ID) return 1;
+	return (PlayerData[playerid][iMoney]);
+}
+
+GivePlayerScore_(playerid, amount, bool:populate = true)
+{
+    if(playerid == INVALID_PLAYER_ID) return 1;
+
+    PlayerData[playerid][iScore] += amount;
+	SetPlayerScore(playerid, PlayerData[playerid][iScore]);
+
+    ZMP_PlayerStatsUpdate(playerid);
+
+    if(populate)
+    {
+        new str[64];
+        if(amount < 0)
+        {
+            format(str, sizeof(str), "~r~~h~~h~-%i Score", amount * -1);
+        }
+        else
+        {
+	        format(str, sizeof(str), "~y~~h~+%s Score", ToCurrency(amount));
+		}
+		PlayerTextDrawSetString(playerid, TXTScore[playerid], str);
+        PlayerTextDrawShow(playerid, TXTScore[playerid]);
+		SetTimerEx("HideScoreTD", 3000, 0, "ii", playerid, YHash(__GetName(playerid)));
+    }
+	return 1;
+}
+
+SetPlayerScore_(playerid, amount)
+{
+    if(playerid == INVALID_PLAYER_ID) return 1;
+	PlayerData[playerid][iScore] = amount;
+    SetPlayerScore(playerid, PlayerData[playerid][iScore]);
+    ZMP_PlayerStatsUpdate(playerid);
+	return 1;
+}
+
+GetPlayerScore_(playerid)
+{
+    if(playerid == INVALID_PLAYER_ID) return -1;
+	return PlayerData[playerid][iScore];
+}
+
+GetPlayingTimeFormat(playerid)
+{
+    PlayerData[playerid][iTime] = PlayerData[playerid][iTime] + (gettime() - PlayerData[playerid][iConnectTime]);
+    PlayerData[playerid][iConnectTime] = gettime();
+
+    new ptime[32],
+        time[3];
+
+    time[0] = floatround(PlayerData[playerid][iTime] / 3600, floatround_floor);
+    time[1] = floatround(PlayerData[playerid][iTime] / 60, floatround_floor) % 60;
+    time[2] = floatround(PlayerData[playerid][iTime] % 60, floatround_floor);
+
+	format(ptime, sizeof(ptime), "%ih %02im %02is", time[0], time[1], time[2]);
+	return ptime;
+}
+
+UTConvert(unixtime)
+{
+	new u_year,
+	    u_month,
+	    u_day,
+		u_hour,
+		u_minute,
+		u_second,
+		u_date[50];
+
+    TimestampToDate(unixtime, u_year, u_month, u_day, u_hour, u_minute, u_second, 1);
+
+    format(u_date, sizeof(u_date), "%02i/%02i/%i %02i:%02i:%02i", u_day, u_month, u_year, u_hour, u_minute, u_second);
+	return u_date;
+}
+
+ToCurrency(CCash)
+{
+    new szStr[16];
+    format(szStr, sizeof(szStr), "%i", CCash);
+
+    for(new iLen = strlen(szStr) - 3; iLen > 0; iLen -= 3)
+    {
+        strins(szStr, ",", iLen);
+    }
+    return szStr;
+}
+
+SollIchDirMaEtWatSagen()
+{
+	new a[][] =
+	{
+		"Unarmed (Fist)",
+		"Brass K"
+	};
+	#pragma unused a
+}
+
+IsAd(const text[])
+{
+	new is1 = 0,
+		r = 0,
+		strR[255];
+
+ 	while(strlen(text[is1]))
+ 	{
+  		if('0' <= text[is1] <= '9')
+  		{
+ 			new is2 = is1 + 1,
+			 	p = 0;
+
+			while(p == 0)
+  			{
+   				if('0' <= text[is2] <= '9' && strlen(text[is2]))
+		   		{
+			  		is2++;
+				}
+ 				else
+  				{
+				   	strmid(strR[r], text, is1, is2, sizeof(strR));
+				   	if(strval(strR[r]) < sizeof(strR)) r++;
+				    is1 = is2;
+				    p = 1;
+				}
+			}
+		}
+ 		is1++;
+ 	}
+	if(r >= 4 && r <= 8) return true;
+	return false;
+}
+
+function:remove_health_obj(damagedid)
+{
+	if(IsPlayerConnected(damagedid))
+	{
+	    RemovePlayerAttachedObject(damagedid, 8);
+	    g_bPlayerHit[damagedid] = false;
+	}
+	return 1;
+}
+
+ZMP_ConvertTime(seconds)
+{
+	new tmp[16];
+ 	new minutes = floatround(seconds / 60);
+  	seconds -= minutes * 60;
+   	format(tmp, sizeof(tmp), "%02i:%02i", minutes, seconds);
+   	return tmp;
+}
+
+ZMP_ShowLogo(playerid)
+{
+	for(new i = 0; i < sizeof(ZMPLogo); i++)
+	{
+ 		TextDrawShowForPlayer(playerid, ZMPLogo[i]);
+	}
+}
+
+ZMP_HideLogo(playerid)
+{
+	for(new i = 0; i < sizeof(ZMPLogo); i++)
+	{
+	    TextDrawHideForPlayer(playerid, ZMPLogo[i]);
+	}
+}
+
+CreateTextdraws()
+{
+	ZMPLogo[0] = TextDrawCreate(231.000000, 85.000000, "Zombie~n~   ~r~~h~~h~Multiplayer");
+	TextDrawBackgroundColor(ZMPLogo[0], 255);
+	TextDrawFont(ZMPLogo[0], 0);
+	TextDrawLetterSize(ZMPLogo[0], 0.959999, 3.899998);
+	TextDrawColor(ZMPLogo[0], -1);
+	TextDrawSetOutline(ZMPLogo[0], 1);
+	TextDrawSetProportional(ZMPLogo[0], 1);
+	TextDrawSetSelectable(ZMPLogo[0], 0);
+
+	ZMPLogo[1] = TextDrawCreate(324.000000, 99.000000, "zombie~r~~h~~h~mp~w~.com");
+	TextDrawBackgroundColor(ZMPLogo[1], 255);
+	TextDrawFont(ZMPLogo[1], 1);
+	TextDrawLetterSize(ZMPLogo[1], 0.299999, 1.699999);
+	TextDrawColor(ZMPLogo[1], -1);
+	TextDrawSetOutline(ZMPLogo[1], 1);
+	TextDrawSetProportional(ZMPLogo[1], 1);
+	TextDrawSetSelectable(ZMPLogo[1], 0);
+
+	ZMPLogo[2] = TextDrawCreate(231.000000, 132.000000, ""VERSION"");
+	TextDrawBackgroundColor(ZMPLogo[2], 255);
+	TextDrawFont(ZMPLogo[2], 1);
+	TextDrawLetterSize(ZMPLogo[2], 0.309999, 1.899999);
+	TextDrawColor(ZMPLogo[2], -1);
+	TextDrawSetOutline(ZMPLogo[2], 1);
+	TextDrawSetProportional(ZMPLogo[2], 1);
+	TextDrawSetSelectable(ZMPLogo[2], 0);
+
+	TXTHealthOverlay = TextDrawCreate(546.000000, 67.000000, "~w~Zombie~r~~h~~h~MP~w~.com");
+	TextDrawBackgroundColor(TXTHealthOverlay, 255);
+	TextDrawFont(TXTHealthOverlay, 1);
+	TextDrawLetterSize(TXTHealthOverlay, 0.240000, 0.799999);
+	TextDrawColor(TXTHealthOverlay, -1);
+	TextDrawSetOutline(TXTHealthOverlay, 0);
+	TextDrawSetProportional(TXTHealthOverlay, 1);
+	TextDrawSetShadow(TXTHealthOverlay, 1);
+	TextDrawUseBox(TXTHealthOverlay, 1);
+	TextDrawBoxColor(TXTHealthOverlay, 255);
+	TextDrawTextSize(TXTHealthOverlay, 607.000000, 0.000000);
+	TextDrawSetSelectable(TXTHealthOverlay, 0);
+
+	TXTInfestationArrival = TextDrawCreate(322.000000, 25.000000, "~w~Infestation arrival in ~r~~h~~h~65 ~w~seconds.~n~Prepare your ass!");
+	TextDrawAlignment(TXTInfestationArrival, 2);
+	TextDrawBackgroundColor(TXTInfestationArrival, 255);
+	TextDrawFont(TXTInfestationArrival, 1);
+	TextDrawLetterSize(TXTInfestationArrival, 0.209998, 0.999998);
+	TextDrawColor(TXTInfestationArrival, -1);
+	TextDrawSetOutline(TXTInfestationArrival, 1);
+	TextDrawSetProportional(TXTInfestationArrival, 1);
+	TextDrawSetSelectable(TXTInfestationArrival, 0);
+
+	TXTRescue = TextDrawCreate(283.000000, 5.000000, "~w~Rescue in: ~r~~h~~h~7:00");
+	TextDrawBackgroundColor(TXTRescue, 255);
+	TextDrawFont(TXTRescue, 1);
+	TextDrawLetterSize(TXTRescue, 0.279999, 1.299998);
+	TextDrawColor(TXTRescue, -1);
+	TextDrawSetOutline(TXTRescue, 1);
+	TextDrawSetProportional(TXTRescue, 1);
+	TextDrawSetSelectable(TXTRescue, 0);
+
+    TXTLoading = TextDrawCreate(319.000000, 208.000000, "Loading...");
+	TextDrawAlignment(TXTLoading, 2);
+	TextDrawBackgroundColor(TXTLoading, 255);
+	TextDrawFont(TXTLoading, 2);
+	TextDrawLetterSize(TXTLoading, 0.469998, 2.099998);
+	TextDrawColor(TXTLoading, -1);
+	TextDrawSetOutline(TXTLoading, 1);
+	TextDrawSetProportional(TXTLoading, 1);
+	TextDrawUseBox(TXTLoading, 1);
+	TextDrawBoxColor(TXTLoading, 170);
+	TextDrawTextSize(TXTLoading, -9.000000, -152.000000);
+}
+
+Map_Reload()
+{
+    mysql_tquery(g_pSQL, "SELECT * FROM `maps`;", "OnMapDataReceived", "");
+    return true;
+}
+
+Map_Unload()
+{
+	if(!g_bMapLoaded) return false;
+
+	DestroyDynamicCP(g_ShopID);
+	g_ShopID = -1;
+
+	g_bMapLoaded = false;
+	return true;
+}
+
+Map_Load(map_file[])
+{
+	if(!fexist(map_file)) return false;
+	if(g_bMapLoaded) return false;
+
+	g_ShopID = CreateDynamicCP(g_Maps[CURRENT_MAP][e_shop_x], g_Maps[CURRENT_MAP][e_shop_y], g_Maps[CURRENT_MAP][e_shop_z], 5.0);
+
+	g_bMapLoaded = true;
+	return true;
+}
+
+ZMP_GetZombies()
+{
+	new count = 0;
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+	    if(IsPlayerConnected(i) && gTeam[i] == gZOMBIE)
+	    {
+	        count++;
+	    }
+	}
+	return count;
+}
+
+bad_afk_detect()
+{
+	new count = 0;
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+	    if(IsPlayerConnected(i) && gTeam[i] == gHUMAN && IsPlayerOnDesktop(i, 10000))
+	    {
+	        count++;
+	    }
+	}
+
+	if(count == ZMP_GetHumans())
+	{
+	    return 1;
+	}
+	return 0;
+}
+
+ZMP_GetHumans()
+{
+	new count = 0;
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+	    if(IsPlayerConnected(i) && gTeam[i] == gHUMAN)
+	    {
+	        count++;
+	    }
+	}
+	return count;
+}
+
+ZMP_GetPlayers()
+{
+	new count = 0;
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+	    if(IsPlayerConnected(i) && (gTeam[i] == gHUMAN || gTeam[i] == gZOMBIE))
+	    {
+	        count++;
+	    }
+	}
+	return count;
+}
+
+ZMP_SyncPlayer(playerid)
+{
+    SetPlayerTime(playerid, g_Maps[CURRENT_MAP][e_time], 0);
+	SetPlayerWeather(playerid, g_Maps[CURRENT_MAP][e_weather]);
 }
 
 /*
