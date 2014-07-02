@@ -9,7 +9,6 @@ Zomebie Multiplayer
 
 * Use __GetIP,__GetName,__GetSerial rather than server natives. Reset player vars etc in "ResetPlayerVars".
 
-
 # Versioning
 
 There are sub-versions which form the main version: Major,Minor,Patch. Draft a new release every minor or major version change.
@@ -18,7 +17,10 @@ It's self explaning, use patch for small changes, minor for new versions with fe
 
 There can still be version numbers greater than 9 like 3.14.2 etc.
 
-
 # Compiler setup
 
 For release/live builds we're using "-O1 -d0" as compiler parameters. For debug builds "-d3".
+
+# Layout
+
+Use proper alignment -> Use TAB not SPACE
