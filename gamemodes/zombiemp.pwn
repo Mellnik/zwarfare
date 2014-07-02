@@ -239,12 +239,6 @@ enum (+= 21)
     DIALOG_LABEL
 };
 
-enum
-{
-    THREAD_LOAD_PLAYER,
-    THREAD_CHECK_PLAYER_PASSWD
-};
-
 enum (+= 10)
 {
 	ACCOUNT_REQUEST_BANNED,
@@ -1168,17 +1162,18 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					return RequestLogin(playerid);
 				}
 				if(isnull(inputtext)) return RequestLogin(playerid);
-				new password[33];
-				if(sscanf(inputtext, "s[32]", password))
+				extract inputtext -> new string:password[33]; else
 				{
-					SCM(playerid, -1, ""er"Length 3 - 32");
+				    SCM(playerid, -1, ""er"Length 3 - 32");
 					return RequestLogin(playerid);
 				}
-				new query[255], escape[33];
-				mysql_escape_string(password, escape, g_pSQL, 33);
+				
+				new hash[SHA3_LENGTH + 1];
+				sha3(password, hash, sizeof(hash));
 
-				format(query, sizeof(query), "SELECT `id` FROM `accounts` WHERE `name` = '%s' AND `password` = MD5('%s');", __GetName(playerid), escape);
-				mysql_tquery(g_pSQL, query, "OnQueryFinish", "siii", query, THREAD_CHECK_PLAYER_PASSWD, playerid, g_pSQL);
+				// todo: add salt
+				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT `id` FROM `accounts` WHERE `name` = '%e' AND ----- LIMIT 1;", __GetName(playerid), hash, hash);
+				mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_LOGIN);
 			    return true;
 			}
 	        case DIALOG_REGISTER:
@@ -1481,85 +1476,6 @@ public OnPlayerClickPlayer(playerid, clickedplayerid, source)
 		new string[30];
 		format(string, sizeof(string), "/stats %i", clickedplayerid);
 		Command_ReProcess(playerid, string, false);
-	}
-	return 1;
-}
-
-function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
-{
-	switch(resultid)
-	{
-	    case THREAD_LOAD_PLAYER:
-	    {
-		    new rows, fields;
-			cache_get_data(rows, fields, g_pSQL);
-
-			if(rows > 0)
-			{
-			    PlayerData[extraid][iAccountID] = cache_get_row_int(0, 0, g_pSQL);
-			    PlayerData[extraid][iScore] = cache_get_row_int(0, 5, g_pSQL);
-			    PlayerData[extraid][iAdminLevel] = cache_get_row_int(0, 6, g_pSQL);
-			    PlayerData[extraid][iMoney] = cache_get_row_int(0, 7, g_pSQL);
-			    PlayerData[extraid][iKills] = cache_get_row_int(0, 8, g_pSQL);
-			    PlayerData[extraid][iDeaths] = cache_get_row_int(0, 9, g_pSQL);
-			    PlayerData[extraid][iTime] = cache_get_row_int(0, 10, g_pSQL);
-			    PlayerData[extraid][iVIP] = cache_get_row_int(0, 11, g_pSQL);
-			    PlayerData[extraid][iMedkits] = cache_get_row_int(0, 12, g_pSQL);
-                PlayerData[extraid][iCookies] = cache_get_row_int(0, 13, g_pSQL);
-                PlayerData[extraid][iLastLogin] = cache_get_row_int(0, 14, g_pSQL);
-                PlayerData[extraid][iRegisterDate] = cache_get_row_int(0, 15, g_pSQL);
-
-			 	SetPlayerCash(extraid, PlayerData[extraid][iMoney]);
-			 	SetPlayerScore(extraid, PlayerData[extraid][iScore]);
-			 	PlayerData[extraid][iConnectTime] = gettime();
-
-                new string[128];
-                
-				if(PlayerData[extraid][iAdminLevel] > 0)
-				{
-					format(string, sizeof(string), ""server_sign" "grey"Successfully logged in. (Adminlevel %i)", PlayerData[extraid][iAdminLevel]);
-					SCM(extraid, -1, string);
-					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UTConvert(PlayerData[extraid][iLastLogin]), UTConvert(PlayerData[extraid][iRegisterDate]));
-  					SCM(extraid, -1, string);
-					format(string, sizeof(string), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(extraid));
-					SCM(extraid, -1, string);
-		   		}
-		   		else
-		   		{
-				   	SCM(extraid, -1, ""server_sign" "grey"Successfully logged in!");
-					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UTConvert(PlayerData[extraid][iLastLogin]), UTConvert(PlayerData[extraid][iRegisterDate]));
-  					SCM(extraid, -1, string);
-					format(string, sizeof(string), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(extraid));
-					SCM(extraid, -1, string);
-				}
-
-				if(PlayerData[extraid][iVIP] == 1)
-				{
-                    format(string, sizeof(string), ""server_sign" "grey"VIP %s(%i) logged in!", __GetName(extraid), extraid);
-                    SCMToAll(-1, string);
-				}
-			}
-	    }
-	    case THREAD_CHECK_PLAYER_PASSWD:
-	    {
-		    new rows, fields;
-		    cache_get_data(rows, fields, g_pSQL);
-
-	  		if(rows > 0)
-		    {
-		        MySQL_LoadPlayer(extraid);
-		        MySQL_LogPlayerIn(extraid);
-		        PlayerData[extraid][bLogged] = true;
-		        PlayerData[extraid][bFirstSpawn] = true;
-                PlayerData[extraid][iExitType] = EXIT_LOGGED;
-                TogglePlayerSpectating(extraid, false);
-			}
-			else
-			{
-			    SCM(extraid, -1, ""er"Login failed. Incorrect password!");
-			    RequestLogin(extraid);
-			}
-	    }
 	}
 	return 1;
 }
@@ -4057,11 +3973,10 @@ MySQL_LogPlayerIn(playerid)
     mysql_tquery(g_pSQL, query, "", "");
 }
 
-MySQL_LoadPlayer(playerid)
+MySQL_LoadAccount(playerid)
 {
-	new query[200];
-	format(query, sizeof(query), "SELECT * FROM `accounts` WHERE `name` = '%s' LIMIT 1;", __GetName(playerid));
-	mysql_tquery(g_pSQL, query, "OnQueryFinish", "siii", query, THREAD_LOAD_PLAYER, playerid, g_pSQL);
+	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT * FROM `accounts` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
+	mysql_tquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_LOAD);
 }
 
 MySQL_LogPlayerOut(playerid)
@@ -4217,7 +4132,7 @@ RequestRegistration(playerid)
 
 AutoLogin(playerid)
 {
-    MySQL_LoadPlayer(playerid);
+    MySQL_LoadAccount(playerid);
     MySQL_LogPlayerIn(playerid);
     PlayerData[playerid][bLogged] = true;
     PlayerData[playerid][bFirstSpawn] = true;
@@ -5721,6 +5636,78 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	     		InterpolateCameraPos(playerid, -2004.7083, 760.5217, 54.0513, -1999.1829, 921.1962, 56.4846, 50000, CAMERA_MOVE);
 			    InterpolateCameraLookAt(playerid, -2004.4877, 759.5416, 53.9013, -1998.5679, 920.4014, 56.3046, 50000, CAMERA_MOVE);
 	        }
+	        return 1;
+	    }
+	    case ACCOUNT_REQUEST_LOAD:
+	    {
+			if(cache_get_row_count() > 0)
+			{
+				new ORM:ormid = PlayerData[playerid][pORM] = orm_create("accounts");
+				
+			 	orm_addvar_int(ormid, PlayerData[playerid][iAccountID], "id");
+				orm_addvar_string(ormid, PlayerData[playerid][sName], MAX_PLAYER_NAME + 1, "name");
+				orm_addvar_int(ormid, PlayerData[playerid][iAdminLevel], "adminlevel");
+				orm_addvar_int(ormid, PlayerData[playerid][iScore], "score");
+				orm_addvar_int(ormid, PlayerData[playerid][iMoney], "money");
+				orm_addvar_int(ormid, PlayerData[playerid][iKills], "kills");
+				orm_addvar_int(ormid, PlayerData[playerid][iDeaths], "deaths");
+				orm_addvar_int(ormid, PlayerData[playerid][iTime], "time");
+				orm_addvar_int(ormid, PlayerData[playerid][iVIP], "vip");
+				orm_addvar_int(ormid, PlayerData[playerid][iCookies], "cookies");
+				orm_addvar_int(ormid, PlayerData[playerid][iMedkits], "medkits");
+				orm_addvar_int(ormid, PlayerData[playerid][iRegisterDate], "reg_date");
+				orm_addvar_int(ormid, PlayerData[playerid][iLastLogin], "lastlogin");
+				orm_addvar_int(ormid, PlayerData[playerid][iLastNC], "lastnc");
+				
+				orm_setkey(ormid, "id");
+				orm_apply_cache(ormid, 0);
+				
+			 	SetPlayerCash(playerid, PlayerData[playerid][iMoney]);
+			 	SetPlayerScore(playerid, PlayerData[playerid][iScore]);
+			 	PlayerData[playerid][iConnectTime] = gettime();
+			 	
+				if(PlayerData[playerid][iAdminLevel] > 0)
+				{
+					format(gstr, sizeof(gstr), ""server_sign" "grey"Successfully logged in. (Adminlevel %i)", PlayerData[playerid][iAdminLevel]);
+					SCM(playerid, -1, gstr);
+					format(gstr, sizeof(gstr), ""server_sign" "grey"You were last online at %s and registered on %s", UTConvert(PlayerData[playerid][iLastLogin]), UTConvert(PlayerData[playerid][iRegisterDate]));
+  					SCM(playerid, -1, gstr);
+					format(gstr, sizeof(gstr), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(playerid));
+					SCM(playerid, -1, gstr);
+		   		}
+		   		else
+		   		{
+				   	SCM(playerid, -1, ""server_sign" "grey"Successfully logged in!");
+					format(gstr, sizeof(gstr), ""server_sign" "grey"You were last online at %s and registered on %s", UTConvert(PlayerData[playerid][iLastLogin]), UTConvert(PlayerData[playerid][iRegisterDate]));
+  					SCM(playerid, -1, gstr);
+					format(gstr, sizeof(gstr), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(playerid));
+					SCM(playerid, -1, gstr);
+				}
+
+				if(PlayerData[playerid][iVIP] == 1)
+				{
+                    format(gstr, sizeof(gstr), ""server_sign" "grey"VIP %s(%i) logged in!", __GetName(playerid), playerid);
+                    SCMToAll(-1, gstr);
+				}
+			}
+			return 1;
+		}
+	    case ACCOUNT_REQUEST_LOGIN:
+	    {
+	  		if(cache_get_row_count() != 0) // Correct password
+		    {
+		        MySQL_LoadAccount(playerid);
+		        MySQL_LogPlayerIn(playerid);
+		        PlayerData[playerid][bLogged] = true;
+		        PlayerData[playerid][bFirstSpawn] = true;
+                PlayerData[playerid][iExitType] = EXIT_LOGGED;
+                TogglePlayerSpectating(playerid, false);
+			}
+			else
+			{
+			    SCM(playerid, -1, ""er"Login failed. Incorrect password!");
+			    RequestLogin(playerid);
+			}
 	        return 1;
 	    }
 	}
