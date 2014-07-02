@@ -17,3 +17,8 @@ There are sub-versions which form the main version: Major,Minor,Patch. Draft a n
 It's self explaning, use patch for small changes, minor for new versions with features and fixes etc. Major versions should only be pushed when very big changes have been made and the old version branch runs out of numbers like 2.9.14
 
 There can still be version numbers greater than 9 like 3.14.2 etc.
+
+
+# Compiler setup
+
+For release/live builds we're using "-O1 -d0" as compiler parameters. For debug builds "-d3".
