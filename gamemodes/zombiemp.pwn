@@ -83,7 +83,7 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define COOLDOWN_JUMP                   (5000)
 #define COOLDOWN_CMD_MEDKIT             (30000)
 #define COOLDOWN_DEATH                  (3000)
-#define SERVERMSGS_TIME                 (300000)
+#define RANDOM_BROADCAST_TIME                 (300000)
 #define MAX_REPORTS 					(7)
 #define MAX_MAPS                        (20)
 #define MAX_ADMIN_LEVEL         		(6)
@@ -172,8 +172,8 @@ enum E_PLAYER_DATA
 {
 	/* ACCOUNT */
     iAccountID, // i = Integer, s = String, b = bool, f = Float
-	sName[MAX_PLAYER_NAME],
-	sIP[MAX_PLAYER_IP],
+	sName[MAX_PLAYER_NAME + 1],
+	sIP[MAX_PLAYER_IP + 1],
 	iKills,
 	iDeaths,
 	iAdminLevel,
@@ -202,7 +202,7 @@ enum E_PLAYER_DATA
 	tLoadMap,
 	tMedkit,
 	iMedkitTime,
-	Text3D:VIPLabel,
+	Text3D:txVIPLabel,
 	iExitType,
 	iCoolDownCommand,
 	iCoolDownText,
@@ -440,8 +440,8 @@ public OnGameModeInit()
     
     server_initialize();
 
-    SetTimer("ProcessTick", 1000, true);
-    SetTimer("server_random_broadcast", SERVERMSGS_TIME, true);
+    SetTimer("ProcessTick", 1000, 1);
+    SetTimer("server_random_broadcast", RANDOM_BROADCAST_TIME, 1);
 
     Map_Reload();
     
@@ -468,7 +468,7 @@ public OnPlayerRequestClass(playerid, classid)
     
     TogglePlayerControllable(playerid, true);
     
-    SetTimerEx("ForceClassSpawn", 15, false, "ii", playerid, YHash(__GetName(playerid)));
+    SetTimerEx("ForceClassSpawn", 15, 0, "ii", playerid, YHash(__GetName(playerid)));
 	return 1;
 }
 
@@ -509,12 +509,6 @@ public OnPlayerConnect(playerid)
     GetPlayerName(playerid, PlayerData[playerid][sName], MAX_PLAYER_NAME + 1);
     GetPlayerIp(playerid, PlayerData[playerid][sIP], MAX_PLAYER_IP + 1);
 	
-    if(PlayerData[playerid][VIPLabel] != Text3D:-1)
-    {
-        DestroyDynamic3DTextLabel(PlayerData[playerid][VIPLabel]);
-        PlayerData[playerid][VIPLabel] = Text3D:-1;
-    }
-	
 	if(bGlobalShutdown)
 	{
   		Kick(playerid);
@@ -529,7 +523,7 @@ public OnPlayerConnect(playerid)
         ZMP_ShowLogo(playerid);
 		
 		new query[128];
-		format(query, sizeof(query), "SELECT * FROM `bans` WHERE `name` = '%s';", __GetName(playerid, true));
+		format(query, sizeof(query), "SELECT * FROM `bans` WHERE `name` = '%s';", __GetName(playerid));
 		mysql_tquery(g_pSQL, query, "OnQueryFinish", "siii", query, THREAD_IS_BANNED, playerid, g_pSQL);
  	}
 	return 1;
@@ -617,12 +611,6 @@ public OnPlayerDisconnect(playerid, reason)
 	
 	gTeam[playerid] = gNONE;
 	
-    if(PlayerData[playerid][VIPLabel] != Text3D:-1)
-    {
-        DestroyDynamic3DTextLabel(PlayerData[playerid][VIPLabel]);
-        PlayerData[playerid][VIPLabel] = Text3D:-1;
-    }
-	
 	if(PlayerData[playerid][bMuted])
 		KillTimer(PlayerData[playerid][tMute]);
 		
@@ -694,7 +682,7 @@ public OnPlayerDeath(playerid, killerid, reason)
     PlayerData[playerid][bIsDead] = true;
     
 	PlayerData[playerid][iCoolDownDeath]++;
-	SetTimerEx("CoolDownDeath", COOLDOWN_DEATH, false, "i", playerid);
+	SetTimerEx("CoolDownDeath", COOLDOWN_DEATH, 0, "i", playerid);
 	if(PlayerData[playerid][iCoolDownDeath] >= 2)
 	{
 		return Kick(playerid);
@@ -1126,7 +1114,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			        return 1;
 				}
 
-	            PlayerData[playerid][VIPLabel] = CreateDynamic3DTextLabel(text, -1, 0.0, 0.0, 0.65, 20.0, playerid, INVALID_VEHICLE_ID, 1, -1, -1, -1, 20.0);
+	            PlayerData[playerid][txVIPLabel] = CreateDynamic3DTextLabel(text, -1, 0.0, 0.0, 0.65, 20.0, playerid, INVALID_VEHICLE_ID, 1, -1, -1, -1, 20.0);
 
                 SCM(playerid, -1, ""er"Label attached! Note: You can't see the label yourself");
 				return true;
@@ -1148,7 +1136,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			        return 1;
 				}
 
-				UpdateDynamic3DTextLabelText(PlayerData[playerid][VIPLabel], -1, text);
+				UpdateDynamic3DTextLabelText(PlayerData[playerid][txVIPLabel], -1, text);
 	            SCM(playerid, -1, ""er"Label text changed!");
 	            return true;
 	        }
@@ -1534,7 +1522,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 					format(string, sizeof(string), "SELECT * FROM `blacklist` WHERE `ip` = '%s';", __GetIP(extraid));
 					mysql_tquery(g_pSQL, string, "OnQueryFinish", "siii", string, THREAD_CHECK_IP, extraid, g_pSQL);
 				
-				    format(string, sizeof(string), "DELETE FROM `bans` WHERE `name` = '%s' LIMIT 1;", __GetName(extraid, true));
+				    format(string, sizeof(string), "DELETE FROM `bans` WHERE `name` = '%s' LIMIT 1;", __GetName(extraid));
 				    mysql_tquery(g_pSQL, string, "", "");
 				}
 				else
@@ -1561,7 +1549,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
             if(rows == 0)
             {
 				new querystring[128];
-				format(querystring, sizeof(querystring), "SELECT `id` FROM `accounts` WHERE `name` = '%s';", __GetName(extraid, true));
+				format(querystring, sizeof(querystring), "SELECT `id` FROM `accounts` WHERE `name` = '%s';", __GetName(extraid));
 				mysql_tquery(g_pSQL, querystring, "OnQueryFinish", "siii", querystring, THREAD_ACCOUNT_EXIST, extraid, g_pSQL);
             }
             else
@@ -1579,7 +1567,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 		    if(rows != 0)
 		    {
 				new querystring[128];
-				format(querystring, sizeof(querystring), "SELECT `id` FROM `accounts` WHERE `name` = '%s' AND `ip` = '%s';", __GetName(extraid, true), __GetIP(extraid));
+				format(querystring, sizeof(querystring), "SELECT `id` FROM `accounts` WHERE `name` = '%s' AND `ip` = '%s';", __GetName(extraid), __GetIP(extraid));
 				mysql_tquery(g_pSQL, querystring, "OnQueryFinish", "siii", querystring, THREAD_CHECK_AUTO_LOGIN, extraid, g_pSQL);
 		    }
 		    else
@@ -1785,7 +1773,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
     {
 	    g_bPlayerHit[damagedid] = true;
 	    SetPlayerAttachedObject(damagedid, 8, 1240, 2, 0.44099, 0.0000, 0.02300, -1.79999, 84.09998, 0.00000, 1.00000, 1.00000, 1.00000);
-	    SetTimerEx("remove_health_obj", 800, false, "i", damagedid);
+	    SetTimerEx("remove_health_obj", 800, 0, "i", damagedid);
 	}
 	if(gTeam[playerid] == gHUMAN && gTeam[damagedid] == gZOMBIE)
 	{
@@ -1844,7 +1832,7 @@ YCMD:shutdown(playerid, params[], help)
 	        SCM(i, -1, "Server restart! Restart your game. IP: samp.nefserver.net:7777");
 	    }
 
-	    SetTimer("server_init_shutdown", 3000, false);
+	    SetTimer("server_init_shutdown", 3000, 0);
  	}
 	return 1;
 }
@@ -1902,7 +1890,7 @@ YCMD:label(playerid, params[], help)
 {
     if(PlayerData[playerid][iVIP] == 1)
 	{
-	    if(PlayerData[playerid][VIPLabel] == Text3D:-1)
+	    if(PlayerData[playerid][txVIPLabel] == Text3D:-1)
 	    {
 	        ShowPlayerDialog(playerid, DIALOG_LABEL, DIALOG_STYLE_INPUT, ""zmp" - Attach VIP Label", ""white"Enter some text which your label shall display\n"blue"* "white"Input length: 3-35", "Next", "Cancel");
 	    }
@@ -1922,7 +1910,7 @@ YCMD:elabel(playerid, params[], help)
 {
     if(PlayerData[playerid][iVIP] == 1)
 	{
-	    if(PlayerData[playerid][VIPLabel] != Text3D:-1)
+	    if(PlayerData[playerid][txVIPLabel] != Text3D:-1)
 	    {
 	        ShowPlayerDialog(playerid, DIALOG_LABEL + 1, DIALOG_STYLE_INPUT, ""zmp" - Change VIP Label Text", ""white"Enter the new text which your label shall display\n"blue"* "white"Input length: 3-35", "Next", "Cancel");
 	    }
@@ -1942,10 +1930,10 @@ YCMD:dlabel(playerid, params[], help)
 {
     if(PlayerData[playerid][iVIP] == 1)
 	{
-	    if(PlayerData[playerid][VIPLabel] != Text3D:-1)
+	    if(PlayerData[playerid][txVIPLabel] != Text3D:-1)
 	    {
-	        DestroyDynamic3DTextLabel(PlayerData[playerid][VIPLabel]);
-	        PlayerData[playerid][VIPLabel] = Text3D:-1;
+	        DestroyDynamic3DTextLabel(PlayerData[playerid][txVIPLabel]);
+	        PlayerData[playerid][txVIPLabel] = Text3D:-1;
 	        SCM(playerid, -1, ""er"Label removed!");
 	    }
 	    else
@@ -2274,7 +2262,7 @@ YCMD:mute(playerid, params[], help)
 	    	format(gstr, sizeof(gstr), ""yellow"** "red"%s(%i) has been muted by Admin %s(%i) for %i seconds [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, time, reason);
             SCMToAll(YELLOW, gstr);
             print(gstr);
-			PlayerData[player][tMute] = SetTimerEx("player_unmute", time * 1000, false, "i", player);
+			PlayerData[player][tMute] = SetTimerEx("player_unmute", time * 1000, 0, "i", player);
 		}
 		else
 		{
@@ -3309,7 +3297,7 @@ YCMD:mk(playerid, params[], help)
 
 	PlayerPlaySound(playerid, 1052, 0.0, 0.0, 0.0);
 
-	PlayerData[playerid][tMedkit] = SetTimerEx("p_medkit", 200, true, "i", playerid);
+	PlayerData[playerid][tMedkit] = SetTimerEx("p_medkit", 200, 1, "i", playerid);
 
 	GameTextForPlayer(playerid, "~y~~h~Medkit used!", 3000, 5);
 	PlayerData[playerid][tickLastMedkit] = tick;
@@ -4112,29 +4100,27 @@ ResetPlayerVars(playerid)
 	SetPVarInt(playerid, "LastID", -1);
 	g_bPlayerHit[playerid] = false;
 	PlayerData[playerid][gSpecialZed] = zedZOMBIE;
+	
+    if(PlayerData[playerid][txVIPLabel] != Text3D:-1)
+    {
+        DestroyDynamic3DTextLabel(PlayerData[playerid][txVIPLabel]);
+        PlayerData[playerid][txVIPLabel] = Text3D:-1;
+    }
 }
 
-__GetName(playerid, bool:escaped = false)
+__GetName(playerid)
 {
-    new name[25];
-
-	if(escaped)
-	{
-	    mysql_escape_string(PlayerData[playerid][sName], name, g_pSQL, 25);
-	}
-	else
-	{
-		strcat(name, PlayerData[playerid][sName], 25);
-	}
-
+    new name[MAX_PLAYER_NAME + 1];
+    
+	strcat(name, PlayerData[playerid][sName], MAX_PLAYER_NAME + 1);
     return name;
 }
 
 __GetIP(playerid)
 {
-	new ip[16];
-	strcat(ip, PlayerData[playerid][sIP], 16);
-
+	new ip[MAX_PLAYER_IP + 1];
+	
+	strcat(ip, PlayerData[playerid][sIP], MAX_PLAYER_IP + 1);
     return ip;
 }
 
@@ -4160,7 +4146,7 @@ MySQL_CreateAccount(playerid, password[])
 
     new query[350], escape[33];
 	mysql_escape_string(password, escape, g_pSQL, 33);
-    format(query, sizeof(query), "INSERT INTO `accounts` (`name`, `logged`, `password`, `ip`, `reg_date`, `lastlogged`) VALUES ('%s', 1, MD5('%s'), '%s', %i, %i);", __GetName(playerid, true), escape, __GetIP(playerid), gettime(), PlayerData[playerid][iLastLogged]);
+    format(query, sizeof(query), "INSERT INTO `accounts` (`name`, `logged`, `password`, `ip`, `reg_date`, `lastlogged`) VALUES ('%s', 1, MD5('%s'), '%s', %i, %i);", __GetName(playerid), escape, __GetIP(playerid), gettime(), PlayerData[playerid][iLastLogged]);
 	mysql_tquery(g_pSQL, query, "OnQueryFinish", "siii", query, THREAD_CREATE_ACCOUNT, playerid, g_pSQL);
 }
 
@@ -4174,21 +4160,21 @@ MySQL_CleanUp()
 MySQL_LogPlayerIn(playerid)
 {
 	new query[150];
-    format(query, sizeof(query), "UPDATE `accounts` SET `logged` = 1, `ip` = '%s' WHERE `name` = '%s' LIMIT 1;", __GetIP(playerid), __GetName(playerid, true));
+    format(query, sizeof(query), "UPDATE `accounts` SET `logged` = 1, `ip` = '%s' WHERE `name` = '%s' LIMIT 1;", __GetIP(playerid), __GetName(playerid));
     mysql_tquery(g_pSQL, query, "", "");
 }
 
 MySQL_LoadPlayer(playerid)
 {
 	new query[200];
-	format(query, sizeof(query), "SELECT * FROM `accounts` WHERE `name` = '%s' LIMIT 1;", __GetName(playerid, true));
+	format(query, sizeof(query), "SELECT * FROM `accounts` WHERE `name` = '%s' LIMIT 1;", __GetName(playerid));
 	mysql_tquery(g_pSQL, query, "OnQueryFinish", "siii", query, THREAD_LOAD_PLAYER, playerid, g_pSQL);
 }
 
 MySQL_LogPlayerOut(playerid)
 {
 	new query[150];
-	format(query, sizeof(query), "UPDATE `accounts` SET `logged` = 0, `lastlogged` = %i WHERE `name` = '%s' LIMIT 1;", gettime(), __GetName(playerid, true));
+	format(query, sizeof(query), "UPDATE `accounts` SET `logged` = 0, `lastlogged` = %i WHERE `name` = '%s' LIMIT 1;", gettime(), __GetName(playerid));
 	mysql_tquery(g_pSQL, query, "", "");
 }
 
@@ -4196,7 +4182,7 @@ MySQL_UpdatePlayerPass(playerid, hash[])
 {
 	new query[128], escape[33];
 	mysql_escape_string(hash, escape, g_pSQL, 33);
-	format(query, sizeof(query), "UPDATE `accounts` SET `password` = MD5('%s') WHERE `name` = '%s' LIMIT 1;", escape, __GetName(playerid, true));
+	format(query, sizeof(query), "UPDATE `accounts` SET `password` = MD5('%s') WHERE `name` = '%s' LIMIT 1;", escape, __GetName(playerid));
  	mysql_tquery(g_pSQL, query, "", "");
 }
 
@@ -4238,7 +4224,7 @@ MySQL_SavePlayer(playerid)
 	strcat(finquery, tmp);
 	
 	format(tmp, sizeof(tmp), " WHERE `name` = '%s' LIMIT 1;",
-	    __GetName(playerid, true));
+	    __GetName(playerid));
 	    
     strcat(finquery, tmp);
 
@@ -4248,7 +4234,7 @@ MySQL_SavePlayer(playerid)
 function:KickEx(playerid)
 {
 	PlayerData[playerid][bOpenSeason] = true;
-	SetTimerEx("Kick_Delay", 3000, false, "ii", playerid, YHash(__GetName(playerid)));
+	SetTimerEx("Kick_Delay", 3000, 0, "ii", playerid, YHash(__GetName(playerid)));
 	return 1;
 }
 
@@ -4394,7 +4380,7 @@ GivePlayerCash(playerid, amount, bool:populate = true)
 		}
 		PlayerTextDrawSetString(playerid, TXTMoney[playerid], str);
         PlayerTextDrawShow(playerid, TXTMoney[playerid]);
-		SetTimerEx("HideMoneyTD", 3000, false, "ii", playerid, YHash(__GetName(playerid)));
+		SetTimerEx("HideMoneyTD", 3000, 0, "ii", playerid, YHash(__GetName(playerid)));
     }
 	return 1;
 }
@@ -4427,7 +4413,7 @@ GivePlayerScore_(playerid, amount, bool:populate = true)
 		}
 		PlayerTextDrawSetString(playerid, TXTScore[playerid], str);
         PlayerTextDrawShow(playerid, TXTScore[playerid]);
-		SetTimerEx("HideScoreTD", 3000, false, "ii", playerid, YHash(__GetName(playerid)));
+		SetTimerEx("HideScoreTD", 3000, 0, "ii", playerid, YHash(__GetName(playerid)));
     }
 	return 1;
 }
@@ -4950,7 +4936,7 @@ ZMP_EndGame()
 	Map_Unload();
 
 	g_GlobalStatus = e_Status_RoundEnd;
-	SetTimer("ZMP_SwitchMap", 10000, false);
+	SetTimer("ZMP_SwitchMap", 10000, 0);
 	return 1;
 }
 
@@ -5016,7 +5002,7 @@ ZMP_BeginNewGame()
 	}
 	
 	iInfestaion = DEFAULT_INFESTATION_TIME;
-    tInfestation = SetTimer("ZMP_InfestationCountDown", 1000, true);
+    tInfestation = SetTimer("ZMP_InfestationCountDown", 1000, 1);
 	TextDrawShowForAll(TXTInfestationArrival);
 	return 1;
 }
@@ -5059,7 +5045,7 @@ function:ZMP_InfestationCountDown()
 			TextDrawShowForAll(TXTRescue);
 
 			iRescue = DEFAULT_RESCUE_TIME;
-			tRescue = SetTimer("ZMP_RescueCountDown", 1000, true);
+			tRescue = SetTimer("ZMP_RescueCountDown", 1000, 1);
 			
 			ZMP_RandomInfection();
 		}
@@ -5500,17 +5486,17 @@ LoadMap(playerid)
 	new ping = GetPlayerPing(playerid);
 	if(ping < 50)
 	{
-		PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 1500, false, "i", playerid);
+		PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 1500, 0, "i", playerid);
 	}
 	else if(ping < 100)
 	{
-	    PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 2100, false, "i", playerid);
+	    PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 2100, 0, "i", playerid);
 	}
 	else if(ping < 200)
 	{
-	    PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 2500, false, "i", playerid);
+	    PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 2500, 0, "i", playerid);
 	}
-	else PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 3100, false, "i", playerid);
+	else PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 3100, 0, "i", playerid);
 }
 
 function:FreePlayer(playerid)
@@ -5584,7 +5570,7 @@ __GetPlayerID(const playername[])
     {
     	if(IsPlayerConnected(i))
       	{
-        	if(!strcmp(playername, __GetName(i), true))
+        	if(!strcmp(playername, __GetName(i)))
         	{
           		return i;
         	}
@@ -5669,7 +5655,7 @@ function:server_init_shutdown()
 			Kick(i);
 		}
 	}
-	SetTimer("_server_shutdown", 2000, false);
+	SetTimer("_server_shutdown", 2000, 0);
 	return 1;
 }
 
