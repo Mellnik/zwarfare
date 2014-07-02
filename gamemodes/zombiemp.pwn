@@ -4901,68 +4901,6 @@ function:ZMP_RescueCountDown()
 	return 1;
 }
 
-ZMP_RandomInfection()
-{
-	new Iterator:count<MAX_PLAYERS>;
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-	    if(IsPlayerAvail(i) && gTeam[i] == gHUMAN)
-	    {
-	        Iter_Add(count, i);
-	    }
-	}
-
-	if(Iter_Count(count) <= 1)
-	{
-        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
-
-        if(!bInfestationArrived) GameTextForAll("~w~Humans win!", 10000, 5);
-
-		ZMP_EndGame();
-
-        KillTimer(tRescue);
-        KillTimer(tInfestation);
-
-        new str[144];
-        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
-        SCMToAll(-1, str);
-        
-	    // Server empty or what? lol | this shouldn't even be called lul
-	    printf("[DEBUG] RI = %i Z = %i", Iter_Count(count), ZMP_GetZombies());
-	}
-	else
-	{
-		new Iterator:count2<MAX_PLAYERS>;
-		for(new i = 0; i < MAX_PLAYERS; i++)
-		{
-		    if(IsPlayerAvail(i) && gTeam[i] == gHUMAN && !IsPlayerOnDesktop(i, 1000))
-		    {
-		        Iter_Add(count2, i);
-		    }
-		}
-		
-		new pid;
-		if(Iter_Count(count2) == 0)
-		{
-	        pid = Iter_Random(count);
-		}
-		else
-		{
-	        pid = Iter_Random(count2);
-		}
-		
-		new string[128];
-		format(string, sizeof(string), ""zmp" "yellow"%s(%i) has been infected by the infestation!", __GetName(pid), pid);
-		SCMToAll(-1, string);
-
-        ZMP_SetPlayerZombie(pid, false);
-        PlayInfectSound();
-
-        GameTextForPlayer(pid, "~w~Infect others by punching them!", 3000, 5);
-	}
-	return 1;
-}
-
 function:ZMP_SwitchMap()
 {
     g_bAllowEnd = true;
@@ -5020,19 +4958,6 @@ function:OnMapAdded(playerid)
 	return 1;
 }
 
-IsPlayerOnDesktop(playerid, afktimems = 5000)
-{
-	if((PlayerData[playerid][tickPlayerUpdate] + afktimems) < (GetTickCountEx())) return 1;
-	return 0;
-}
-
-function:player_unmute(playerid)
-{
-    PlayerData[playerid][bMuted] = false;
-    PlayerData[playerid][tMute] = -1;
-    return 1;
-}
-
 function:OnNCReceive(playerid)
 {
 	new rows, fields;
@@ -5079,51 +5004,6 @@ function:OnNCReceive2(playerid, name[])
 	return 1;
 }
 
-ZMP_PlayerStatsUpdate(playerid)
-{
-	new string[255];
-	
-	format(string, sizeof(string), "~w~Score: %i~n~Money: $%s~n~Kills: %i~n~Deaths: %i~n~K/D: %.2f",
-	    PlayerData[playerid][iScore],
-	    ToCurrency(PlayerData[playerid][iMoney]),
-	    PlayerData[playerid][iKills],
-	    PlayerData[playerid][iDeaths],
-        Float:PlayerData[playerid][iKills] / (PlayerData[playerid][iDeaths] == 0 ? 1.00 : Float:PlayerData[playerid][iDeaths]));
-
-	PlayerTextDrawSetString(playerid, TXTPlayerStats[playerid], string);
-}
-
-ZMP_UpdatePlayerHealthTD(playerid)
-{
-	const Float:MIN = 497.00;
-	const Float:MAX = 605.00;
-	
-	new Float:h, Float:POS;
-	GetPlayerHealth(playerid, h);
-
-	if(gTeam[playerid] == gZOMBIE && h >= 1.00)
-	{
-		h = h / 2.00;
-	}
-	
-	if(h >= 100.00)
-	{
-	    POS = MAX;
-	}
-	else if(h <= 0.00)
-	{
-		POS = MIN;
-	}
-	else
-	{
-	    POS = floatadd(floatmul(h, 1.08), MIN);
-	}
-
-    PlayerTextDrawTextSize(playerid, TXTPlayerHealth[playerid], POS, -80.000000);
-    PlayerTextDrawHide(playerid, TXTPlayerHealth[playerid]);
-    PlayerTextDrawShow(playerid, TXTPlayerHealth[playerid]);
-}
-
 function:ProcessTick()
 {
 	if(g_GlobalStatus != e_Status_Inactive)
@@ -5163,39 +5043,6 @@ function:ProcessTick()
 		}
 	}
 	return 1;
-}
-
-GetUptime()
-{
-    new Result[128],
-        Remaining = gettime() - g_iStartTime,
-        Time[4];
-
-    Time[0] = Remaining % 60;
-    Remaining /= 60;
-    Time[1] = Remaining % 60;
-    Remaining /= 60;
-    Time[2] = Remaining % 24;
-    Remaining /= 24;
-    Time[3] = Remaining;
-
-    if(Time[3])
-    {
-        format(Result, sizeof(Result), ""white"Server is up for %i days, %i hours, %i minutes and %i seconds", Time[3], Time[2], Time[1], Time[0]);
-	}
-    else if(Time[2])
-    {
-        format(Result, sizeof(Result), ""white"Server is up for %i hours, %i minutes and %i seconds", Time[2], Time[1], Time[0]);
-	}
-    else if(Time[1])
-    {
-        format(Result, sizeof(Result), ""white"Server is up for %i minutes and %i seconds", Time[1], Time[0]);
-	}
-    else
-    {
-        format(Result, sizeof(Result), ""white"Server is up for %i seconds", Time[0]);
-	}
-    return Result;
 }
 
 function:OnPlayerNameChangeRequest(newname[], playerid)
@@ -5244,88 +5091,26 @@ function:OnPlayerNameChangeRequest(newname[], playerid)
 	return 1;
 }
 
-stock GetWeaponModel(weaponid)
+function:player_free(playerid, namehash)
 {
-    switch(weaponid)
-    {
-        case 1: return 331;
-        case 2..8: return weaponid+331;
-		case 9: return 341;
-		case 10..15: return weaponid+311;
-		case 16..18: return weaponid+326;
-		case 22..29: return weaponid+324;
-		case 30,31: return weaponid+325;
-		case 32: return 372;
-		case 33..45: return weaponid+324;
-		case 46: return 371;
-    }
-    return 0;
-}
-
-stock Float:GetDistance3D(Float:x1, Float:y1, Float:z1, Float:x2, Float:y2, Float:z2)
-{
-	return VectorSize(x1 - x2, y1 - y2, z1 - z2);
-}
-
-Float:GetDistanceBetweenPlayers(playerid1, playerid2)
-{
-	if(playerid1 == INVALID_PLAYER_ID || playerid2 == INVALID_PLAYER_ID)
-	    return -1.00;
-	    
-	if(!IsPlayerConnected(playerid1) || !IsPlayerConnected(playerid2))
-	    return -1.00;
-	    
-	new Float:pPOS[2][3];
-
-	GetPlayerPos(playerid1, pPOS[0][0], pPOS[0][1], pPOS[0][2]);
-	GetPlayerPos(playerid2, pPOS[1][0], pPOS[1][1], pPOS[1][2]);
-	
-	return VectorSize(pPOS[0][0] - pPOS[1][0], pPOS[0][1] - pPOS[1][1], pPOS[0][2] - pPOS[1][2]);
-}
-
-LoadMap(playerid)
-{
-	Streamer_Update(playerid);
-	PlayerData[playerid][bLoadMap] = true;
-	TogglePlayerControllable(playerid, false);
-	TextDrawShowForPlayer(playerid, TXTLoading);
-	new ping = GetPlayerPing(playerid);
-	if(ping < 50)
+	if(namehash == YHash(__GetName(playerid)))
 	{
-		PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 1500, 0, "i", playerid);
-	}
-	else if(ping < 100)
-	{
-	    PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 2100, 0, "i", playerid);
-	}
-	else if(ping < 200)
-	{
-	    PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 2500, 0, "i", playerid);
-	}
-	else PlayerData[playerid][tLoadMap] = SetTimerEx("FreePlayer", 3100, 0, "i", playerid);
-}
-
-function:FreePlayer(playerid)
-{
-	if(PlayerData[playerid][bLoadMap])
-	{
-		TogglePlayerControllable(playerid, 1);
-		TextDrawHideForPlayer(playerid, TXTLoading);
-		PlayerData[playerid][tLoadMap] = -1;
-		PlayerData[playerid][bLoadMap] = false;
+		if(PlayerData[playerid][bLoadMap])
+		{
+			TogglePlayerControllable(playerid, 1);
+			TextDrawHideForPlayer(playerid, TXTLoading);
+			PlayerData[playerid][tLoadMap] = -1;
+			PlayerData[playerid][bLoadMap] = false;
+		}
 	}
 	return 1;
 }
 
-PlayInfectSound()
+function:player_unmute(playerid)
 {
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-	    if(IsPlayerAvail(i))
-	    {
-	        PlaySound(i, 1039);
-	    }
-	}
+    PlayerData[playerid][bMuted] = false;
+    PlayerData[playerid][tMute] = -1;
+    return 1;
 }
 
 function:p_medkit(playerid)
@@ -5368,21 +5153,6 @@ function:server_random_broadcast()
 {
     SCMToAll(WHITE, ServerMSGS[random(sizeof(ServerMSGS))]);
 	return 1;
-}
-
-__GetPlayerID(const playername[])
-{
-	for(new i = 0; i < MAX_PLAYERS; i++)
-    {
-    	if(IsPlayerConnected(i))
-      	{
-        	if(!strcmp(playername, __GetName(i)))
-        	{
-          		return i;
-        	}
-      	}
-    }
-    return INVALID_PLAYER_ID;
 }
 
 function:OnUnbanAttempt(playerid, unban[])
@@ -5452,90 +5222,6 @@ function:OnOfflineBanAttempt2(playerid, ban[], reason[])
 	return 1;
 }
 
-function:server_init_shutdown()
-{
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-	    if(IsPlayerConnected(i))
-	    {
-			Kick(i);
-		}
-	}
-	SetTimer("_server_shutdown", 2000, 0);
-	return 1;
-}
-
-function:_server_shutdown()
-{
-	Log(LOG_EXIT, "server_shutdown called");
-	SendRconCommand("exit");
-	return 1;
-}
-
-server_initialize()
-{
-	format(gstr, sizeof(gstr), "hostname %s", HOSTNAME);
-	SendRconCommand(gstr);
-	SendRconCommand("weburl "URL"");
-    SetGameModeText("(-|-) ZombieMPSurvivalFunHorror");
-	SendRconCommand("mapname ZombieMPSurvivalFunHorror");
-	SendRconCommand("playertimeout 7000");
-	SendRconCommand("ackslimit 4000");
-	SendRconCommand("messageslimit 500");
-	SendRconCommand("messageholelimit 1800");
-	SendRconCommand("rcon 0");
-	SendRconCommand("maxnpc 0");
-	
-    EnableVehicleFriendlyFire();
-    ShowPlayerMarkers(PLAYER_MARKERS_MODE_STREAMED);
-    DisableInteriorEnterExits();
-    ShowNameTags(1);
-    SetNameTagDrawDistance(50.0);
-    AllowInteriorWeapons(1);
-    UsePlayerPedAnims();
-    EnableStuntBonusForAll(0);
-    SollIchDirMaEtWatSagen();
-	SetWeather(43);
-    SetWorldTime(7);
-    
-    CreateTextdraws();
-
-	g_iStartTime = gettime();
-    
- 	Command_AddAltNamed("cmds", "commands");
-	Command_AddAltNamed("stats", "statistics");
-	Command_AddAltNamed("sounds", "sound");
-	Command_AddAltNamed("adminhelp", "ahelp");
-	Command_AddAltNamed("adminhelp", "acmds");
-	Command_AddAltNamed("go", "goto");
-	Command_AddAltNamed("stopanim", "stopanims");
-	Command_AddAltNamed("mk", "medkit");
-	Command_AddAltNamed("mk", "medkits");
-}
-
-GetTickCountEx()
-{
-	return (GetTickCount() + 3600000);
-}
-
-Log(E_LOG_LEVEL:log_level, const fmat[], va_args<>)
-{
-	va_format(gstr2, sizeof(gstr2), fmat, va_start<2>);
-
-	switch(log_level)
-	{
-	    case LOG_INIT: strins(gstr2, "LogInit: ", 0, sizeof(gstr2));
-		case LOG_EXIT: strins(gstr2, "LogExit: ", 0, sizeof(gstr2));
-		case LOG_ONLINE: strins(gstr2, "LogOnline: ", 0, sizeof(gstr2));
-		case LOG_NET: strins(gstr2, "LogNet: ", 0, sizeof(gstr2));
-		case LOG_PLAYER: strins(gstr2, "LogPlayer: ", 0, sizeof(gstr2));
-		case LOG_WORLD: strins(gstr2, "LogWorld: ", 0, sizeof(gstr2));
-		case LOG_FAIL: strins(gstr2, "LogError: ", 0, sizeof(gstr2));
-		case LOG_SUSPECT: strins(gstr2, "LogSuspect: ", 0, sizeof(gstr2));
-	}
-	return print(gstr2);
-}
-
 function:OnPlayerAccountRequest(playerid, namehash, request)
 {
     if(!IsPlayerConnected(playerid))
@@ -5546,7 +5232,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	    Kick(playerid);
 		return 0;
 	}
-	
+
 	switch(request)
 	{
 	    case ACCOUNT_REQUEST_BANNED:
@@ -5643,7 +5329,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 			if(cache_get_row_count() > 0)
 			{
 				new ORM:ormid = PlayerData[playerid][pORM] = orm_create("accounts");
-				
+
 			 	orm_addvar_int(ormid, PlayerData[playerid][iAccountID], "id");
 				orm_addvar_string(ormid, PlayerData[playerid][sName], MAX_PLAYER_NAME + 1, "name");
 				orm_addvar_int(ormid, PlayerData[playerid][iAdminLevel], "adminlevel");
@@ -5658,14 +5344,14 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 				orm_addvar_int(ormid, PlayerData[playerid][iRegisterDate], "reg_date");
 				orm_addvar_int(ormid, PlayerData[playerid][iLastLogin], "lastlogin");
 				orm_addvar_int(ormid, PlayerData[playerid][iLastNC], "lastnc");
-				
+
 				orm_setkey(ormid, "id");
 				orm_apply_cache(ormid, 0);
-				
+
 			 	SetPlayerCash(playerid, PlayerData[playerid][iMoney]);
 			 	SetPlayerScore(playerid, PlayerData[playerid][iScore]);
 			 	PlayerData[playerid][iConnectTime] = gettime();
-			 	
+
 				if(PlayerData[playerid][iAdminLevel] > 0)
 				{
 					format(gstr, sizeof(gstr), ""server_sign" "grey"Successfully logged in. (Adminlevel %i)", PlayerData[playerid][iAdminLevel]);
@@ -5740,6 +5426,329 @@ function:OnPlayerRegister(playerid, namehash, hash[], playername[], ip_address[]
 
 		MySQL_SavePlayer(playerid);
 		MySQL_LogPlayerIn(playerid);
+	}
+	return 1;
+}
+
+function:server_init_shutdown()
+{
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+	    if(IsPlayerConnected(i))
+	    {
+			Kick(i);
+		}
+	}
+	SetTimer("_server_shutdown", 2000, 0);
+	return 1;
+}
+
+function:_server_shutdown()
+{
+	Log(LOG_EXIT, "server_shutdown called");
+	SendRconCommand("exit");
+	return 1;
+}
+
+server_initialize()
+{
+	format(gstr, sizeof(gstr), "hostname %s", HOSTNAME);
+	SendRconCommand(gstr);
+	SendRconCommand("weburl "URL"");
+    SetGameModeText("(-|-) ZombieMPSurvivalFunHorror");
+	SendRconCommand("mapname ZombieMPSurvivalFunHorror");
+	SendRconCommand("playertimeout 7000");
+	SendRconCommand("ackslimit 4000");
+	SendRconCommand("messageslimit 500");
+	SendRconCommand("messageholelimit 1800");
+	SendRconCommand("rcon 0");
+	SendRconCommand("maxnpc 0");
+	
+    EnableVehicleFriendlyFire();
+    ShowPlayerMarkers(PLAYER_MARKERS_MODE_STREAMED);
+    DisableInteriorEnterExits();
+    ShowNameTags(1);
+    SetNameTagDrawDistance(50.0);
+    AllowInteriorWeapons(1);
+    UsePlayerPedAnims();
+    EnableStuntBonusForAll(0);
+    SollIchDirMaEtWatSagen();
+	SetWeather(43);
+    SetWorldTime(7);
+    
+    CreateTextdraws();
+
+	g_iStartTime = gettime();
+    
+ 	Command_AddAltNamed("cmds", "commands");
+	Command_AddAltNamed("stats", "statistics");
+	Command_AddAltNamed("sounds", "sound");
+	Command_AddAltNamed("adminhelp", "ahelp");
+	Command_AddAltNamed("adminhelp", "acmds");
+	Command_AddAltNamed("go", "goto");
+	Command_AddAltNamed("stopanim", "stopanims");
+	Command_AddAltNamed("mk", "medkit");
+	Command_AddAltNamed("mk", "medkits");
+}
+
+GetTickCountEx()
+{
+	return (GetTickCount() + 3600000);
+}
+
+Log(E_LOG_LEVEL:log_level, const fmat[], va_args<>)
+{
+	va_format(gstr2, sizeof(gstr2), fmat, va_start<2>);
+
+	switch(log_level)
+	{
+	    case LOG_INIT: strins(gstr2, "LogInit: ", 0, sizeof(gstr2));
+		case LOG_EXIT: strins(gstr2, "LogExit: ", 0, sizeof(gstr2));
+		case LOG_ONLINE: strins(gstr2, "LogOnline: ", 0, sizeof(gstr2));
+		case LOG_NET: strins(gstr2, "LogNet: ", 0, sizeof(gstr2));
+		case LOG_PLAYER: strins(gstr2, "LogPlayer: ", 0, sizeof(gstr2));
+		case LOG_WORLD: strins(gstr2, "LogWorld: ", 0, sizeof(gstr2));
+		case LOG_FAIL: strins(gstr2, "LogError: ", 0, sizeof(gstr2));
+		case LOG_SUSPECT: strins(gstr2, "LogSuspect: ", 0, sizeof(gstr2));
+	}
+	return print(gstr2);
+}
+
+stock GetWeaponModel(weaponid)
+{
+    switch(weaponid)
+    {
+        case 1: return 331;
+        case 2..8: return weaponid+331;
+		case 9: return 341;
+		case 10..15: return weaponid+311;
+		case 16..18: return weaponid+326;
+		case 22..29: return weaponid+324;
+		case 30,31: return weaponid+325;
+		case 32: return 372;
+		case 33..45: return weaponid+324;
+		case 46: return 371;
+    }
+    return 0;
+}
+
+stock Float:GetDistance3D(Float:x1, Float:y1, Float:z1, Float:x2, Float:y2, Float:z2)
+{
+	return VectorSize(x1 - x2, y1 - y2, z1 - z2);
+}
+
+Float:GetDistanceBetweenPlayers(playerid1, playerid2)
+{
+	if(playerid1 == INVALID_PLAYER_ID || playerid2 == INVALID_PLAYER_ID)
+	    return -1.00;
+
+	if(!IsPlayerConnected(playerid1) || !IsPlayerConnected(playerid2))
+	    return -1.00;
+
+	new Float:pPOS[2][3];
+
+	GetPlayerPos(playerid1, pPOS[0][0], pPOS[0][1], pPOS[0][2]);
+	GetPlayerPos(playerid2, pPOS[1][0], pPOS[1][1], pPOS[1][2]);
+
+	return VectorSize(pPOS[0][0] - pPOS[1][0], pPOS[0][1] - pPOS[1][1], pPOS[0][2] - pPOS[1][2]);
+}
+
+LoadMap(playerid)
+{
+	Streamer_Update(playerid);
+	PlayerData[playerid][bLoadMap] = true;
+	TogglePlayerControllable(playerid, false);
+	TextDrawShowForPlayer(playerid, TXTLoading);
+	
+	new ping = GetPlayerPing(playerid);
+	
+	switch(ping)
+	{
+		case 0..50:
+		{
+		    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 1500, 0, "ii", playerid, YHash(__GetName(playerid)));
+		}
+		case 51..100:
+		{
+		    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 2100, 0, "ii", playerid, YHash(__GetName(playerid)));
+		}
+		case 101..200:
+		{
+		    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 2500, 0, "ii", playerid, YHash(__GetName(playerid)));
+		}
+		default:
+		{
+		    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 3100, 0, "ii", playerid, YHash(__GetName(playerid)));
+		}
+	}
+}
+
+PlayInfectSound()
+{
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+	    if(IsPlayerAvail(i))
+	    {
+	        PlaySound(i, 1039);
+	    }
+	}
+}
+
+__GetPlayerID(const playername[])
+{
+	for(new i = 0; i < MAX_PLAYERS; i++)
+    {
+    	if(IsPlayerConnected(i))
+      	{
+        	if(!strcmp(playername, __GetName(i)))
+        	{
+          		return i;
+        	}
+      	}
+    }
+    return INVALID_PLAYER_ID;
+}
+
+GetUptime()
+{
+    new Result[128],
+        Remaining = gettime() - g_iStartTime,
+        Time[4];
+
+    Time[0] = Remaining % 60;
+    Remaining /= 60;
+    Time[1] = Remaining % 60;
+    Remaining /= 60;
+    Time[2] = Remaining % 24;
+    Remaining /= 24;
+    Time[3] = Remaining;
+
+    if(Time[3])
+    {
+        format(Result, sizeof(Result), ""white"Server is up for %i days, %i hours, %i minutes and %i seconds", Time[3], Time[2], Time[1], Time[0]);
+	}
+    else if(Time[2])
+    {
+        format(Result, sizeof(Result), ""white"Server is up for %i hours, %i minutes and %i seconds", Time[2], Time[1], Time[0]);
+	}
+    else if(Time[1])
+    {
+        format(Result, sizeof(Result), ""white"Server is up for %i minutes and %i seconds", Time[1], Time[0]);
+	}
+    else
+    {
+        format(Result, sizeof(Result), ""white"Server is up for %i seconds", Time[0]);
+	}
+    return Result;
+}
+
+ZMP_PlayerStatsUpdate(playerid)
+{
+	format(gstr2, sizeof(gstr2), "~w~Score: %i~n~Money: $%s~n~Kills: %i~n~Deaths: %i~n~K/D: %.2f",
+	    PlayerData[playerid][iScore],
+	    ToCurrency(PlayerData[playerid][iMoney]),
+	    PlayerData[playerid][iKills],
+	    PlayerData[playerid][iDeaths],
+        Float:PlayerData[playerid][iKills] / (PlayerData[playerid][iDeaths] == 0 ? 1.00 : Float:PlayerData[playerid][iDeaths]));
+
+	PlayerTextDrawSetString(playerid, TXTPlayerStats[playerid], gstr2);
+}
+
+ZMP_UpdatePlayerHealthTD(playerid)
+{
+	const Float:MIN = 497.00;
+	const Float:MAX = 605.00;
+
+	new Float:h, Float:POS;
+	GetPlayerHealth(playerid, h);
+
+	if(gTeam[playerid] == gZOMBIE && h >= 1.00)
+	{
+		h = h / 2.00;
+	}
+
+	if(h >= 100.00)
+	{
+	    POS = MAX;
+	}
+	else if(h <= 0.00)
+	{
+		POS = MIN;
+	}
+	else
+	{
+	    POS = floatadd(floatmul(h, 1.08), MIN);
+	}
+
+    PlayerTextDrawTextSize(playerid, TXTPlayerHealth[playerid], POS, -80.000000);
+    PlayerTextDrawHide(playerid, TXTPlayerHealth[playerid]);
+    PlayerTextDrawShow(playerid, TXTPlayerHealth[playerid]);
+}
+
+IsPlayerOnDesktop(playerid, afktimems = 5000)
+{
+	if((PlayerData[playerid][tickPlayerUpdate] + afktimems) < (GetTickCountEx())) return 1;
+	return 0;
+}
+
+ZMP_RandomInfection()
+{
+	new Iterator:count<MAX_PLAYERS>;
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+	    if(IsPlayerAvail(i) && gTeam[i] == gHUMAN)
+	    {
+	        Iter_Add(count, i);
+	    }
+	}
+
+	if(Iter_Count(count) <= 1)
+	{
+        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
+
+        if(!bInfestationArrived) GameTextForAll("~w~Humans win!", 10000, 5);
+
+		ZMP_EndGame();
+
+        KillTimer(tRescue);
+        KillTimer(tInfestation);
+
+        new str[144];
+        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+        SCMToAll(-1, str);
+
+	    // Server empty or what? lol | this shouldn't even be called lul
+	    printf("[DEBUG] RI = %i Z = %i", Iter_Count(count), ZMP_GetZombies());
+	}
+	else
+	{
+		new Iterator:count2<MAX_PLAYERS>;
+		for(new i = 0; i < MAX_PLAYERS; i++)
+		{
+		    if(IsPlayerAvail(i) && gTeam[i] == gHUMAN && !IsPlayerOnDesktop(i, 1000))
+		    {
+		        Iter_Add(count2, i);
+		    }
+		}
+
+		new pid;
+		if(Iter_Count(count2) == 0)
+		{
+	        pid = Iter_Random(count);
+		}
+		else
+		{
+	        pid = Iter_Random(count2);
+		}
+
+		new string[128];
+		format(string, sizeof(string), ""zmp" "yellow"%s(%i) has been infected by the infestation!", __GetName(pid), pid);
+		SCMToAll(-1, string);
+
+        ZMP_SetPlayerZombie(pid, false);
+        PlayInfectSound();
+
+        GameTextForPlayer(pid, "~w~Infect others by punching them!", 3000, 5);
 	}
 	return 1;
 }
