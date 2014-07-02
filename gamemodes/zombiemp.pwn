@@ -242,7 +242,6 @@ enum (+= 21)
 enum
 {
     THREAD_LOAD_PLAYER,
-    THREAD_CREATE_ACCOUNT,
     THREAD_CHECK_PLAYER_PASSWD
 };
 
@@ -1490,28 +1489,6 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 {
 	switch(resultid)
 	{
-	    case THREAD_CREATE_ACCOUNT:
-	    {
-		    PlayerData[extraid][iRegisterDate] = gettime();
-			PlayerData[extraid][iExitType] = EXIT_LOGGED;
-			PlayerData[extraid][iConnectTime] = gettime();
-		    PlayerData[extraid][bLogged] = true;
-		    PlayerData[extraid][bFirstSpawn] = true;
-			TogglePlayerSpectating(extraid, false);
-
-		    new str[144];
-			format(str, sizeof str, ""zmp" %s(%i) "grey"registered, making the server have a total of "green"%i "grey"players registered.", __GetName(extraid), extraid, cache_insert_id());
-			SCMToAll(-1, str);
-
-		    GameTextForPlayer(extraid, "Welcome", 3000, 4);
-	  		GivePlayerCash(extraid, 10000);
-	  		GameTextForPlayer(extraid, "~n~+$10,000~n~Startcash", 3000, 1);
-			SCM(extraid, -1, ""server_sign" "grey"You are now registered, and have been logged in!");
-			PlaySound(extraid, 1057);
-
-			MySQL_SavePlayer(extraid);
-			MySQL_LogPlayerIn(extraid);
-	    }
 	    case THREAD_LOAD_PLAYER:
 	    {
 		    new rows, fields;
@@ -4016,6 +3993,14 @@ __GetIP(playerid)
     return ip;
 }
 
+__GetSerial(playerid)
+{
+	new tmp[64];
+	
+    gpci(playerid, tmp, sizeof(tmp));
+    return tmp;
+}
+
 MySQL_Connect()
 {
     g_pSQL = mysql_connect(SQL_HOST, SQL_USER, SQL_DATA, SQL_PASS, SQL_PORT, true);
@@ -4055,18 +4040,7 @@ MySQL_RegisterAccount(playerid, hash[])
 	orm_addvar_int(ormid, PlayerData[playerid][iLastNC], "lastnc");
 
 	orm_setkey(ormid, "id");
-	orm_insert(ormid, "OnPlayerRegister", "iiisss", playerid, YHash(__GetName(playerid)), hash, __GetName(playerid), __GetIP(playerid));
-}
-
-
-MySQL_CreateAccount(playerid, password[])
-{
-	PlayerData[playerid][iLastLogin] = gettime();
-
-    new query[350], escape[33];
-	mysql_escape_string(password, escape, g_pSQL, 33);
-    format(query, sizeof(query), "INSERT INTO `accounts` (`name`, `logged`, `password`, `ip`, `reg_date`, `lastlogged`) VALUES ('%s', 1, MD5('%s'), '%s', %i, %i);", __GetName(playerid), escape, __GetIP(playerid), gettime(), PlayerData[playerid][iLastLogin]);
-	mysql_tquery(g_pSQL, query, "OnQueryFinish", "siii", query, THREAD_CREATE_ACCOUNT, playerid, g_pSQL);
+	orm_insert(ormid, "OnPlayerRegister", "iiisss", playerid, YHash(__GetName(playerid)), hash, __GetName(playerid), __GetIP(playerid), __GetSerial(playerid));
 }
 
 MySQL_CleanUp()
@@ -5760,7 +5734,25 @@ function:OnPlayerRegister(playerid, namehash, hash[], playername[], ip_address[]
 
 	if(namehash == YHash(__GetName(playerid)))
 	{
+	    PlayerData[playerid][iRegisterDate] = gettime();
+		PlayerData[playerid][iExitType] = EXIT_LOGGED;
+		PlayerData[playerid][iConnectTime] = gettime();
+	    PlayerData[playerid][bLogged] = true;
+	    PlayerData[playerid][bFirstSpawn] = true;
+		TogglePlayerSpectating(playerid, false);
 
+	    new str[144];
+		format(str, sizeof str, ""zmp" %s(%i) "grey"registered, making the server have a total of "green"%i "grey"players registered.", __GetName(playerid), playerid, cache_insert_id());
+		SCMToAll(-1, str);
+
+	    GameTextForPlayer(playerid, "Welcome", 3000, 4);
+  		GivePlayerCash(playerid, 10000);
+  		GameTextForPlayer(playerid, "~n~+$10,000~n~Startcash", 3000, 1);
+		SCM(playerid, -1, ""server_sign" "grey"You are now registered, and have been logged in!");
+		PlaySound(playerid, 1057);
+
+		MySQL_SavePlayer(playerid);
+		MySQL_LogPlayerIn(playerid);
 	}
 	return 1;
 }
