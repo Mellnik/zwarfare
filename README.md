@@ -24,3 +24,12 @@ For release/live builds we're using "-O1 -d0" as compiler parameters. For debug 
 # Layout
 
 Use proper alignment -> Use TAB not SPACE
+
+Script layout:
+1. include files
+2. defines
+3. enums
+4. global variables
+5. samp callbacks
+6. custom callbacks/public functions
+7. naked/stock functions
