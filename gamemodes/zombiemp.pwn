@@ -170,6 +170,9 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 
 enum E_PLAYER_DATA
 {
+	/* ORM */
+	ORM:pORM,
+
 	/* ACCOUNT */
     iAccountID, // i = Integer, s = String, b = bool, f = Float
 	sName[MAX_PLAYER_NAME + 1],
@@ -183,13 +186,13 @@ enum E_PLAYER_DATA
 	iVIP,
 	iMedkits,
 	iCookies,
-	iLastLogged,
+	iLastLogin,
+	iLastNC,
 	iRegisterDate,
 	
 	/* INTERNAL */
 	iWarnings,
 	iConnectTime,
-	iChatWrote,
 	iTimesHit,
 	gSpecialZed,
 	tickLastMedkit,
@@ -227,7 +230,7 @@ enum
 enum (+= 21)
 {
 	NO_DIALOG_ID,
-	DIALOG_REGISTER,
+ 	DIALOG_REGISTER,
 	DIALOG_LOGIN,
 	DIALOG_SHOP,
 	DIALOG_HELP,
@@ -847,23 +850,6 @@ public OnPlayerText(playerid, text[])
 		return 0;
 	}
 	
-    new tick = GetTickCountEx();
-
-	if((PlayerData[playerid][iChatWrote] >= 2) && ((PlayerData[playerid][tickLastChat] + COOLDOWN_CHAT) >= tick))
-	{
-		SCM(playerid, -1, ""er"Wait a bit before chatting again");
-	    return 0;
-	}
-	else if((PlayerData[playerid][iChatWrote] >= 2) && ((PlayerData[playerid][tickLastChat] + COOLDOWN_CHAT) <= tick))
-	{
-        PlayerData[playerid][iChatWrote] = 0;
-        PlayerData[playerid][tickLastChat] = tick;
-	}
-	else
-	{
-	    PlayerData[playerid][iChatWrote]++;
-	}
-	
 	new string[144];
 
 	format(string, sizeof(string), "%s", text);
@@ -1201,16 +1187,19 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			    if(strlen(inputtext) < 3 || strlen(inputtext) > 32)
 				{
 					SCM(playerid, -1, ""er"Password length: 3 - 32 characters");
-					return RequestAccountCreation(playerid);
+					return RequestRegistration(playerid);
 				}
-				if(isnull(inputtext)) return RequestAccountCreation(playerid);
-				new password[33];
-				if(sscanf(inputtext, "s[32]", password))
+				if(isnull(inputtext)) return RequestRegistration(playerid);
+			    
+				extract inputtext -> new string:password[33]; else
 				{
-					SCM(playerid, -1, ""er"Length 3 - 32");
-					return RequestAccountCreation(playerid);
+					return RequestRegistration(playerid);
 				}
-			    MySQL_CreateAccount(playerid, password);
+				
+				new hash[SHA3_LENGTH + 1];
+				sha3(password, hash, sizeof(hash));
+				
+			    MySQL_RegisterAccount(playerid, hash);
 			    return true;
 			}
 			case DIALOG_SHOP:
@@ -1478,7 +1467,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 	        }
 	        case DIALOG_REGISTER:
 	        {
-	            RequestAccountCreation(playerid);
+	            RequestRegistration(playerid);
 	            return true;
 	        }
 	    }
@@ -1540,7 +1529,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 			    PlayerData[extraid][iVIP] = cache_get_row_int(0, 11, g_pSQL);
 			    PlayerData[extraid][iMedkits] = cache_get_row_int(0, 12, g_pSQL);
                 PlayerData[extraid][iCookies] = cache_get_row_int(0, 13, g_pSQL);
-                PlayerData[extraid][iLastLogged] = cache_get_row_int(0, 14, g_pSQL);
+                PlayerData[extraid][iLastLogin] = cache_get_row_int(0, 14, g_pSQL);
                 PlayerData[extraid][iRegisterDate] = cache_get_row_int(0, 15, g_pSQL);
 
 			 	SetPlayerCash(extraid, PlayerData[extraid][iMoney]);
@@ -1553,7 +1542,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 				{
 					format(string, sizeof(string), ""server_sign" "grey"Successfully logged in. (Adminlevel %i)", PlayerData[extraid][iAdminLevel]);
 					SCM(extraid, -1, string);
-					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UTConvert(PlayerData[extraid][iLastLogged]), UTConvert(PlayerData[extraid][iRegisterDate]));
+					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UTConvert(PlayerData[extraid][iLastLogin]), UTConvert(PlayerData[extraid][iRegisterDate]));
   					SCM(extraid, -1, string);
 					format(string, sizeof(string), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(extraid));
 					SCM(extraid, -1, string);
@@ -1561,7 +1550,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 		   		else
 		   		{
 				   	SCM(extraid, -1, ""server_sign" "grey"Successfully logged in!");
-					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UTConvert(PlayerData[extraid][iLastLogged]), UTConvert(PlayerData[extraid][iRegisterDate]));
+					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UTConvert(PlayerData[extraid][iLastLogin]), UTConvert(PlayerData[extraid][iRegisterDate]));
   					SCM(extraid, -1, string);
 					format(string, sizeof(string), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(extraid));
 					SCM(extraid, -1, string);
@@ -1931,7 +1920,7 @@ YCMD:stats(playerid, params[], help)
 			vip,
 			PlayerData[player1][iMedkits],
 			UTConvert(PlayerData[player1][iRegisterDate]),
-			UTConvert(PlayerData[player1][iLastLogged]));
+			UTConvert(PlayerData[player1][iLastLogin]));
 
 		strcat(finstring, string1);
 		strcat(finstring, string2);
@@ -3984,10 +3973,10 @@ ResetPlayerVars(playerid)
     PlayerData[playerid][iCookies] = 0;
     PlayerData[playerid][bMuted] = false;
     PlayerData[playerid][bLogged] = false;
-   	PlayerData[playerid][iLastLogged] = 0;
+   	PlayerData[playerid][iLastLogin] = 0;
+   	PlayerData[playerid][iLastNC] = 0;
 	PlayerData[playerid][iRegisterDate] = 0;
 	PlayerData[playerid][iConnectTime] = 0;
-	PlayerData[playerid][iChatWrote] = 0;
 	PlayerData[playerid][tickLastChat] = 0;
 	PlayerData[playerid][tickPlayerUpdate] = 0;
 	PlayerData[playerid][tickLastReport] = 0;
@@ -4043,13 +4032,40 @@ MySQL_Connect()
     }
 }
 
+MySQL_RegisterAccount(playerid, hash[])
+{
+	PlayerData[playerid][iLastLogin] = gettime();
+    PlayerData[playerid][iRegisterDate] = gettime();
+
+    new ORM:ormid = PlayerData[playerid][pORM] = orm_create("accounts");
+
+ 	orm_addvar_int(ormid, PlayerData[playerid][iAccountID], "id");
+	orm_addvar_string(ormid, PlayerData[playerid][sName], MAX_PLAYER_NAME + 1, "name");
+	orm_addvar_int(ormid, PlayerData[playerid][iAdminLevel], "adminlevel");
+	orm_addvar_int(ormid, PlayerData[playerid][iScore], "score");
+	orm_addvar_int(ormid, PlayerData[playerid][iMoney], "money");
+	orm_addvar_int(ormid, PlayerData[playerid][iKills], "kills");
+	orm_addvar_int(ormid, PlayerData[playerid][iDeaths], "deaths");
+	orm_addvar_int(ormid, PlayerData[playerid][iTime], "time");
+	orm_addvar_int(ormid, PlayerData[playerid][iVIP], "vip");
+	orm_addvar_int(ormid, PlayerData[playerid][iCookies], "cookies");
+	orm_addvar_int(ormid, PlayerData[playerid][iMedkits], "medkits");
+	orm_addvar_int(ormid, PlayerData[playerid][iRegisterDate], "reg_date");
+	orm_addvar_int(ormid, PlayerData[playerid][iLastLogin], "lastlogin");
+	orm_addvar_int(ormid, PlayerData[playerid][iLastNC], "lastnc");
+
+	orm_setkey(ormid, "id");
+	orm_insert(ormid, "OnPlayerRegister", "iiisss", playerid, YHash(__GetName(playerid)), hash, __GetName(playerid), __GetIP(playerid));
+}
+
+
 MySQL_CreateAccount(playerid, password[])
 {
-	PlayerData[playerid][iLastLogged] = gettime();
+	PlayerData[playerid][iLastLogin] = gettime();
 
     new query[350], escape[33];
 	mysql_escape_string(password, escape, g_pSQL, 33);
-    format(query, sizeof(query), "INSERT INTO `accounts` (`name`, `logged`, `password`, `ip`, `reg_date`, `lastlogged`) VALUES ('%s', 1, MD5('%s'), '%s', %i, %i);", __GetName(playerid), escape, __GetIP(playerid), gettime(), PlayerData[playerid][iLastLogged]);
+    format(query, sizeof(query), "INSERT INTO `accounts` (`name`, `logged`, `password`, `ip`, `reg_date`, `lastlogged`) VALUES ('%s', 1, MD5('%s'), '%s', %i, %i);", __GetName(playerid), escape, __GetIP(playerid), gettime(), PlayerData[playerid][iLastLogin]);
 	mysql_tquery(g_pSQL, query, "OnQueryFinish", "siii", query, THREAD_CREATE_ACCOUNT, playerid, g_pSQL);
 }
 
@@ -4217,13 +4233,11 @@ trans(col)
 	return (col - 0xBB);
 }
 
-RequestAccountCreation(playerid)
+RequestRegistration(playerid)
 {
-	new newtext1[1024], newtext2[128];
-    format(newtext2, sizeof(newtext2), ""zmp" Registration - %s", __GetName(playerid));
-
-	format(newtext1, sizeof(newtext1), ""white"Welcome "grey"%s"white" to Zombie "red"Multiplayer"white"!\n\nEnter a password for your new account below:", __GetName(playerid));
-	ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, newtext2, newtext1, "Register", "");
+    format(gstr, sizeof(gstr), ""zmp" Registration - %s", __GetName(playerid));
+	format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"white" to Zombie "red"Multiplayer"white"!\n\nEnter a password for your new account below:", __GetName(playerid));
+	ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, gstr, gstr2, "Register", "");
 	return 1;
 }
 
@@ -5711,7 +5725,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 		    else
 		    {
 		        // Create New Account
-				RequestAccountCreation(playerid);
+				RequestRegistration(playerid);
 
 				InterpolateCameraPos(playerid, -2004.7083, 760.5217, 54.0513, -1999.1829, 921.1962, 56.4846, 50000, CAMERA_MOVE);
 				InterpolateCameraLookAt(playerid, -2004.4877, 759.5416, 53.9013, -1998.5679, 920.4014, 56.3046, 50000, CAMERA_MOVE);
@@ -5737,6 +5751,18 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	    }
 	}
 	return 0;
+}
+
+function:OnPlayerRegister(playerid, namehash, hash[], playername[], ip_address[], serial[])
+{
+	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `hash` = '%s', `ip` = '%s', `serial` = '%e' WHERE `name` = '%s';", hash, playername, ip_address, serial);
+	mysql_tquery(g_pSQL, gstr2);
+
+	if(namehash == YHash(__GetName(playerid)))
+	{
+
+	}
+	return 1;
 }
 
 /*

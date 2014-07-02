@@ -34,18 +34,18 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   `hash` varchar(128) NOT NULL,
   `salt` varchar(32) NOT NULL,
   `score` int(10) unsigned NOT NULL,
-  `adminlevel` tinyint(1) unsigned NOT NULL,
   `money` int(10) NOT NULL,
+  `adminlevel` tinyint(1) unsigned NOT NULL,
   `kills` mediumint(6) unsigned NOT NULL,
   `deaths` mediumint(6) unsigned NOT NULL,
   `time` int(10) unsigned NOT NULL,
   `vip` tinyint(1) NOT NULL,
   `medkits` mediumint(6) unsigned NOT NULL,
   `cookies` mediumint(6) unsigned NOT NULL,
-  `lastlogged` int(10) unsigned NOT NULL,
+  `lastnc` int(10) unsigned NOT NULL,
+  `lastlogin` int(10) unsigned NOT NULL,
   `reg_date` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `id` (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
@@ -64,7 +64,6 @@ CREATE TABLE IF NOT EXISTS `bans` (
   `date` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
-  KEY `id` (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
