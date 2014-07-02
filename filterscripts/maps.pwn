@@ -15,14 +15,13 @@
 #include <streamer>     // v2.7.2
 
 /*
-Maps:
+Maps: (id:mapname) `maps` table
 - <name>
 */
 
 public OnFilterScriptInit()
 {
-	print("ZombieMP map script loading");
-    BuildMaps();
+	print("ZombieMP map script loaded");
 	return 1;
 }
 
@@ -31,8 +30,24 @@ public OnFilterScriptExit()
 	return 1;
 }
 
-BuildMaps()
+forward BuildMap(index, name[]);
+public BuildMap(index, name[]) // To be called by CallRemoteFunction
 {
-	print("> Loading map <name>");
-
+	printf("> Loading map (%i:%s)", index, name);
+	
+	switch(index)
+	{
+	    case 1: // index equals id in maps table
+	    {
+	        // mapcodes
+	    }
+	    case 2:
+	    {
+	    
+	    }
+	    default:
+	    {
+	        print("> Unkown map");
+	    }
+	}
 }

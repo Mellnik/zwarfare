@@ -238,13 +238,24 @@ enum (+= 21)
 
 enum
 {
-    THREAD_IS_BANNED,
-    THREAD_CHECK_IP,
-    THREAD_ACCOUNT_EXIST,
     THREAD_LOAD_PLAYER,
-    THREAD_CHECK_AUTO_LOGIN,
     THREAD_CREATE_ACCOUNT,
     THREAD_CHECK_PLAYER_PASSWD
+};
+
+enum (+= 10)
+{
+	ACCOUNT_REQUEST_BANNED,
+	ACCOUNT_REQUEST_IP_BANNED,
+	ACCOUNT_REQUEST_EXIST,
+	ACCOUNT_REQUEST_AUTO_LOGIN,
+	ACCOUNT_REQUST_VERIFY_REGISTER,
+	ACCOUNT_REQUEST_LOAD,
+	ACCOUNT_REQUEST_GANG_LOAD,
+	ACCOUNT_REQUEST_ACHS_LOAD,
+	ACCOUNT_REQUEST_TOYS_LOAD,
+	ACCOUNT_REQUEST_PVS_LOAD,
+    ACCOUNT_REQUEST_LOGIN
 };
 
 enum
@@ -522,9 +533,8 @@ public OnPlayerConnect(playerid)
 
         ZMP_ShowLogo(playerid);
 		
-		new query[128];
-		format(query, sizeof(query), "SELECT * FROM `bans` WHERE `name` = '%s';", __GetName(playerid));
-		mysql_tquery(g_pSQL, query, "OnQueryFinish", "siii", query, THREAD_IS_BANNED, playerid, g_pSQL);
+		mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT * FROM `bans` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
+		mysql_pquery(g_pSQL, gstr, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_BANNED);
  	}
 	return 1;
 }
@@ -1491,113 +1501,6 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 {
 	switch(resultid)
 	{
-	    case THREAD_IS_BANNED:
-	    {
-		    new rows, fields;
-		    cache_get_data(rows, fields, g_pSQL);
-
-            new string[512];
-		    if(rows > 0)
-		    {
-				new adminname[MAX_PLAYER_NAME+1],
-		            reason[128],
-		            udate, lift;
-
-				cache_get_row(0, 2, adminname, g_pSQL, sizeof(adminname));
-				cache_get_row(0, 3, reason, g_pSQL, sizeof(reason));
-				lift = cache_get_row_int(0, 4, g_pSQL);
-				udate = cache_get_row_int(0, 5, g_pSQL);
-
-				if(lift == 0) // perm ban
-				{
-			        format(string, sizeof(string), ""red"You have been banned!"white"\n\nAdmin:\t\t%s\nYour name:\t%s\nReason:\t%s\nDate:\t\t%s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on forum.zombiemp.com", adminname, __GetName(extraid), reason, UnixTimeToDate(udate));
-					ShowPlayerDialog(extraid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Notice", string, "OK", "");
-					StopAudioStreamForPlayer(extraid);
-					KickEx(extraid);
-				}
-				else if(lift < gettime())
-				{
-		    		SetPlayerColor(extraid, trans(WHITE));
-
-					format(string, sizeof(string), "SELECT * FROM `blacklist` WHERE `ip` = '%s';", __GetIP(extraid));
-					mysql_tquery(g_pSQL, string, "OnQueryFinish", "siii", string, THREAD_CHECK_IP, extraid, g_pSQL);
-				
-				    format(string, sizeof(string), "DELETE FROM `bans` WHERE `name` = '%s' LIMIT 1;", __GetName(extraid));
-				    mysql_tquery(g_pSQL, string, "", "");
-				}
-				else
-				{
-				    format(string, sizeof(string), ""red"You have been time banned!"white"\n\nAdmin:\t\t%s\nYour name:\t%s\nReason:\t%s\nExpires:\t%s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on forum.zombiemp.com", adminname, __GetName(extraid), reason, UnixTimeToDate(lift));
-					ShowPlayerDialog(extraid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Notice", string, "OK", "");
-					StopAudioStreamForPlayer(extraid);
-					KickEx(extraid);
-				}
-		    }
-		    else
-		    {
-	    		SetPlayerColor(extraid, trans(WHITE));
-
-				format(string, sizeof(string), "SELECT * FROM `blacklist` WHERE `ip` = '%s';", __GetIP(extraid));
-				mysql_tquery(g_pSQL, string, "OnQueryFinish", "siii", string, THREAD_CHECK_IP, extraid, g_pSQL);
-		    }
-	    }
-	    case THREAD_CHECK_IP:
-	    {
-            new rows, fields;
-            cache_get_data(rows, fields, g_pSQL);
-
-            if(rows == 0)
-            {
-				new querystring[128];
-				format(querystring, sizeof(querystring), "SELECT `id` FROM `accounts` WHERE `name` = '%s';", __GetName(extraid));
-				mysql_tquery(g_pSQL, querystring, "OnQueryFinish", "siii", querystring, THREAD_ACCOUNT_EXIST, extraid, g_pSQL);
-            }
-            else
-			{
-	 		   	SCM(extraid, -1, ""server_sign" You have been banned.");
-	 		   	StopAudioStreamForPlayer(extraid);
-       			KickEx(extraid);
-			}
-	    }
-	    case THREAD_ACCOUNT_EXIST:
-	    {
-		    new rows, fields;
-		    cache_get_data(rows, fields, g_pSQL);
-
-		    if(rows != 0)
-		    {
-				new querystring[128];
-				format(querystring, sizeof(querystring), "SELECT `id` FROM `accounts` WHERE `name` = '%s' AND `ip` = '%s';", __GetName(extraid), __GetIP(extraid));
-				mysql_tquery(g_pSQL, querystring, "OnQueryFinish", "siii", querystring, THREAD_CHECK_AUTO_LOGIN, extraid, g_pSQL);
-		    }
-		    else
-		    {
-		        // Create New Account
-				RequestAccountCreation(extraid);
-				
-				InterpolateCameraPos(extraid, -2004.7083, 760.5217, 54.0513, -1999.1829, 921.1962, 56.4846, 50000, CAMERA_MOVE);
-				InterpolateCameraLookAt(extraid, -2004.4877, 759.5416, 53.9013, -1998.5679, 920.4014, 56.3046, 50000, CAMERA_MOVE);
-		    }
-	    }
-	    case THREAD_CHECK_AUTO_LOGIN:
-	    {
-	        new rows, fields;
-	        cache_get_data(rows, fields, g_pSQL);
-
-	        if(rows > 0)
-	        {
-	            // Auto Login
-				AutoLogin(extraid);
-	        }
-	        else
-	        {
-	            // Login Dialog
-	            RequestLogin(extraid);
-	            
-	     		InterpolateCameraPos(extraid, -2004.7083, 760.5217, 54.0513, -1999.1829, 921.1962, 56.4846, 50000, CAMERA_MOVE);
-			    InterpolateCameraLookAt(extraid, -2004.4877, 759.5416, 53.9013, -1998.5679, 920.4014, 56.3046, 50000, CAMERA_MOVE);
-	        }
-	    }
 	    case THREAD_CREATE_ACCOUNT:
 	    {
 		    PlayerData[extraid][iRegisterDate] = gettime();
@@ -1650,7 +1553,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 				{
 					format(string, sizeof(string), ""server_sign" "grey"Successfully logged in. (Adminlevel %i)", PlayerData[extraid][iAdminLevel]);
 					SCM(extraid, -1, string);
-					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UnixTimeToDate(PlayerData[extraid][iLastLogged]), UnixTimeToDate(PlayerData[extraid][iRegisterDate]));
+					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UTConvert(PlayerData[extraid][iLastLogged]), UTConvert(PlayerData[extraid][iRegisterDate]));
   					SCM(extraid, -1, string);
 					format(string, sizeof(string), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(extraid));
 					SCM(extraid, -1, string);
@@ -1658,7 +1561,7 @@ function:OnQueryFinish(query[], resultid, extraid, connectionHandle)
 		   		else
 		   		{
 				   	SCM(extraid, -1, ""server_sign" "grey"Successfully logged in!");
-					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UnixTimeToDate(PlayerData[extraid][iLastLogged]), UnixTimeToDate(PlayerData[extraid][iRegisterDate]));
+					format(string, sizeof(string), ""server_sign" "grey"You were last online at %s and registered on %s", UTConvert(PlayerData[extraid][iLastLogged]), UTConvert(PlayerData[extraid][iRegisterDate]));
   					SCM(extraid, -1, string);
 					format(string, sizeof(string), ""server_sign" "grey"You've been online for %s", GetPlayingTimeFormat(extraid));
 					SCM(extraid, -1, string);
@@ -2027,8 +1930,8 @@ YCMD:stats(playerid, params[], help)
             GetPlayingTimeFormat(player1),
 			vip,
 			PlayerData[player1][iMedkits],
-			UnixTimeToDate(PlayerData[player1][iRegisterDate]),
-			UnixTimeToDate(PlayerData[player1][iLastLogged]));
+			UTConvert(PlayerData[player1][iRegisterDate]),
+			UTConvert(PlayerData[player1][iLastLogged]));
 
 		strcat(finstring, string1);
 		strcat(finstring, string2);
@@ -3086,7 +2989,7 @@ YCMD:tban(playerid, params[], help)
 				SCMToAll(YELLOW, string);
 				print(string);
 
-	    		format(string, sizeof(string), ""red"You have been time banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\nExpires:\t\t%s\nIf you think that you have been banned wrongly,\nwrite a ban appeal on forum.zombiemp.com", __GetName(playerid), reason, UnixTimeToDate(gettime() + (mins * 60)));
+	    		format(string, sizeof(string), ""red"You have been time banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\nExpires:\t\t%s\nIf you think that you have been banned wrongly,\nwrite a ban appeal on forum.zombiemp.com", __GetName(playerid), reason, UTConvert(gettime() + (mins * 60)));
 	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Notice", string, "OK", "");
 	    		KickEx(player);
 
@@ -4449,7 +4352,7 @@ GetPlayingTimeFormat(playerid)
 	return ptime;
 }
 
-UnixTimeToDate(unixtime)
+UTConvert(unixtime)
 {
 	new u_year,
 	    u_month,
@@ -5240,7 +5143,7 @@ function:OnNCReceive(playerid)
 	    {
 	        cache_get_row(i, 1, oldname, g_pSQL, sizeof(oldname));
 	        cache_get_row(i, 2, newname, g_pSQL, sizeof(newname));
-	        format(tmp, sizeof(tmp), "%i - %s changed their name to %s on %s\n", i + 1, oldname, newname, UnixTimeToDate(cache_get_row_int(i, 3, g_pSQL)));
+	        format(tmp, sizeof(tmp), "%i - %s changed their name to %s on %s\n", i + 1, oldname, newname, UTConvert(cache_get_row_int(i, 3, g_pSQL)));
 	        strcat(string, tmp);
 	    }
 
@@ -5263,7 +5166,7 @@ function:OnNCReceive2(playerid, name[])
 	    {
 	        cache_get_row(i, 1, oldname, g_pSQL, sizeof(oldname));
 	        cache_get_row(i, 2, newname, g_pSQL, sizeof(newname));
-	        format(tmp, sizeof(tmp), "%i - %s changed their name to %s on %s\n", i + 1, oldname, newname, UnixTimeToDate(cache_get_row_int(i, 3, g_pSQL)));
+	        format(tmp, sizeof(tmp), "%i - %s changed their name to %s on %s\n", i + 1, oldname, newname, UTConvert(cache_get_row_int(i, 3, g_pSQL)));
 	        strcat(string, tmp);
 	    }
 
@@ -5728,6 +5631,112 @@ Log(E_LOG_LEVEL:log_level, const fmat[], va_args<>)
 		case LOG_SUSPECT: strins(gstr2, "LogSuspect: ", 0, sizeof(gstr2));
 	}
 	return print(gstr2);
+}
+
+function:OnPlayerAccountRequest(playerid, namehash, request)
+{
+    if(!IsPlayerConnected(playerid))
+		return 0;
+
+	if(YHash(__GetName(playerid)) != namehash) {
+	    Log(LOG_NET, "OnPlayerAccountRequest data race detected, kicking (%s, %i, %i, %i)", __GetName(playerid), playerid, YHash(__GetName(playerid)), namehash);
+	    Kick(playerid);
+		return 0;
+	}
+	
+	switch(request)
+	{
+	    case ACCOUNT_REQUEST_BANNED:
+	    {
+	        if(cache_get_row_count() != 0)
+	        {
+	            new szAdmin[MAX_PLAYER_NAME + 1],
+	                szReason[128],
+	                u_iBanDate,
+	                iLift;
+
+	            cache_get_row(0, 2, szAdmin);
+	            cache_get_row(0, 3, szReason);
+				iLift = cache_get_row_int(0, 4, g_pSQL);
+				u_iBanDate = cache_get_row_int(0, 5, g_pSQL);
+
+				if(iLift == 0) // Player has a permanent ban
+				{
+				    format(gstr2, sizeof(gstr2), ""red"You have been banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nDate: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on forum.zombiemp.com", szAdmin, __GetName(playerid), szReason, UTConvert(u_iBanDate));
+					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" :: Notice", gstr2, "OK", "");
+					KickEx(playerid);
+					return 1;
+				}
+				else if(iLift < gettime()) // Player is time banned, checking if ban ran out
+				{
+				    mysql_format(g_pSQL, gstr2, sizeof(gstr2), "DELETE FROM `bans` WHERE `PlayerName` = '%e' LIMIT 1;", __GetName(playerid)); // Delete time ban
+				    mysql_pquery(g_pSQL, gstr2);
+
+				    SCM(playerid, -1, ""zmp" Your time ban expired, you've been unbanned!");
+				}
+				else
+				{
+				    format(gstr2, sizeof(gstr2), ""red"You have been time banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nExpires: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on forum.zombiemp.com", szAdmin, __GetName(playerid), szReason, UTConvert(iLift));
+					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" :: Notice", gstr2, "OK", "");
+					KickEx(playerid);
+					return 1;
+				}
+	        }
+
+	        mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT * FROM `blacklist` WHERE `IP` = '%e' LIMIT 1;", __GetIP(playerid));
+	        mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_IP_BANNED);
+	        return 1;
+	    }
+	    case ACCOUNT_REQUEST_IP_BANNED:
+	    {
+            if(cache_get_row_count() == 0) // IP Address is not blacklisted
+            {
+				mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT `id` FROM `accounts` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
+				mysql_pquery(g_pSQL, gstr, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_EXIST); // Check if the account already exist
+            }
+            else
+			{
+	 		   	SCM(playerid, -1, ""server_sign" You have been banned.");
+       			KickEx(playerid);
+			}
+	        return 1;
+	    }
+	    case ACCOUNT_REQUEST_EXIST:
+	    {
+		    if(cache_get_row_count() != 0) // acc exists
+		    {
+				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT `id` FROM `accounts` WHERE `name` = '%e' AND `ip` = '%s' LIMIT 1;", __GetName(playerid), __GetIP(playerid));
+				mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_AUTO_LOGIN); // Check auto login
+		    }
+		    else
+		    {
+		        // Create New Account
+				RequestAccountCreation(playerid);
+
+				InterpolateCameraPos(playerid, -2004.7083, 760.5217, 54.0513, -1999.1829, 921.1962, 56.4846, 50000, CAMERA_MOVE);
+				InterpolateCameraLookAt(playerid, -2004.4877, 759.5416, 53.9013, -1998.5679, 920.4014, 56.3046, 50000, CAMERA_MOVE);
+		    }
+	        return 1;
+	    }
+	    case ACCOUNT_REQUEST_AUTO_LOGIN:
+	    {
+	        if(cache_get_row_count() > 0) // Account with IP found
+	        {
+	            // Auto Login
+				AutoLogin(playerid);
+	        }
+	        else // ip on account is not the same as current connection
+	        {
+	            // Login Dialog
+	            RequestLogin(playerid);
+
+	     		InterpolateCameraPos(playerid, -2004.7083, 760.5217, 54.0513, -1999.1829, 921.1962, 56.4846, 50000, CAMERA_MOVE);
+			    InterpolateCameraLookAt(playerid, -2004.4877, 759.5416, 53.9013, -1998.5679, 920.4014, 56.3046, 50000, CAMERA_MOVE);
+	        }
+	        return 1;
+	    }
+	}
+	return 0;
 }
 
 /*

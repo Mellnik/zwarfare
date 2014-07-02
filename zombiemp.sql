@@ -1,3 +1,12 @@
+-- phpMyAdmin SQL Dump
+-- version 3.5.8.2
+-- http://www.phpmyadmin.net
+--
+-- Host: localhost
+-- Generation Time: Jul 02, 2014 at 11:33 AM
+-- Server version: 5.1.73
+-- PHP Version: 5.3.3
+
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
@@ -6,6 +15,10 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8 */;
+
+--
+-- Database: `uif`
+--
 
 -- --------------------------------------------------------
 
@@ -34,7 +47,7 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id` (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -43,14 +56,16 @@ CREATE TABLE IF NOT EXISTS `accounts` (
 --
 
 CREATE TABLE IF NOT EXISTS `bans` (
-  `id` int(10) NOT NULL,
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  `name` varchar(24) NOT NULL,
   `adminname` varchar(24) NOT NULL,
   `reason` varchar(128) NOT NULL,
   `lift` int(10) unsigned NOT NULL,
   `date` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
   KEY `id` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
 
@@ -75,8 +90,6 @@ CREATE TABLE IF NOT EXISTS `blacklist` (
 CREATE TABLE IF NOT EXISTS `maps` (
   `id` mediumint(6) unsigned NOT NULL AUTO_INCREMENT,
   `mapname` varchar(24) NOT NULL,
-  `realmapname` varchar(32) NOT NULL,
-  `objectfile` varchar(28) NOT NULL,
   `SpawnX` float(20,3) NOT NULL,
   `SpawnY` float(20,3) NOT NULL,
   `SpawnZ` float(20,3) NOT NULL,
@@ -87,7 +100,6 @@ CREATE TABLE IF NOT EXISTS `maps` (
   `ShopY` float(20,3) NOT NULL,
   `ShopZ` float(20,3) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `realmapname` (`realmapname`),
   UNIQUE KEY `id` (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
