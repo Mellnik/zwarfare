@@ -278,31 +278,19 @@ enum E_LOG_LEVEL
 	LOG_SUSPECT
 };
 
-enum E_mapload_data
+enum E_MAP_DATA
 {
-	e_model_id,
-	Float:e_pos_x,
-	Float:e_pos_y,
-	Float:e_pos_z,
-	Float:e_rot_x,
-	Float:e_rot_y,
-	Float:e_rot_z
-};
-
-enum E_map_data
-{
+	e_id,
 	e_mapname[24],
-	e_realmapname[32],
-	e_objectfile[28],
 	Float:e_spawn_x,
 	Float:e_spawn_y,
 	Float:e_spawn_z,
 	Float:e_spawn_a,
+	e_weather,
+	e_time,
 	Float:e_shop_x,
 	Float:e_shop_y,
-	Float:e_shop_z,
-	e_weather,
-	e_time
+	Float:e_shop_z
 };
 
 enum
@@ -349,14 +337,13 @@ enum e_top_rtests
 	E_test
 };
 
-new	Iterator:g_MapObjects<40000>,
-	g_pSQL = -1, // g = Global, p = Pointer
+new	g_pSQL = -1, // g = Global, p = Pointer, txt = Text, b = bool, s = string, i = integer
     g_bAllowEnd = true,
 	g_World = 0,
 	g_ShopID = -1,
 	g_GlobalStatus = e_Status_Inactive,
 	g_MapCount = 0,
-	g_Maps[MAX_MAPS][E_map_data],
+	g_Maps[MAX_MAPS][E_MAP_DATA],
     g_ForceMap = -1,
 	g_sReports[MAX_REPORTS][144],
 	g_iStartTime,
@@ -447,8 +434,6 @@ public OnGameModeInit()
 
     SetTimer("ProcessTick", 1000, 1);
     SetTimer("server_random_broadcast", RANDOM_BROADCAST_TIME, 1);
-
-    Map_Reload();
     
 	AddPlayerClass(0, 1958.3783, 1343.1572, 15.3746, 269.1425, 0, 0, 0, 0, 0, 0);
 	return 1;
@@ -2932,46 +2917,16 @@ YCMD:mapchange(playerid, params[], help)
 
 	    for(new i = 0; i < g_MapCount; i++)
 	    {
-	        if(!strcmp(map, g_Maps[i][e_realmapname], true))
+	        if(!strcmp(map, g_Maps[i][e_mapname], true))
 	        {
-	            if(!fexist(g_Maps[i][e_objectfile])) return SCM(playerid, -1, ""er"Map file not found");
-	            new str[144];
-				format(str, sizeof(str), ""red"Admin %s(%i) set the next map to %s", __GetName(playerid), playerid, g_Maps[i][e_mapname]);
-				SCMToAll(-1, str);
-	            format(str, sizeof(str), "Next map will be %s", g_Maps[i][e_mapname]);
-				SCM(playerid, -1, str);
+				format(gstr, sizeof(gstr), ""red"Admin %s(%i) set the next map to %s", __GetName(playerid), playerid, g_Maps[i][e_mapname]);
+				SCMToAll(-1, gstr);
 				
 				g_ForceMap = i;
 				return 1;
 	        }
 	    }
 	    SCM(playerid, -1, ""er"Map not found!");
-	}
-  	else
-	{
-  		SCM(playerid, -1, NO_PERM);
-	}
-	return 1;
-}
-
-YCMD:reloadmaps(playerid, params[], help)
-{
-	if(PlayerData[playerid][iAdminLevel] >= MAX_ADMIN_LEVEL)
-	{
-	    if(g_GlobalStatus == e_Status_RoundEnd)
-	    {
-	        SCM(playerid, -1, ""er"Reloading...");
-	        Map_Reload();
-	        if(mysql_errno() == 0)
-	        {
-	        	SCM(playerid, -1, ""er"Reloaded");
-			}
-			else SCM(playerid, -1, ""er"Error");
-		}
-	    else
-	    {
-	        SCM(playerid, -1, ""er"Can not reload now!");
-	    }
 	}
   	else
 	{
@@ -3950,92 +3905,6 @@ function:Kick_Delay(playerid, namehash)
 	return 1;
 }
 
-// INSERT INTO `maps` VALUES (NULL, 'The Ships', 'zmp_theships', 'Maps/zmp_theships.map', 1908.7662, 1466.7018, 12.7591, 90.000, 10, 6, 1913.4165, 1493.0498, 14.0066);
-// INSERT INTO `maps` VALUES (NULL, 'Zombified', 'zmp_zombified', 'Maps/zmp_zombified.map', -2263.6882, 719.4948, 48.8338, 90.000, 20, 4, -2248.7073, 707.5730, 49.2045);
-// INSERT INTO `maps` VALUES (NULL, 'Mjcastillo Research', 'zmp_mjcastilloresearch', 'Maps/zmp_mjcastilloresearch.map', 965.1849, 2598.4795, 11.5496, 90.000, 54, 8, 982.7676, 2608.2666, 10.1896);
-// INSERT INTO `maps` VALUES (NULL, 'Zombie Rave', 'zmp_zombierave', 'Maps/zmp_zombierave.map', -6.0405, 101.0859, 64.6307, 90.000, 55, 0, 9.1316, 79.5868, 63.6971);
-// INSERT INTO `maps` VALUES (NULL, 'Area51', 'zmp_area51', 'Maps/zmp_area51.map', 242.0379, 1860.9944, 20.3018, 90.000, 40, 5, 203.4946, 1873.0204, 17.0782);
-// INSERT INTO `maps` VALUES (NULL, 'Stranded', 'zmp_stranded', 'Maps/zmp_stranded.map', 3974.6792, -1848.0774, 18.4969, 90.000, 13, 10, 3995.3286, -1865.0518, 12.3410);
-// INSERT INTO `maps` VALUES (NULL, 'Piertrip', 'zmp_piertrip', 'Maps/zmp_piertrip.map', 836.5068, -2040.7943, 13.2590, 90.000, 13, 18, 836.6353, -2092.3430, 12.7800);
-// INSERT INTO `maps` VALUES (NULL, 'Dillmore', 'zmp_dillmore', 'Maps/zmp_dillmore.map', 619.9825, -530.3881, 17.1951, 90.000, 11, 10, 664.8924, -545.4448, 17.5156);
-// INSERT INTO `maps` VALUES (NULL, 'Nacht der Untoten', 'zmp_nachtderuntoten', 'Maps/zmp_nachtderuntoten.map', 4381.4253, -1746.6296, 7.4691, 90.000, 30, 9, 4378.5610, -1749.3059, 10.9287);
-// INSERT INTO `maps` VALUES (NULL, 'Storm Drain', 'zmp_stormdrain', 'Maps/zmp_stormdrain.map', 2570.2610, -1962.0959, 3.9190, 90.000, 77, 8, 2595.5098, -1981.6780, 3.8152);
-// INSERT INTO `maps` VALUES (NULL, 'Grove', 'zmp_grove', 'Maps/zmp_grove.map', 2473.3354, -1704.7177, 13.6995, 90.000, 4, 22, 2458.0576, -1672.1040, 13.4029);
-// INSERT INTO `maps` VALUES (NULL, 'Treatment Plant', 'zmp_treatmentplant', 'Maps/zmp_treatmentplant.map', 5919.3037, -247.2903, 8.0128, 90.000, 3, 23, 5933.6792, -242.6043, 9.5632);
-// INSERT INTO `maps` VALUES (NULL, 'Swamp', 'zmp_swamp', 'Maps/zmp_swamp.map', -679.0611, -1918.0465, 12.1192, 90.000, 0, 1, -675.7892, -1866.7722, 13.3581);
-// INSERT INTO `maps` VALUES (NULL, 'LS Hood', 'zmp_lshood', 'Maps/zmp_lshood.map', 1983.9769, -1043.7767, 24.6669, 90.000, 2, 23, 382.8864, -1868.0176, 7.5617);
-// INSERT INTO `maps` VALUES (NULL, 'LS Beach', 'zmp_lsbeach', 'Maps/zmp_lsbeach.map', 372.7794, -1882.9701, 7.7352, 90.000, 10, 6, 1987.2028, -1065.5238, 24.3256);
-function:OnMapDataReceived() // INSERT INTO `maps` VALUES (NULL, 'Outpost', 'zmp_outpost', 'Maps/zmp_outpost.map', -1348.9994, 2378.2124, 96.7093, 90.000, 9, 0, -1334.8137, 2393.3386, 96.2719);
-{
-	new rows, fields;
-	cache_get_data(rows, fields);
-	
-	if(rows > 0)
-	{
-		for(new i = Iter_First(g_MapObjects), prev; i != Iter_End(g_MapObjects); i = Iter_Next(g_MapObjects, prev))
-		{
-			DestroyDynamicObject(i);
-
-		    Iter_SafeRemove(g_MapObjects, i, prev);
-		}
-		Iter_Clear(g_MapObjects);
-	
-		new buffer[64];
-	    for(new i = 0; i < rows && i < MAX_MAPS; i++)
-	    {
-	        cache_get_row(i, 1, buffer, g_pSQL, sizeof(buffer));
-	        strmid(g_Maps[i][e_mapname], buffer, 0, 64, 64);
-	        
-	        cache_get_row(i, 2, buffer, g_pSQL, sizeof(buffer));
-	        strmid(g_Maps[i][e_realmapname], buffer, 0, 64, 64);
-	        
- 	        cache_get_row(i, 3, buffer, g_pSQL, sizeof(buffer));
-	        strmid(g_Maps[i][e_objectfile], buffer, 0, 64, 64);
-
-			g_Maps[i][e_spawn_x] = cache_get_row_float(i, 4, g_pSQL);
-			g_Maps[i][e_spawn_y] = cache_get_row_float(i, 5, g_pSQL);
-			g_Maps[i][e_spawn_z] = cache_get_row_float(i, 6, g_pSQL);
-			g_Maps[i][e_spawn_a] = cache_get_row_float(i, 7, g_pSQL);
-			
-			g_Maps[i][e_weather] = cache_get_row_int(i, 8, g_pSQL);
-			g_Maps[i][e_time] = cache_get_row_int(i, 9, g_pSQL);
-			
-			g_Maps[i][e_shop_x] = cache_get_row_float(i, 10, g_pSQL);
-			g_Maps[i][e_shop_y] = cache_get_row_float(i, 11, g_pSQL);
-			g_Maps[i][e_shop_z] = cache_get_row_float(i, 12, g_pSQL);
-			
-			if(!fexist(g_Maps[i][e_objectfile]))
-			{
-			    printf("[ERROR] %s does not exist!", g_Maps[i][e_objectfile]);
-			}
-			else
-			{
-				new fbuffer[255],
-				    File:fmap = fopen(g_Maps[i][e_objectfile], io_read),
-				    MapData[E_mapload_data];
-
-				for(new line = 1; fread(fmap, fbuffer); line++)
-				{
-					if(!sscanf(fbuffer, "e<P<(),>{s[20]}iffffff>", MapData)) // p<(>{s[15]}p<,>iffffff{s[5]}
-					{
-					    new id = CreateDynamicObject(MapData[e_model_id], MapData[e_pos_x], MapData[e_pos_y], MapData[e_pos_z], MapData[e_rot_x], MapData[e_rot_y], MapData[e_rot_z]);
-						Iter_Add(g_MapObjects, id);
-					}
-					else
-					{
-						printf("Failed loading object in %s at line %i", g_Maps[i][e_objectfile], line);
-					}
-				}
-				fclose(fmap);
-			}
-	    }
-
-	    g_MapCount = rows;
-	    
-	    printf("#Loaded %i maps", g_MapCount);
-	}
-}
-
 function:ZMP_InfestationCountDown()
 {
 	if(iInfestaion >= 0)
@@ -4155,14 +4024,6 @@ function:HideScoreTD(playerid, namehash)
 	{
     	PlayerTextDrawHide(playerid, TXTScore[playerid]);
 	}
-}
-
-function:OnMapAdded(playerid)
-{
-	SCM(playerid, -1, ""er"Successfully added the map!");
-
-	Map_Reload();
-	return 1;
 }
 
 function:OnNCReceive(playerid)
@@ -5069,19 +4930,15 @@ ZMP_BeginNewGame()
 			break;
         }
 
-   		CURRENT_MAP = random(g_MapCount);
+   		CURRENT_MAP = random_int(0, g_MapCount);
 
-        if(CURRENT_MAP != iOldMap && fexist(g_Maps[CURRENT_MAP][e_objectfile]))
+        if(CURRENT_MAP != iOldMap)
         {
             iOldMap = CURRENT_MAP;
             found = true;
 		}
-
-		printf("[DEBUG] new map: %i", CURRENT_MAP);
     }
     while(!found);
-
-   	Map_Load(g_Maps[CURRENT_MAP][e_objectfile]);
 
 	TextDrawHideForAll(TXTRescue);
 
@@ -5442,12 +5299,6 @@ CreateTextdraws()
 	TextDrawTextSize(TXTLoading, -9.000000, -152.000000);
 }
 
-Map_Reload()
-{
-    mysql_tquery(g_pSQL, "SELECT * FROM `maps`;", "OnMapDataReceived", "");
-    return true;
-}
-
 Map_Unload()
 {
 	if(!g_bMapLoaded) return false;
@@ -5456,17 +5307,6 @@ Map_Unload()
 	g_ShopID = -1;
 
 	g_bMapLoaded = false;
-	return true;
-}
-
-Map_Load(map_file[])
-{
-	if(!fexist(map_file)) return false;
-	if(g_bMapLoaded) return false;
-
-	g_ShopID = CreateDynamicCP(g_Maps[CURRENT_MAP][e_shop_x], g_Maps[CURRENT_MAP][e_shop_y], g_Maps[CURRENT_MAP][e_shop_z], 5.0);
-
-	g_bMapLoaded = true;
 	return true;
 }
 

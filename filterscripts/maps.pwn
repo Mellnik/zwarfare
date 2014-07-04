@@ -31,6 +31,7 @@ Maps: (id:mapname) `maps` table
 public OnFilterScriptInit()
 {
 	print("ZombieMP map script loaded");
+	BuildMaps();
 	return 1;
 }
 
@@ -39,24 +40,7 @@ public OnFilterScriptExit()
 	return 1;
 }
 
-forward BuildMap(index, name[]);
-public BuildMap(index, name[]) // To be called by CallRemoteFunction
+BuildMaps()
 {
-	printf("> Loading map (%i:%s)", index, name);
-	
-	switch(index)
-	{
-	    case 1: // index equals id in maps table
-	    {
-	        // mapcodes
-	    }
-	    case 2:
-	    {
-	    
-	    }
-	    default:
-	    {
-	        print("> Unkown map");
-	    }
-	}
+	// <name>
 }
