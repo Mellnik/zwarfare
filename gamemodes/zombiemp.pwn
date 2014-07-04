@@ -338,7 +338,7 @@ enum e_top_rtests
 	E_test
 };
 
-new	g_pSQL = -1, // g = Global, p = Pointer, txt = Text, b = bool, s = string, i = integer
+new	g_pSQL = -1, // g = Global, p = Pointer, txt = Textdraw, b = bool, s = string, i = integer
 	g_World = 0,
 	g_ShopID = -1,
 	g_GlobalStatus = e_Status_Inactive,
@@ -355,18 +355,18 @@ new	g_pSQL = -1, // g = Global, p = Pointer, txt = Text, b = bool, s = string, i
 	gstr[144],
 	gstr2[255],
 	gTeam[MAX_PLAYERS] = {gNONE, ...},
-	Text:ZMPLogo[3],
-	Text:TXTHealthOverlay,
-	Text:TXTInfestationArrival,
-	Text:TXTRescue,
-	Text:TXTLoading,
+	Text:txtZMPLogo[3],
+	Text:txtHealthOverlay,
+	Text:txtInfestationArrival,
+	Text:txtRescue,
+	Text:txtLoading,
 	PlayerText:TXTMoney[MAX_PLAYERS],
 	PlayerText:TXTScore[MAX_PLAYERS],
 	PlayerText:TXTPlayerStats[MAX_PLAYERS],
 	PlayerText:TXTMoneyOverlay[MAX_PLAYERS],
 	PlayerText:TXTPlayerHealth[MAX_PLAYERS],
 	PlayerData[MAX_PLAYERS][E_PLAYER_DATA],
-	CURRENT_MAP = -1,
+	g_CurrentMap = -1,
 	tInfestation = INVALID_TIMER,
 	iInfestaion = DEFAULT_INFESTATION_TIME,
 	tRescue = INVALID_TIMER,
@@ -548,7 +548,7 @@ public OnPlayerDisconnect(playerid, reason)
 				}
 	            else if(ZMP_GetPlayers() == 1 || ZMP_GetHumans() == 0)
 	            {
-			        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
+			        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
 
 			        if(!bInfestationArrived) GameTextForAll("~w~Zombies win!", 10000, 5);
 
@@ -579,7 +579,7 @@ public OnPlayerDisconnect(playerid, reason)
 				}
 	            else if(ZMP_GetPlayers() == 1)
 	            {
-			        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
+			        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
 
 			        if(!bInfestationArrived) GameTextForAll("~w~Humans win!", 10000, 5);
 
@@ -623,7 +623,7 @@ public OnPlayerSpawn(playerid)
 	    SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
 	    SetCameraBehindPlayer(playerid);
 	    StopAudioStreamForPlayer(playerid);
-		TextDrawShowForPlayer(playerid, TXTHealthOverlay);
+		TextDrawShowForPlayer(playerid, txtHealthOverlay);
 		PlayerTextDrawShow(playerid, TXTMoneyOverlay[playerid]);
 		PlayerTextDrawShow(playerid, TXTPlayerStats[playerid]);
 		PlayerTextDrawShow(playerid, TXTPlayerHealth[playerid]);
@@ -642,7 +642,7 @@ public OnPlayerSpawn(playerid)
 		{
 			ZMP_SetPlayerHuman(playerid);
 			ZMP_SyncPlayer(playerid);
-			TextDrawShowForPlayer(playerid, TXTInfestationArrival);
+			TextDrawShowForPlayer(playerid, txtInfestationArrival);
 			LoadMap(playerid);
 		    return 1;
 		}
@@ -659,14 +659,14 @@ public OnPlayerSpawn(playerid)
 				ZMP_SyncPlayer(playerid);
 			}
 
-			TextDrawShowForPlayer(playerid, TXTRescue);
+			TextDrawShowForPlayer(playerid, txtRescue);
 			LoadMap(playerid);
 		    return 1;
 		}
 		case e_Status_RoundEnd:
 		{
-			SetPlayerPos(playerid, g_Maps[CURRENT_MAP][e_spawn_x], g_Maps[CURRENT_MAP][e_spawn_y], g_Maps[CURRENT_MAP][e_spawn_z] + 4.0);
-			SetPlayerFacingAngle(playerid, g_Maps[CURRENT_MAP][e_spawn_a]);
+			SetPlayerPos(playerid, g_Maps[g_CurrentMap][e_spawn_x], g_Maps[g_CurrentMap][e_spawn_y], g_Maps[g_CurrentMap][e_spawn_z] + 4.0);
+			SetPlayerFacingAngle(playerid, g_Maps[g_CurrentMap][e_spawn_a]);
 			TogglePlayerControllable(playerid, false);
 		    return 1;
 		}
@@ -680,7 +680,7 @@ public OnPlayerSpawn(playerid)
 	{
 		ZMP_SetPlayerHuman(playerid);
 		ZMP_SyncPlayer(playerid);
-		TextDrawShowForPlayer(playerid, TXTInfestationArrival);
+		TextDrawShowForPlayer(playerid, txtInfestationArrival);
 		LoadMap(playerid);
 	}
 	else if(g_GlobalStatus == e_Status_Playing)
@@ -696,13 +696,13 @@ public OnPlayerSpawn(playerid)
 			ZMP_SyncPlayer(playerid);
 		}
 		
-		TextDrawShowForPlayer(playerid, TXTRescue);
+		TextDrawShowForPlayer(playerid, txtRescue);
 		LoadMap(playerid);
 	}
 	else if(g_GlobalStatus == e_Status_RoundEnd)
 	{
-		SetPlayerPos(playerid, g_Maps[CURRENT_MAP][e_spawn_x], g_Maps[CURRENT_MAP][e_spawn_y], g_Maps[CURRENT_MAP][e_spawn_z] + 4.0);
-		SetPlayerFacingAngle(playerid, g_Maps[CURRENT_MAP][e_spawn_a]);
+		SetPlayerPos(playerid, g_Maps[g_CurrentMap][e_spawn_x], g_Maps[g_CurrentMap][e_spawn_y], g_Maps[g_CurrentMap][e_spawn_z] + 4.0);
+		SetPlayerFacingAngle(playerid, g_Maps[g_CurrentMap][e_spawn_a]);
 		TogglePlayerControllable(playerid, false);
 	}
 	return 1;
@@ -731,7 +731,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 		PlayerData[playerid][tLoadMap] = -1;
 		TogglePlayerControllable(playerid, 1);
 		PlayerData[playerid][bLoadMap] = false;
-		TextDrawHideForPlayer(playerid, TXTLoading);
+		TextDrawHideForPlayer(playerid, txtLoading);
 	}
     
     if(IsPlayerAvail(killerid))
@@ -743,7 +743,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 		{
 			if(ZMP_GetHumans() == 0)
 			{
-		        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
+		        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
 
 		        GameTextForAll("~w~Zombies win!", 10000, 5);
 
@@ -799,7 +799,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 		
 		if(ZMP_GetHumans() == 0)
 		{
-	        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
+	        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
 
 	        GameTextForAll("~w~Zombies win!", 10000, 5);
 
@@ -1029,7 +1029,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
                     
 					if(ZMP_GetHumans() == 0)
 					{
-				        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
+				        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
 
 				        GameTextForAll("~w~Zombies win!", 10000, 5);
 
@@ -1069,7 +1069,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	                    PlayInfectSound();
 						if(ZMP_GetHumans() == 0)
 						{
-					        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
+					        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
 
 					        GameTextForAll("~w~Zombies win!", 10000, 5);
 
@@ -1635,7 +1635,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 	        PlayInfectSound();
 			if(ZMP_GetHumans() == 0)
 			{
-		        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
+		        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
 
 		        GameTextForAll("~w~Zombies win!", 10000, 5);
 
@@ -2979,6 +2979,27 @@ YCMD:mapchange(playerid, params[], help)
 	return 1;
 }
 
+YCMD:reloadmapdata(playerid, params[], help)
+{
+	if(PlayerData[playerid][iAdminLevel] >= 4)
+	{
+	    if(g_GlobalStatus == e_Status_RoundEnd)
+	    {
+	        server_fetch_mapdata();
+	        SCM(playerid, -1, ""er"Map data has been re-fetched from the db");
+	    }
+	    else
+	    {
+	        SCM(playerid, -1, ""er"Map data reload only possible during round end.");
+	    }
+	}
+  	else
+	{
+  		SCM(playerid, -1, NO_PERM);
+	}
+	return 1;
+}
+
 YCMD:setvip(playerid, params[], help)
 {
 	if(PlayerData[playerid][iAdminLevel] == MAX_ADMIN_LEVEL)
@@ -3953,9 +3974,8 @@ function:ZMP_InfestationCountDown()
 {
 	if(iInfestaion >= 0)
 	{
-        new string[255];
-        format(string, sizeof(string), "~w~Infestation arrival in ~r~~h~~h~%i ~w~seconds.~n~Prepare your ass!", iInfestaion);
-        TextDrawSetString(TXTInfestationArrival, string);
+        format(gstr, sizeof(gstr), "~w~Infestation arrival in ~r~~h~~h~%i ~w~seconds.~n~Prepare your ass!", iInfestaion);
+        TextDrawSetString(txtInfestationArrival, gstr);
 
 		for(new i = 0; i < MAX_PLAYERS; i++)
 		{
@@ -3983,8 +4003,8 @@ function:ZMP_InfestationCountDown()
 	        bInfestationArrived = true;
             g_GlobalStatus = e_Status_Playing;
             
-	        TextDrawHideForAll(TXTInfestationArrival);
-			TextDrawShowForAll(TXTRescue);
+	        TextDrawHideForAll(txtInfestationArrival);
+			TextDrawShowForAll(txtRescue);
 
 			iRescue = DEFAULT_RESCUE_TIME;
 			tRescue = SetTimer("ZMP_RescueCountDown", 1000, 1);
@@ -4001,7 +4021,7 @@ function:ZMP_RescueCountDown()
 	{
         new string[255];
         format(string, sizeof(string), "~w~Rescue in: ~r~~h~~h~%s", ZMP_ConvertTime(iRescue));
-        TextDrawSetString(TXTRescue, string);
+        TextDrawSetString(txtRescue, string);
 	        
 	    iRescue--;
 	}
@@ -4009,7 +4029,7 @@ function:ZMP_RescueCountDown()
 	{
 	    if(ZMP_GetHumans() > 0)
 	    {
-	        TextDrawSetString(TXTRescue, "~w~Rescue arrived!");
+	        TextDrawSetString(txtRescue, "~w~Rescue arrived!");
 	        GameTextForAll("~w~Humans win!", 10000, 5);
 			ZMP_EndGame();
 			
@@ -4022,7 +4042,7 @@ function:ZMP_RescueCountDown()
 		}
 		else
 		{
-	        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
+	        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
 	        GameTextForAll("~w~Zombies win!", 10000, 5);
 			ZMP_EndGame();
 			
@@ -4205,7 +4225,7 @@ function:player_free(playerid, namehash)
 		if(PlayerData[playerid][bLoadMap])
 		{
 			TogglePlayerControllable(playerid, 1);
-			TextDrawHideForPlayer(playerid, TXTLoading);
+			TextDrawHideForPlayer(playerid, txtLoading);
 			PlayerData[playerid][tLoadMap] = -1;
 			PlayerData[playerid][bLoadMap] = false;
 		}
@@ -4659,30 +4679,33 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2)
 
 LoadMap(playerid)
 {
-	Streamer_Update(playerid);
-	PlayerData[playerid][bLoadMap] = true;
-	TogglePlayerControllable(playerid, false);
-	TextDrawShowForPlayer(playerid, TXTLoading);
-	
-	new ping = GetPlayerPing(playerid);
-	
-	switch(ping)
+	if(g_Maps[g_CurrentMap][e_require_preload])
 	{
-		case 0..50:
+		Streamer_Update(playerid);
+		PlayerData[playerid][bLoadMap] = true;
+		TogglePlayerControllable(playerid, false);
+		TextDrawShowForPlayer(playerid, txtLoading);
+
+		new ping = GetPlayerPing(playerid);
+
+		switch(ping)
 		{
-		    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 1500, 0, "ii", playerid, YHash(__GetName(playerid)));
-		}
-		case 51..100:
-		{
-		    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 2100, 0, "ii", playerid, YHash(__GetName(playerid)));
-		}
-		case 101..200:
-		{
-		    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 2500, 0, "ii", playerid, YHash(__GetName(playerid)));
-		}
-		default:
-		{
-		    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 3100, 0, "ii", playerid, YHash(__GetName(playerid)));
+			case 0..50:
+			{
+			    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 1500, 0, "ii", playerid, YHash(__GetName(playerid)));
+			}
+			case 51..100:
+			{
+			    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 2100, 0, "ii", playerid, YHash(__GetName(playerid)));
+			}
+			case 101..200:
+			{
+			    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 2500, 0, "ii", playerid, YHash(__GetName(playerid)));
+			}
+			default:
+			{
+			    PlayerData[playerid][tLoadMap] = SetTimerEx("player_free", 3100, 0, "ii", playerid, YHash(__GetName(playerid)));
+			}
 		}
 	}
 }
@@ -4832,7 +4855,7 @@ ZMP_RandomInfection()
 
 	if(Iter_Count(count) <= 1)
 	{
-        TextDrawSetString(TXTRescue, "~w~Rescue abandoned!");
+        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
 
         if(!bInfestationArrived) GameTextForAll("~w~Humans win!", 10000, 5);
 
@@ -4886,8 +4909,8 @@ ZMP_SetPlayerHuman(playerid)
 	ClearAnimations(playerid);
 	SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
     SetPlayerVirtualWorld(playerid, g_World);
-	SetPlayerPos(playerid, g_Maps[CURRENT_MAP][e_spawn_x], g_Maps[CURRENT_MAP][e_spawn_y], g_Maps[CURRENT_MAP][e_spawn_z] + 4.0);
-	SetPlayerFacingAngle(playerid, g_Maps[CURRENT_MAP][e_spawn_a]);
+	SetPlayerPos(playerid, g_Maps[g_CurrentMap][e_spawn_x], g_Maps[g_CurrentMap][e_spawn_y], g_Maps[g_CurrentMap][e_spawn_z] + 4.0);
+	SetPlayerFacingAngle(playerid, g_Maps[g_CurrentMap][e_spawn_a]);
 	SetCameraBehindPlayer(playerid);
 
     gTeam[playerid] = gHUMAN;
@@ -4913,8 +4936,8 @@ ZMP_SetPlayerZombie(playerid, bool:homespawn = true)
 
     if(homespawn)
     {
-		SetPlayerPos(playerid, g_Maps[CURRENT_MAP][e_spawn_x], g_Maps[CURRENT_MAP][e_spawn_y], g_Maps[CURRENT_MAP][e_spawn_z] + 4.0);
-		SetPlayerFacingAngle(playerid, g_Maps[CURRENT_MAP][e_spawn_a]);
+		SetPlayerPos(playerid, g_Maps[g_CurrentMap][e_spawn_x], g_Maps[g_CurrentMap][e_spawn_y], g_Maps[g_CurrentMap][e_spawn_z] + 4.0);
+		SetPlayerFacingAngle(playerid, g_Maps[g_CurrentMap][e_spawn_a]);
 	}
 
 	SetCameraBehindPlayer(playerid);
@@ -4980,36 +5003,37 @@ ZMP_BeginNewGame()
 {
     g_GlobalStatus = e_Status_Prepare;
     bInfestationArrived = false;
-    new bool:found = false;
+    new bool:bFound = false;
 
     do
     {
         if(g_ForceMap != -1)
         {
-            CURRENT_MAP = g_ForceMap;
+            g_CurrentMap = g_ForceMap;
             g_ForceMap = -1;
-			iOldMap = CURRENT_MAP;
-			found = true;
+			iOldMap = g_CurrentMap;
+			bFound = true;
 			break;
         }
 
-   		CURRENT_MAP = random_int(0, g_MapCount);
+   		g_CurrentMap = random_int(0, g_MapCount);
 
-        if(CURRENT_MAP != iOldMap)
+        if(g_CurrentMap != iOldMap)
         {
-            iOldMap = CURRENT_MAP;
-            found = true;
+            iOldMap = g_CurrentMap;
+            bFound = true;
 		}
     }
-    while(!found);
+    while(!bFound);
 
-	TextDrawHideForAll(TXTRescue);
+	Map_Load(g_CurrentMap);
 
-	new string[128];
-	format(string, sizeof(string), ""zmp" "green"Starting new round! Map: %s", g_Maps[CURRENT_MAP][e_mapname]);
-	SCMToAll(-1, string);
+	TextDrawHideForAll(txtRescue);
 
-	g_World = random(990000) + 10000;
+	format(gstr, sizeof(gstr), ""zmp" "green"Starting new round! Map: %s", g_Maps[g_CurrentMap][e_mapname]);
+	SCMToAll(-1, gstr);
+
+	g_World = random_int(10000, 100000);
 
 	new count = 0;
 	for(new i = 0; i < MAX_PLAYERS; i++)
@@ -5017,12 +5041,11 @@ ZMP_BeginNewGame()
 		if(IsPlayerAvail(i))
 		{
 		    ZMP_SetPlayerHuman(i);
-
             ZMP_SyncPlayer(i);
 
             PlayAudio(i, "http://zombiemp.com/rs.mp3");
-            TogglePlayerControllable(i, true);
 			LoadMap(i);
+			
             count++;
 		}
 	}
@@ -5035,7 +5058,7 @@ ZMP_BeginNewGame()
 
 	iInfestaion = DEFAULT_INFESTATION_TIME;
     tInfestation = SetTimer("ZMP_InfestationCountDown", 1000, 1);
-	TextDrawShowForAll(TXTInfestationArrival);
+	TextDrawShowForAll(txtInfestationArrival);
 	return 1;
 }
 
@@ -5274,92 +5297,92 @@ ZMP_ConvertTime(seconds)
 
 ZMP_ShowLogo(playerid)
 {
-	for(new i = 0; i < sizeof(ZMPLogo); i++)
+	for(new i = 0; i < sizeof(txtZMPLogo); i++)
 	{
- 		TextDrawShowForPlayer(playerid, ZMPLogo[i]);
+ 		TextDrawShowForPlayer(playerid, txtZMPLogo[i]);
 	}
 }
 
 ZMP_HideLogo(playerid)
 {
-	for(new i = 0; i < sizeof(ZMPLogo); i++)
+	for(new i = 0; i < sizeof(txtZMPLogo); i++)
 	{
-	    TextDrawHideForPlayer(playerid, ZMPLogo[i]);
+	    TextDrawHideForPlayer(playerid, txtZMPLogo[i]);
 	}
 }
 
 server_load_textdraws()
 {
-	ZMPLogo[0] = TextDrawCreate(231.000000, 85.000000, "Zombie~n~   ~r~~h~~h~Multiplayer");
-	TextDrawBackgroundColor(ZMPLogo[0], 255);
-	TextDrawFont(ZMPLogo[0], 0);
-	TextDrawLetterSize(ZMPLogo[0], 0.959999, 3.899998);
-	TextDrawColor(ZMPLogo[0], -1);
-	TextDrawSetOutline(ZMPLogo[0], 1);
-	TextDrawSetProportional(ZMPLogo[0], 1);
-	TextDrawSetSelectable(ZMPLogo[0], 0);
+	txtZMPLogo[0] = TextDrawCreate(231.000000, 85.000000, "Zombie~n~   ~r~~h~~h~Multiplayer");
+	TextDrawBackgroundColor(txtZMPLogo[0], 255);
+	TextDrawFont(txtZMPLogo[0], 0);
+	TextDrawLetterSize(txtZMPLogo[0], 0.959999, 3.899998);
+	TextDrawColor(txtZMPLogo[0], -1);
+	TextDrawSetOutline(txtZMPLogo[0], 1);
+	TextDrawSetProportional(txtZMPLogo[0], 1);
+	TextDrawSetSelectable(txtZMPLogo[0], 0);
 
-	ZMPLogo[1] = TextDrawCreate(324.000000, 99.000000, "zombie~r~~h~~h~mp~w~.com");
-	TextDrawBackgroundColor(ZMPLogo[1], 255);
-	TextDrawFont(ZMPLogo[1], 1);
-	TextDrawLetterSize(ZMPLogo[1], 0.299999, 1.699999);
-	TextDrawColor(ZMPLogo[1], -1);
-	TextDrawSetOutline(ZMPLogo[1], 1);
-	TextDrawSetProportional(ZMPLogo[1], 1);
-	TextDrawSetSelectable(ZMPLogo[1], 0);
+	txtZMPLogo[1] = TextDrawCreate(324.000000, 99.000000, "zombie~r~~h~~h~mp~w~.com");
+	TextDrawBackgroundColor(txtZMPLogo[1], 255);
+	TextDrawFont(txtZMPLogo[1], 1);
+	TextDrawLetterSize(txtZMPLogo[1], 0.299999, 1.699999);
+	TextDrawColor(txtZMPLogo[1], -1);
+	TextDrawSetOutline(txtZMPLogo[1], 1);
+	TextDrawSetProportional(txtZMPLogo[1], 1);
+	TextDrawSetSelectable(txtZMPLogo[1], 0);
 
-	ZMPLogo[2] = TextDrawCreate(231.000000, 132.000000, ""VERSION"");
-	TextDrawBackgroundColor(ZMPLogo[2], 255);
-	TextDrawFont(ZMPLogo[2], 1);
-	TextDrawLetterSize(ZMPLogo[2], 0.309999, 1.899999);
-	TextDrawColor(ZMPLogo[2], -1);
-	TextDrawSetOutline(ZMPLogo[2], 1);
-	TextDrawSetProportional(ZMPLogo[2], 1);
-	TextDrawSetSelectable(ZMPLogo[2], 0);
+	txtZMPLogo[2] = TextDrawCreate(231.000000, 132.000000, ""VERSION"");
+	TextDrawBackgroundColor(txtZMPLogo[2], 255);
+	TextDrawFont(txtZMPLogo[2], 1);
+	TextDrawLetterSize(txtZMPLogo[2], 0.309999, 1.899999);
+	TextDrawColor(txtZMPLogo[2], -1);
+	TextDrawSetOutline(txtZMPLogo[2], 1);
+	TextDrawSetProportional(txtZMPLogo[2], 1);
+	TextDrawSetSelectable(txtZMPLogo[2], 0);
 
-	TXTHealthOverlay = TextDrawCreate(546.000000, 67.000000, "~w~Zombie~r~~h~~h~MP~w~.com");
-	TextDrawBackgroundColor(TXTHealthOverlay, 255);
-	TextDrawFont(TXTHealthOverlay, 1);
-	TextDrawLetterSize(TXTHealthOverlay, 0.240000, 0.799999);
-	TextDrawColor(TXTHealthOverlay, -1);
-	TextDrawSetOutline(TXTHealthOverlay, 0);
-	TextDrawSetProportional(TXTHealthOverlay, 1);
-	TextDrawSetShadow(TXTHealthOverlay, 1);
-	TextDrawUseBox(TXTHealthOverlay, 1);
-	TextDrawBoxColor(TXTHealthOverlay, 255);
-	TextDrawTextSize(TXTHealthOverlay, 607.000000, 0.000000);
-	TextDrawSetSelectable(TXTHealthOverlay, 0);
+	txtHealthOverlay = TextDrawCreate(546.000000, 67.000000, "~w~Zombie~r~~h~~h~MP~w~.com");
+	TextDrawBackgroundColor(txtHealthOverlay, 255);
+	TextDrawFont(txtHealthOverlay, 1);
+	TextDrawLetterSize(txtHealthOverlay, 0.240000, 0.799999);
+	TextDrawColor(txtHealthOverlay, -1);
+	TextDrawSetOutline(txtHealthOverlay, 0);
+	TextDrawSetProportional(txtHealthOverlay, 1);
+	TextDrawSetShadow(txtHealthOverlay, 1);
+	TextDrawUseBox(txtHealthOverlay, 1);
+	TextDrawBoxColor(txtHealthOverlay, 255);
+	TextDrawTextSize(txtHealthOverlay, 607.000000, 0.000000);
+	TextDrawSetSelectable(txtHealthOverlay, 0);
 
-	TXTInfestationArrival = TextDrawCreate(322.000000, 25.000000, "~w~Infestation arrival in ~r~~h~~h~65 ~w~seconds.~n~Prepare your ass!");
-	TextDrawAlignment(TXTInfestationArrival, 2);
-	TextDrawBackgroundColor(TXTInfestationArrival, 255);
-	TextDrawFont(TXTInfestationArrival, 1);
-	TextDrawLetterSize(TXTInfestationArrival, 0.209998, 0.999998);
-	TextDrawColor(TXTInfestationArrival, -1);
-	TextDrawSetOutline(TXTInfestationArrival, 1);
-	TextDrawSetProportional(TXTInfestationArrival, 1);
-	TextDrawSetSelectable(TXTInfestationArrival, 0);
+	txtInfestationArrival = TextDrawCreate(322.000000, 25.000000, "~w~Infestation arrival in ~r~~h~~h~65 ~w~seconds.~n~Prepare your ass!");
+	TextDrawAlignment(txtInfestationArrival, 2);
+	TextDrawBackgroundColor(txtInfestationArrival, 255);
+	TextDrawFont(txtInfestationArrival, 1);
+	TextDrawLetterSize(txtInfestationArrival, 0.209998, 0.999998);
+	TextDrawColor(txtInfestationArrival, -1);
+	TextDrawSetOutline(txtInfestationArrival, 1);
+	TextDrawSetProportional(txtInfestationArrival, 1);
+	TextDrawSetSelectable(txtInfestationArrival, 0);
 
-	TXTRescue = TextDrawCreate(283.000000, 5.000000, "~w~Rescue in: ~r~~h~~h~7:00");
-	TextDrawBackgroundColor(TXTRescue, 255);
-	TextDrawFont(TXTRescue, 1);
-	TextDrawLetterSize(TXTRescue, 0.279999, 1.299998);
-	TextDrawColor(TXTRescue, -1);
-	TextDrawSetOutline(TXTRescue, 1);
-	TextDrawSetProportional(TXTRescue, 1);
-	TextDrawSetSelectable(TXTRescue, 0);
+	txtRescue = TextDrawCreate(283.000000, 5.000000, "~w~Rescue in: ~r~~h~~h~7:00");
+	TextDrawBackgroundColor(txtRescue, 255);
+	TextDrawFont(txtRescue, 1);
+	TextDrawLetterSize(txtRescue, 0.279999, 1.299998);
+	TextDrawColor(txtRescue, -1);
+	TextDrawSetOutline(txtRescue, 1);
+	TextDrawSetProportional(txtRescue, 1);
+	TextDrawSetSelectable(txtRescue, 0);
 
-    TXTLoading = TextDrawCreate(319.000000, 208.000000, "Loading...");
-	TextDrawAlignment(TXTLoading, 2);
-	TextDrawBackgroundColor(TXTLoading, 255);
-	TextDrawFont(TXTLoading, 2);
-	TextDrawLetterSize(TXTLoading, 0.469998, 2.099998);
-	TextDrawColor(TXTLoading, -1);
-	TextDrawSetOutline(TXTLoading, 1);
-	TextDrawSetProportional(TXTLoading, 1);
-	TextDrawUseBox(TXTLoading, 1);
-	TextDrawBoxColor(TXTLoading, 170);
-	TextDrawTextSize(TXTLoading, -9.000000, -152.000000);
+    txtLoading = TextDrawCreate(319.000000, 208.000000, "Loading...");
+	TextDrawAlignment(txtLoading, 2);
+	TextDrawBackgroundColor(txtLoading, 255);
+	TextDrawFont(txtLoading, 2);
+	TextDrawLetterSize(txtLoading, 0.469998, 2.099998);
+	TextDrawColor(txtLoading, -1);
+	TextDrawSetOutline(txtLoading, 1);
+	TextDrawSetProportional(txtLoading, 1);
+	TextDrawUseBox(txtLoading, 1);
+	TextDrawBoxColor(txtLoading, 170);
+	TextDrawTextSize(txtLoading, -9.000000, -152.000000);
 }
 
 server_fetch_mapdata()
@@ -5367,15 +5390,30 @@ server_fetch_mapdata()
 	mysql_tquery(g_pSQL, "SELECT * FROM `maps`;", "OnMapDataLoad");
 }
 
+Map_Load(index)
+{
+	if(g_bMapLoaded)
+	    return 0;
+
+	SetWorldTime(g_Maps[index][e_time]);
+	SetWeather(g_Maps[index][e_weather]);
+	
+	g_ShopID = CreateDynamicCP(g_Maps[index][e_shop_x], g_Maps[index][e_shop_y], g_Maps[index][e_shop_z], 5.0);
+
+	g_bMapLoaded = true;
+	return 1;
+}
+
 Map_Unload()
 {
-	if(!g_bMapLoaded) return false;
+	if(!g_bMapLoaded)
+		return 0;
 
 	DestroyDynamicCP(g_ShopID);
 	g_ShopID = -1;
 
 	g_bMapLoaded = false;
-	return true;
+	return 1;
 }
 
 ZMP_GetZombies()
@@ -5437,8 +5475,8 @@ ZMP_GetPlayers()
 
 ZMP_SyncPlayer(playerid)
 {
-    SetPlayerTime(playerid, g_Maps[CURRENT_MAP][e_time], 0);
-	SetPlayerWeather(playerid, g_Maps[CURRENT_MAP][e_weather]);
+    SetPlayerTime(playerid, g_Maps[g_CurrentMap][e_time], 0);
+	SetPlayerWeather(playerid, g_Maps[g_CurrentMap][e_weather]);
 }
 
 broadcast_admin(color, const string[])
