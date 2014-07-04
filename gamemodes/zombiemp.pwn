@@ -63,7 +63,7 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define SQL_PORT                        (3306)
 #if IS_RELEASE_BUILD == true
 #define SQL_USER   						"zmpserver"
-#define SQL_PASS   						"pass"
+#define SQL_PASS   						"tAfl3qAJQgSc2Xqal"
 #define SQL_DATA   						"zmpserver"
 #else
 #define SQL_USER   						"zmpdev"
@@ -522,11 +522,10 @@ public OnPlayerConnect(playerid)
 	}
 	else
 	{
-        PlayAudioStreamForPlayer(playerid, "http://zombiemp.com/sjgs.mp3");
+        PlayAudioStreamForPlayer(playerid, "http://zombiemp.com/ztheme.mp3");
 		TogglePlayerSpectating(playerid, true);
 
         InitSession(playerid);
-
         ZMP_ShowLogo(playerid);
 		
 		mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT * FROM `bans` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
