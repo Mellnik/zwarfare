@@ -3821,15 +3821,6 @@ function:player_death_cooldown(playerid)
 	return 1;
 }
 
-function:IsPlayerAvail(playerid)
-{
-	if(IsPlayerConnected(playerid) && playerid != INVALID_PLAYER_ID && PlayerData[playerid][iExitType] == EXIT_FIRST_SPAWNED)
-	{
-	    return 1;
-	}
-	return 0;
-}
-
 MySQL_Connect()
 {
     g_pSQL = mysql_connect(SQL_HOST, SQL_USER, SQL_DATA, SQL_PASS, SQL_PORT, true);
@@ -3956,7 +3947,7 @@ MySQL_SavePlayer(playerid)
     mysql_tquery(g_pSQL, finquery, "", "");
 }
 
-function:KickEx(playerid)
+KickEx(playerid)
 {
 	PlayerData[playerid][bOpenSeason] = true;
 	SetTimerEx("Kick_Delay", 3000, 0, "ii", playerid, YHash(__GetName(playerid)));
@@ -3969,68 +3960,6 @@ function:Kick_Delay(playerid, namehash)
 	{
 		Kick(playerid);
 	}
-	return 1;
-}
-
-function:InitSession(playerid)
-{
-	TXTMoney[playerid] = CreatePlayerTextDraw(playerid, 323.000000, 247.000000, "~g~~h~~h~+$100");
-	PlayerTextDrawAlignment(playerid, TXTMoney[playerid], 2);
-	PlayerTextDrawBackgroundColor(playerid, TXTMoney[playerid], 255);
-	PlayerTextDrawFont(playerid, TXTMoney[playerid], 1);
-	PlayerTextDrawLetterSize(playerid, TXTMoney[playerid], 0.299999, 1.399999);
-	PlayerTextDrawColor(playerid, TXTMoney[playerid], -1);
-	PlayerTextDrawSetOutline(playerid, TXTMoney[playerid], 1);
-	PlayerTextDrawSetProportional(playerid, TXTMoney[playerid], 1);
-	PlayerTextDrawSetSelectable(playerid, TXTMoney[playerid], 0);
-
-	TXTScore[playerid] = CreatePlayerTextDraw(playerid, 323.000000, 262.000000, "~y~~h~+1 Score");
-	PlayerTextDrawAlignment(playerid, TXTScore[playerid], 2);
-	PlayerTextDrawBackgroundColor(playerid, TXTScore[playerid], 255);
-	PlayerTextDrawFont(playerid, TXTScore[playerid], 1);
-	PlayerTextDrawLetterSize(playerid, TXTScore[playerid], 0.299999, 1.399999);
-	PlayerTextDrawColor(playerid, TXTScore[playerid], -1);
-	PlayerTextDrawSetOutline(playerid, TXTScore[playerid], 1);
-	PlayerTextDrawSetProportional(playerid, TXTScore[playerid], 1);
-	PlayerTextDrawSetSelectable(playerid, TXTScore[playerid], 0);
-	
-	TXTPlayerStats[playerid] = CreatePlayerTextDraw(playerid, 500.000000, 377.000000, "~w~Score: 0~n~Money: $0~n~Kills: 0~n~Deaths: 0~n~K/D: 0.00");
-	PlayerTextDrawBackgroundColor(playerid, TXTPlayerStats[playerid], 255);
-	PlayerTextDrawFont(playerid, TXTPlayerStats[playerid], 1);
-	PlayerTextDrawLetterSize(playerid, TXTPlayerStats[playerid], 0.260000, 1.000000);
-	PlayerTextDrawColor(playerid, TXTPlayerStats[playerid], -1);
-	PlayerTextDrawSetOutline(playerid, TXTPlayerStats[playerid], 1);
-	PlayerTextDrawSetProportional(playerid, TXTPlayerStats[playerid], 1);
-	PlayerTextDrawUseBox(playerid, TXTPlayerStats[playerid], 1);
-	PlayerTextDrawBoxColor(playerid, TXTPlayerStats[playerid], 168430148);
-	PlayerTextDrawTextSize(playerid, TXTPlayerStats[playerid], 607.000000, 13.000000);
-	PlayerTextDrawSetSelectable(playerid, TXTPlayerStats[playerid], 0);
-	
-	TXTMoneyOverlay[playerid] = CreatePlayerTextDraw(playerid, 498.000000, 79.000000, "~n~");
-	PlayerTextDrawBackgroundColor(playerid, TXTMoneyOverlay[playerid], 255);
-	PlayerTextDrawFont(playerid, TXTMoneyOverlay[playerid], 1);
-	PlayerTextDrawLetterSize(playerid, TXTMoneyOverlay[playerid], 0.240000, 2.000000);
-	PlayerTextDrawColor(playerid, TXTMoneyOverlay[playerid], -1);
-	PlayerTextDrawSetOutline(playerid, TXTMoneyOverlay[playerid], 0);
-	PlayerTextDrawSetProportional(playerid, TXTMoneyOverlay[playerid], 1);
-	PlayerTextDrawSetShadow(playerid, TXTMoneyOverlay[playerid], 1);
-	PlayerTextDrawUseBox(playerid, TXTMoneyOverlay[playerid], 1);
-	PlayerTextDrawBoxColor(playerid, TXTMoneyOverlay[playerid], 255);
-	PlayerTextDrawTextSize(playerid, TXTMoneyOverlay[playerid], 607.000000, 0.000000);
-	PlayerTextDrawSetSelectable(playerid, TXTMoneyOverlay[playerid], 0);
-	
-	TXTPlayerHealth[playerid] = CreatePlayerTextDraw(playerid, 500.000000, 81.000000, "~n~");
-	PlayerTextDrawBackgroundColor(playerid, TXTPlayerHealth[playerid], 255);
-	PlayerTextDrawFont(playerid, TXTPlayerHealth[playerid], 1);
-	PlayerTextDrawLetterSize(playerid, TXTPlayerHealth[playerid], 0.240000, 1.500000);
-	PlayerTextDrawColor(playerid, TXTPlayerHealth[playerid], -1);
-	PlayerTextDrawSetOutline(playerid, TXTPlayerHealth[playerid], 0);
-	PlayerTextDrawSetProportional(playerid, TXTPlayerHealth[playerid], 1);
-	PlayerTextDrawSetShadow(playerid, TXTPlayerHealth[playerid], 1);
-	PlayerTextDrawUseBox(playerid, TXTPlayerHealth[playerid], 1);
-	PlayerTextDrawBoxColor(playerid, TXTPlayerHealth[playerid], -16773172);
-	PlayerTextDrawTextSize(playerid, TXTPlayerHealth[playerid], 605.000000, -80.000000);
-	PlayerTextDrawSetSelectable(playerid, TXTPlayerHealth[playerid], 0);
 	return 1;
 }
 
@@ -4685,6 +4614,16 @@ function:OnPlayerRegister(playerid, namehash, hash[], playername[], ip_address[]
   		GameTextForPlayer(playerid, "~n~+$10,000~n~Startcash", 3000, 1);
 		SCM(playerid, -1, ""server_sign" "grey"You are now registered, and have been logged in!");
 		PlaySound(playerid, 1057);
+	}
+	return 1;
+}
+
+function:remove_health_obj(damagedid)
+{
+	if(IsPlayerConnected(damagedid))
+	{
+	    RemovePlayerAttachedObject(damagedid, 8);
+	    g_bPlayerHit[damagedid] = false;
 	}
 	return 1;
 }
@@ -5422,16 +5361,6 @@ IsAd(const text[])
 	return false;
 }
 
-function:remove_health_obj(damagedid)
-{
-	if(IsPlayerConnected(damagedid))
-	{
-	    RemovePlayerAttachedObject(damagedid, 8);
-	    g_bPlayerHit[damagedid] = false;
-	}
-	return 1;
-}
-
 ZMP_ConvertTime(seconds)
 {
 	new tmp[16];
@@ -5687,6 +5616,77 @@ ResetPlayerVars(playerid)
         DestroyDynamic3DTextLabel(PlayerData[playerid][txVIPLabel]);
         PlayerData[playerid][txVIPLabel] = Text3D:-1;
     }
+}
+
+InitSession(playerid)
+{
+	TXTMoney[playerid] = CreatePlayerTextDraw(playerid, 323.000000, 247.000000, "~g~~h~~h~+$100");
+	PlayerTextDrawAlignment(playerid, TXTMoney[playerid], 2);
+	PlayerTextDrawBackgroundColor(playerid, TXTMoney[playerid], 255);
+	PlayerTextDrawFont(playerid, TXTMoney[playerid], 1);
+	PlayerTextDrawLetterSize(playerid, TXTMoney[playerid], 0.299999, 1.399999);
+	PlayerTextDrawColor(playerid, TXTMoney[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, TXTMoney[playerid], 1);
+	PlayerTextDrawSetProportional(playerid, TXTMoney[playerid], 1);
+	PlayerTextDrawSetSelectable(playerid, TXTMoney[playerid], 0);
+
+	TXTScore[playerid] = CreatePlayerTextDraw(playerid, 323.000000, 262.000000, "~y~~h~+1 Score");
+	PlayerTextDrawAlignment(playerid, TXTScore[playerid], 2);
+	PlayerTextDrawBackgroundColor(playerid, TXTScore[playerid], 255);
+	PlayerTextDrawFont(playerid, TXTScore[playerid], 1);
+	PlayerTextDrawLetterSize(playerid, TXTScore[playerid], 0.299999, 1.399999);
+	PlayerTextDrawColor(playerid, TXTScore[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, TXTScore[playerid], 1);
+	PlayerTextDrawSetProportional(playerid, TXTScore[playerid], 1);
+	PlayerTextDrawSetSelectable(playerid, TXTScore[playerid], 0);
+
+	TXTPlayerStats[playerid] = CreatePlayerTextDraw(playerid, 500.000000, 377.000000, "~w~Score: 0~n~Money: $0~n~Kills: 0~n~Deaths: 0~n~K/D: 0.00");
+	PlayerTextDrawBackgroundColor(playerid, TXTPlayerStats[playerid], 255);
+	PlayerTextDrawFont(playerid, TXTPlayerStats[playerid], 1);
+	PlayerTextDrawLetterSize(playerid, TXTPlayerStats[playerid], 0.260000, 1.000000);
+	PlayerTextDrawColor(playerid, TXTPlayerStats[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, TXTPlayerStats[playerid], 1);
+	PlayerTextDrawSetProportional(playerid, TXTPlayerStats[playerid], 1);
+	PlayerTextDrawUseBox(playerid, TXTPlayerStats[playerid], 1);
+	PlayerTextDrawBoxColor(playerid, TXTPlayerStats[playerid], 168430148);
+	PlayerTextDrawTextSize(playerid, TXTPlayerStats[playerid], 607.000000, 13.000000);
+	PlayerTextDrawSetSelectable(playerid, TXTPlayerStats[playerid], 0);
+
+	TXTMoneyOverlay[playerid] = CreatePlayerTextDraw(playerid, 498.000000, 79.000000, "~n~");
+	PlayerTextDrawBackgroundColor(playerid, TXTMoneyOverlay[playerid], 255);
+	PlayerTextDrawFont(playerid, TXTMoneyOverlay[playerid], 1);
+	PlayerTextDrawLetterSize(playerid, TXTMoneyOverlay[playerid], 0.240000, 2.000000);
+	PlayerTextDrawColor(playerid, TXTMoneyOverlay[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, TXTMoneyOverlay[playerid], 0);
+	PlayerTextDrawSetProportional(playerid, TXTMoneyOverlay[playerid], 1);
+	PlayerTextDrawSetShadow(playerid, TXTMoneyOverlay[playerid], 1);
+	PlayerTextDrawUseBox(playerid, TXTMoneyOverlay[playerid], 1);
+	PlayerTextDrawBoxColor(playerid, TXTMoneyOverlay[playerid], 255);
+	PlayerTextDrawTextSize(playerid, TXTMoneyOverlay[playerid], 607.000000, 0.000000);
+	PlayerTextDrawSetSelectable(playerid, TXTMoneyOverlay[playerid], 0);
+
+	TXTPlayerHealth[playerid] = CreatePlayerTextDraw(playerid, 500.000000, 81.000000, "~n~");
+	PlayerTextDrawBackgroundColor(playerid, TXTPlayerHealth[playerid], 255);
+	PlayerTextDrawFont(playerid, TXTPlayerHealth[playerid], 1);
+	PlayerTextDrawLetterSize(playerid, TXTPlayerHealth[playerid], 0.240000, 1.500000);
+	PlayerTextDrawColor(playerid, TXTPlayerHealth[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, TXTPlayerHealth[playerid], 0);
+	PlayerTextDrawSetProportional(playerid, TXTPlayerHealth[playerid], 1);
+	PlayerTextDrawSetShadow(playerid, TXTPlayerHealth[playerid], 1);
+	PlayerTextDrawUseBox(playerid, TXTPlayerHealth[playerid], 1);
+	PlayerTextDrawBoxColor(playerid, TXTPlayerHealth[playerid], -16773172);
+	PlayerTextDrawTextSize(playerid, TXTPlayerHealth[playerid], 605.000000, -80.000000);
+	PlayerTextDrawSetSelectable(playerid, TXTPlayerHealth[playerid], 0);
+	return 1;
+}
+
+IsPlayerAvail(playerid)
+{
+	if(IsPlayerConnected(playerid) && playerid != INVALID_PLAYER_ID && PlayerData[playerid][iExitType] == EXIT_FIRST_SPAWNED)
+	{
+	    return 1;
+	}
+	return 0;
 }
 
 /*
