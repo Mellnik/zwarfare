@@ -108,6 +108,7 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define NOT_AVAIL                       "{2DFF00}Info: {D2D2D2}You can´t use this command now!"
 #define nocash(%1) GameTextForPlayer(%1, "~g~~h~~h~Not enough money!", 2000, 3)
 #define MAX_PLAYER_IP                   (16)
+#define SALT_LENGTH                     (32)
 
 // Colors
 #define SEMI_TRANS                      (0x0A0A0A55)
@@ -250,8 +251,7 @@ enum (+= 10)
 	ACCOUNT_REQUEST_GANG_LOAD,
 	ACCOUNT_REQUEST_ACHS_LOAD,
 	ACCOUNT_REQUEST_TOYS_LOAD,
-	ACCOUNT_REQUEST_PVS_LOAD,
-    ACCOUNT_REQUEST_LOGIN
+	ACCOUNT_REQUEST_PVS_LOAD
 };
 
 enum
@@ -1167,12 +1167,34 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					return RequestLogin(playerid);
 				}
 				
-				new hash[SHA3_LENGTH + 1];
-				sha3(password, hash, sizeof(hash));
+				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT `hash`, `salt` FROM `accounts` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
+				
+				new db_hash[SHA3_LENGTH + 1], db_salt[SALT_LENGTH + 1],
+					Cache:query = mysql_query(g_pSQL, gstr2, true),
+					hash[SHA3_LENGTH + 1],
+					validate[sizeof(hash) + SALT_LENGTH + 1];
 
-				// todo: add salt
-				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT `id` FROM `accounts` WHERE `name` = '%e' AND ----- LIMIT 1;", __GetName(playerid), hash, hash);
-				mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_LOGIN);
+				cache_get_row(0, 0, db_hash, g_pSQL, sizeof(db_hash));
+				cache_get_row(0, 1, db_salt, g_pSQL, sizeof(db_salt));
+				cache_delete(query);
+				
+				format(validate, sizeof(validate), "%s%s", password, db_salt);
+				sha3(validate, hash, sizeof(hash));
+
+				if(strcmp(validate, hash))
+				{
+				    SCM(playerid, -1, ""er"Login failed, incorrect password!");
+				    RequestLogin(playerid);
+				}
+				else
+				{
+					PlayerData[playerid][bLogged] = true;
+					PlayerData[playerid][bFirstSpawn] = true;
+					PlayerData[playerid][iExitType] = EXIT_LOGGED;
+					TogglePlayerSpectating(playerid, false);
+					MySQL_LoadAccount(playerid);
+					MySQL_LogPlayerIn(playerid);
+				}
 			    return true;
 			}
 	        case DIALOG_REGISTER:
@@ -1183,7 +1205,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					return RequestRegistration(playerid);
 				}
 				if(isnull(inputtext)) return RequestRegistration(playerid);
-			    
 				extract inputtext -> new string:password[33]; else
 				{
 					return RequestRegistration(playerid);
@@ -3931,7 +3952,7 @@ MySQL_RegisterAccount(playerid, hash[])
 	orm_addvar_int(ormid, PlayerData[playerid][iLastNC], "lastnc");
 
 	orm_setkey(ormid, "id");
-	orm_insert(ormid, "OnPlayerRegister", "iiisss", playerid, YHash(__GetName(playerid)), hash, __GetName(playerid), __GetIP(playerid), __GetSerial(playerid));
+	orm_insert(ormid, "OnPlayerRegister", "iissss", playerid, YHash(__GetName(playerid)), hash, __GetName(playerid), __GetIP(playerid), __GetSerial(playerid));
 }
 
 MySQL_CleanUp()
@@ -4727,31 +4748,17 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 			}
 			return 1;
 		}
-	    case ACCOUNT_REQUEST_LOGIN:
-	    {
-	  		if(cache_get_row_count() != 0) // Correct password
-		    {
-		        MySQL_LoadAccount(playerid);
-		        MySQL_LogPlayerIn(playerid);
-		        PlayerData[playerid][bLogged] = true;
-		        PlayerData[playerid][bFirstSpawn] = true;
-                PlayerData[playerid][iExitType] = EXIT_LOGGED;
-                TogglePlayerSpectating(playerid, false);
-			}
-			else
-			{
-			    SCM(playerid, -1, ""er"Login failed. Incorrect password!");
-			    RequestLogin(playerid);
-			}
-	        return 1;
-	    }
 	}
 	return 0;
 }
 
 function:OnPlayerRegister(playerid, namehash, hash[], playername[], ip_address[], serial[])
 {
-	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `hash` = '%s', `ip` = '%s', `serial` = '%e' WHERE `name` = '%s';", hash, ip_address, serial, playername);
+	new salt[SALT_LENGTH + 1], tosave[sizeof(salt) + SHA3_LENGTH + 1];
+	random_string(SALT_LENGTH, salt, sizeof(salt));
+	format(tosave, sizeof(tosave), "%s%s", hash, salt);
+
+	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `hash` = '%e', `salt` = '%e', `ip` = '%e', `serial` = '%e' WHERE `name` = '%s';", tosave, salt, ip_address, serial, playername);
 	mysql_tquery(g_pSQL, gstr2);
 
 	if(namehash == YHash(__GetName(playerid)))
@@ -5319,12 +5326,12 @@ RequestRegistration(playerid)
 
 AutoLogin(playerid)
 {
-    MySQL_LoadAccount(playerid);
-    MySQL_LogPlayerIn(playerid);
     PlayerData[playerid][bLogged] = true;
     PlayerData[playerid][bFirstSpawn] = true;
     PlayerData[playerid][iExitType] = EXIT_LOGGED;
     TogglePlayerSpectating(playerid, false);
+    MySQL_LoadAccount(playerid);
+    MySQL_LogPlayerIn(playerid);
 	return 1;
 }
 
