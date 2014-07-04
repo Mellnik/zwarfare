@@ -98,8 +98,8 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define SCMToAll SendClientMessageToAll
 #define Key(%0) 						(((newkeys & (%0)) == (%0)) && ((oldkeys & (%0)) != (%0)))
 #define function:%1(%2) \
-			forward public %1(%2); \
-			public %1(%2)
+	forward public %1(%2); \
+	public %1(%2)
 
 // Other
 #define er                      		"{F42626}[INFO] {D2D2D2}"
@@ -175,7 +175,7 @@ enum E_PLAYER_DATA
 	ORM:pORM,
 
 	/* ACCOUNT */
-    iAccountID, // i = Integer, s = String, b = bool, f = Float, p = Pointer
+    iAccountID, // Prefixes: i = Integer, s = String, b = bool, f = Float, p = Pointer, t3d = 3DLabel
 	sName[MAX_PLAYER_NAME + 1],
 	sIP[MAX_PLAYER_IP + 1],
 	iKills,
@@ -206,7 +206,7 @@ enum E_PLAYER_DATA
 	tLoadMap,
 	tMedkit,
 	iMedkitTime,
-	Text3D:txVIPLabel,
+	Text3D:t3dVIPLabel,
 	iExitType,
 	iCoolDownDeath,
 	bool:bIsDead,
@@ -281,13 +281,14 @@ enum E_LOG_LEVEL
 enum E_MAP_DATA
 {
 	e_id,
-	e_mapname[24],
+	e_mapname[25],
 	Float:e_spawn_x,
 	Float:e_spawn_y,
 	Float:e_spawn_z,
 	Float:e_spawn_a,
 	e_weather,
 	e_time,
+	e_require_preload,
 	Float:e_shop_x,
 	Float:e_shop_y,
 	Float:e_shop_z
@@ -338,7 +339,6 @@ enum e_top_rtests
 };
 
 new	g_pSQL = -1, // g = Global, p = Pointer, txt = Text, b = bool, s = string, i = integer
-    g_bAllowEnd = true,
 	g_World = 0,
 	g_ShopID = -1,
 	g_GlobalStatus = e_Status_Inactive,
@@ -347,6 +347,7 @@ new	g_pSQL = -1, // g = Global, p = Pointer, txt = Text, b = bool, s = string, i
     g_ForceMap = -1,
 	g_sReports[MAX_REPORTS][144],
 	g_iStartTime,
+	bool:g_bAllowEnd = true,
 	bool:g_bMapLoaded = false,
 	bool:g_bPlayerHit[MAX_PLAYERS] = {false, ...},
 	bool:bGlobalShutdown = false,
@@ -431,6 +432,8 @@ public OnGameModeInit()
     MySQL_CleanUp();
     
     server_initialize();
+    server_load_textdraws();
+	server_fetch_mapdata();
 
     SetTimer("ProcessTick", 1000, 1);
     SetTimer("server_random_broadcast", RANDOM_BROADCAST_TIME, 1);
@@ -508,7 +511,7 @@ public OnPlayerConnect(playerid)
         PlayAudioStreamForPlayer(playerid, "http://zombiemp.com/ztheme.mp3");
 		TogglePlayerSpectating(playerid, true);
 
-        InitSession(playerid);
+        player_init_session(playerid);
         ZMP_ShowLogo(playerid);
 		
 		mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT * FROM `bans` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
@@ -616,8 +619,8 @@ public OnPlayerSpawn(playerid)
 	{
 	    PlayerData[playerid][bFirstSpawn] = false;
 	    PlayerData[playerid][iExitType] = EXIT_FIRST_SPAWNED;
+	    
 	    SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
-	    SetPlayerHealth(playerid, 100.0);
 	    SetCameraBehindPlayer(playerid);
 	    StopAudioStreamForPlayer(playerid);
 		TextDrawShowForPlayer(playerid, TXTHealthOverlay);
@@ -627,6 +630,47 @@ public OnPlayerSpawn(playerid)
 	}
 	
 	ZMP_UpdatePlayerHealthTD(playerid);
+	
+	switch(g_GlobalStatus)
+	{
+		case e_Status_Inactive:
+		{
+		    ZMP_BeginNewGame();
+		    return 1;
+		}
+		case e_Status_Prepare:
+		{
+			ZMP_SetPlayerHuman(playerid);
+			ZMP_SyncPlayer(playerid);
+			TextDrawShowForPlayer(playerid, TXTInfestationArrival);
+			LoadMap(playerid);
+		    return 1;
+		}
+		case e_Status_Playing:
+		{
+		    if(gTeam[playerid] == gHUMAN)
+		    {
+				ZMP_SetPlayerHuman(playerid);
+				ZMP_SyncPlayer(playerid);
+			}
+			else
+			{
+				ZMP_SetPlayerZombie(playerid);
+				ZMP_SyncPlayer(playerid);
+			}
+
+			TextDrawShowForPlayer(playerid, TXTRescue);
+			LoadMap(playerid);
+		    return 1;
+		}
+		case e_Status_RoundEnd:
+		{
+			SetPlayerPos(playerid, g_Maps[CURRENT_MAP][e_spawn_x], g_Maps[CURRENT_MAP][e_spawn_y], g_Maps[CURRENT_MAP][e_spawn_z] + 4.0);
+			SetPlayerFacingAngle(playerid, g_Maps[CURRENT_MAP][e_spawn_a]);
+			TogglePlayerControllable(playerid, false);
+		    return 1;
+		}
+	}
 	
 	if(g_GlobalStatus == e_Status_Inactive)
 	{
@@ -1081,7 +1125,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			        return 1;
 				}
 
-	            PlayerData[playerid][txVIPLabel] = CreateDynamic3DTextLabel(text, -1, 0.0, 0.0, 0.65, 20.0, playerid, INVALID_VEHICLE_ID, 1, -1, -1, -1, 20.0);
+	            PlayerData[playerid][t3dVIPLabel] = CreateDynamic3DTextLabel(text, -1, 0.0, 0.0, 0.65, 20.0, playerid, INVALID_VEHICLE_ID, 1, -1, -1, -1, 20.0);
 
                 SCM(playerid, -1, ""er"Label attached! Note: You can't see the label yourself");
 				return true;
@@ -1102,7 +1146,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			        return 1;
 				}
 
-				UpdateDynamic3DTextLabelText(PlayerData[playerid][txVIPLabel], -1, text);
+				UpdateDynamic3DTextLabelText(PlayerData[playerid][t3dVIPLabel], -1, text);
 	            SCM(playerid, -1, ""er"Label text changed!");
 	            return true;
 	        }
@@ -1682,7 +1726,7 @@ YCMD:label(playerid, params[], help)
 {
     if(PlayerData[playerid][iVIP] == 1)
 	{
-	    if(PlayerData[playerid][txVIPLabel] == Text3D:-1)
+	    if(PlayerData[playerid][t3dVIPLabel] == Text3D:-1)
 	    {
 	        ShowPlayerDialog(playerid, DIALOG_LABEL, DIALOG_STYLE_INPUT, ""zmp" - Attach VIP Label", ""white"Enter some text which your label shall display\n"blue"* "white"Input length: 3-35", "Next", "Cancel");
 	    }
@@ -1702,7 +1746,7 @@ YCMD:elabel(playerid, params[], help)
 {
     if(PlayerData[playerid][iVIP] == 1)
 	{
-	    if(PlayerData[playerid][txVIPLabel] != Text3D:-1)
+	    if(PlayerData[playerid][t3dVIPLabel] != Text3D:-1)
 	    {
 	        ShowPlayerDialog(playerid, DIALOG_LABEL + 1, DIALOG_STYLE_INPUT, ""zmp" - Change VIP Label Text", ""white"Enter the new text which your label shall display\n"blue"* "white"Input length: 3-35", "Next", "Cancel");
 	    }
@@ -1722,10 +1766,10 @@ YCMD:dlabel(playerid, params[], help)
 {
     if(PlayerData[playerid][iVIP] == 1)
 	{
-	    if(PlayerData[playerid][txVIPLabel] != Text3D:-1)
+	    if(PlayerData[playerid][t3dVIPLabel] != Text3D:-1)
 	    {
-	        DestroyDynamic3DTextLabel(PlayerData[playerid][txVIPLabel]);
-	        PlayerData[playerid][txVIPLabel] = Text3D:-1;
+	        DestroyDynamic3DTextLabel(PlayerData[playerid][t3dVIPLabel]);
+	        PlayerData[playerid][t3dVIPLabel] = Text3D:-1;
 	        SCM(playerid, -1, ""er"Label removed!");
 	    }
 	    else
@@ -4491,6 +4535,27 @@ function:_server_shutdown()
 	return 1;
 }
 
+function:OnMapDataLoad()
+{
+	for(new i = 0, c = cache_get_row_count(); i < c; i++)
+	{
+	    g_Maps[i][e_id] = cache_get_row_int(i, 0);
+	    cache_get_row(i, 1, g_Maps[i][e_mapname], g_pSQL, 24);
+	    g_Maps[i][e_spawn_x] = cache_get_row_float(i, 2);
+	    g_Maps[i][e_spawn_y] = cache_get_row_float(i, 3);
+	    g_Maps[i][e_spawn_z] = cache_get_row_float(i, 4);
+	    g_Maps[i][e_spawn_a] = cache_get_row_float(i, 5);
+	    g_Maps[i][e_weather] = cache_get_row_int(i, 6);
+	    g_Maps[i][e_time] = cache_get_row_int(i, 7);
+	    g_Maps[i][e_require_preload] = cache_get_row_int(i, 8);
+	    g_Maps[i][e_shop_x] = cache_get_row_float(i, 9);
+	    g_Maps[i][e_shop_y] = cache_get_row_float(i, 10);
+	    g_Maps[i][e_shop_z] = cache_get_row_float(i, 11);
+	}
+	Log(LOG_ONLINE, "Retrieved %i maps", cache_get_row_count());
+	return 1;
+}
+
 server_initialize()
 {
 	format(gstr, sizeof(gstr), "hostname %s", HOSTNAME);
@@ -4516,8 +4581,6 @@ server_initialize()
     SollIchDirMaEtWatSagen();
 	SetWeather(43);
     SetWorldTime(7);
-    
-    CreateTextdraws();
 
 	g_iStartTime = gettime();
     
@@ -5225,7 +5288,7 @@ ZMP_HideLogo(playerid)
 	}
 }
 
-CreateTextdraws()
+server_load_textdraws()
 {
 	ZMPLogo[0] = TextDrawCreate(231.000000, 85.000000, "Zombie~n~   ~r~~h~~h~Multiplayer");
 	TextDrawBackgroundColor(ZMPLogo[0], 255);
@@ -5297,6 +5360,11 @@ CreateTextdraws()
 	TextDrawUseBox(TXTLoading, 1);
 	TextDrawBoxColor(TXTLoading, 170);
 	TextDrawTextSize(TXTLoading, -9.000000, -152.000000);
+}
+
+server_fetch_mapdata()
+{
+	mysql_tquery(g_pSQL, "SELECT * FROM `maps`;", "OnMapDataLoad");
 }
 
 Map_Unload()
@@ -5397,6 +5465,7 @@ broadcast_vip(color, const string[])
 
 ResetPlayerVars(playerid)
 {
+    gTeam[playerid] = gNONE;
     PlayerData[playerid][iExitType] = EXIT_NONE;
 	PlayerData[playerid][iKills] = 0;
 	PlayerData[playerid][iDeaths] = 0;
@@ -5433,14 +5502,14 @@ ResetPlayerVars(playerid)
 	g_bPlayerHit[playerid] = false;
 	PlayerData[playerid][gSpecialZed] = zedZOMBIE;
 
-    if(PlayerData[playerid][txVIPLabel] != Text3D:-1)
+    if(PlayerData[playerid][t3dVIPLabel] != Text3D:-1)
     {
-        DestroyDynamic3DTextLabel(PlayerData[playerid][txVIPLabel]);
-        PlayerData[playerid][txVIPLabel] = Text3D:-1;
+        DestroyDynamic3DTextLabel(PlayerData[playerid][t3dVIPLabel]);
+        PlayerData[playerid][t3dVIPLabel] = Text3D:-1;
     }
 }
 
-InitSession(playerid)
+player_init_session(playerid)
 {
 	TXTMoney[playerid] = CreatePlayerTextDraw(playerid, 323.000000, 247.000000, "~g~~h~~h~+$100");
 	PlayerTextDrawAlignment(playerid, TXTMoney[playerid], 2);
