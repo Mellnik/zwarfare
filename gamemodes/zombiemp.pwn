@@ -83,7 +83,7 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define COOLDOWN_JUMP                   (5000)
 #define COOLDOWN_CMD_MEDKIT             (30000)
 #define COOLDOWN_DEATH                  (3000)
-#define RANDOM_BROADCAST_TIME                 (300000)
+#define RANDOM_BROADCAST_TIME           (300000)
 #define MAX_REPORTS 					(7)
 #define MAX_MAPS                        (20)
 #define MAX_ADMIN_LEVEL         		(6)
@@ -4752,7 +4752,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 
 function:OnPlayerRegister(playerid, namehash, hash[], playername[], ip_address[], serial[])
 {
-	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `hash` = '%s', `ip` = '%s', `serial` = '%e' WHERE `name` = '%s';", hash, playername, ip_address, serial);
+	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `hash` = '%s', `ip` = '%s', `serial` = '%e' WHERE `name` = '%s';", hash, ip_address, serial, playername);
 	mysql_tquery(g_pSQL, gstr2);
 
 	if(namehash == YHash(__GetName(playerid)))
