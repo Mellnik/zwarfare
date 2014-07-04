@@ -1184,6 +1184,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					PlayerData[playerid][bLogged] = true;
 					PlayerData[playerid][bFirstSpawn] = true;
 					PlayerData[playerid][iExitType] = EXIT_LOGGED;
+					PlayerData[playerid][iLastLogin] = gettime();
 					TogglePlayerSpectating(playerid, false);
 					MySQL_UpdateAccount(playerid);
 					MySQL_LoadAccount(playerid);
@@ -3140,16 +3141,21 @@ YCMD:changepass(playerid, params[], help)
 		SCM(playerid, YELLOW, "Usage: /changepass <new pass>");
 	    return 1;
 	}
+	
 	if(strlen(pass) < 3 || strlen(pass) > 32)
 	{
-		SCM(playerid, -1, ""er"Incorrect password length. (3 - 32)");
+		SCM(playerid, -1, ""er"Allowed password length (3 - 32)");
 		return 1;
 	}
-	new string[128];
-    MySQL_UpdatePlayerPass(playerid, pass);
+	
+	new hash[SHA3_LENGTH + 1];
+	sha3(pass, hash, sizeof(hash));
+	
+    MySQL_UpdatePlayerPass(playerid, hash);
 	PlaySound(playerid, 1057);
-    format(string, sizeof(string), ""server_sign" "r_besch"You have successfully changed your password to %s", pass);
-	SCM(playerid, -1, string);
+    format(gstr, sizeof(gstr), ""server_sign" "r_besch"You have successfully changed your password to %s", pass);
+	SCM(playerid, -1, gstr);
+	
 	PlayerData[playerid][tickLastPW] = tick;
 	return 1;
 }
@@ -3864,9 +3870,7 @@ AssembleORM(ORM:ormid, playerid)
 
 MySQL_CleanUp()
 {
-	new query[100];
-	format(query, sizeof(query), "UPDATE `accounts` SET `logged` = 0 WHERE `logged` = 1;");
-	mysql_tquery(g_pSQL, query, "", "");
+	mysql_tquery(g_pSQL, "UPDATE `accounts` SET `logged` = 0 WHERE `logged` = 1;");
 }
 
 MySQL_UpdateAccount(playerid)
@@ -3883,17 +3887,17 @@ MySQL_LoadAccount(playerid)
 
 MySQL_LogPlayerOut(playerid)
 {
-	new query[150];
-	format(query, sizeof(query), "UPDATE `accounts` SET `logged` = 0, `lastlogged` = %i WHERE `name` = '%s' LIMIT 1;", gettime(), __GetName(playerid));
-	mysql_tquery(g_pSQL, query, "", "");
+	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `logged` = 0 WHERE `name` = '%s' LIMIT 1;", __GetName(playerid));
+	mysql_tquery(g_pSQL, gstr2);
 }
 
 MySQL_UpdatePlayerPass(playerid, hash[])
 {
-	new query[128], escape[33];
-	mysql_escape_string(hash, escape, g_pSQL, 33);
-	format(query, sizeof(query), "UPDATE `accounts` SET `password` = MD5('%s') WHERE `name` = '%s' LIMIT 1;", escape, __GetName(playerid));
- 	mysql_tquery(g_pSQL, query, "", "");
+	new salt[SALT_LENGTH + 1];
+	random_string(SALT_LENGTH, salt, sizeof(salt)); // Generate a new salt for this account
+
+	format(gstr2, sizeof(gstr2), "UPDATE `accounts` SET `hash` = '%s', `salt` = '%s' WHERE `name` = '%s' LIMIT 1;", hash, salt, __GetName(playerid));
+ 	mysql_tquery(g_pSQL, gstr2);
 }
 
 MySQL_CreateBan(PlayerName[], AdminName[], Reason[], lift=0)
