@@ -175,7 +175,7 @@ enum E_PLAYER_DATA
 	ORM:pORM,
 
 	/* ACCOUNT */
-    iAccountID, // i = Integer, s = String, b = bool, f = Float
+    iAccountID, // i = Integer, s = String, b = bool, f = Float, p = Pointer
 	sName[MAX_PLAYER_NAME + 1],
 	sIP[MAX_PLAYER_IP + 1],
 	iKills,
@@ -1556,6 +1556,14 @@ public OnPlayerEnterDynamicCP(playerid, checkpointid)
 /* AUTHORITATIVE SERVER */
 public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
+	/* PLAYER QUEUED FOR KICK */
+	if(hittype == BULLET_HIT_TYPE_PLAYER) {
+	    if(hitid != INVALID_PLAYER_ID) {
+		    if(PlayerData[playerid][bOpenSeason] || PlayerData[hitid][bOpenSeason]) {
+		        return 0;
+		    }
+		}
+	}
 	return 1;
 }
 
@@ -3896,7 +3904,7 @@ MySQL_UpdatePlayerPass(playerid, hash[])
 	new salt[SALT_LENGTH + 1];
 	random_string(SALT_LENGTH, salt, sizeof(salt)); // Generate a new salt for this account
 
-	format(gstr2, sizeof(gstr2), "UPDATE `accounts` SET `hash` = '%s', `salt` = '%s' WHERE `name` = '%s' LIMIT 1;", hash, salt, __GetName(playerid));
+	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `hash` = '%s', `salt` = '%s' WHERE `name` = '%s' LIMIT 1;", hash, salt, __GetName(playerid));
  	mysql_tquery(g_pSQL, gstr2);
 }
 
@@ -3919,30 +3927,11 @@ MySQL_BanIP(const ip[])
 
 MySQL_SaveAccount(playerid)
 {
-	new finquery[1024], tmp[512];
-	
-    PlayerData[playerid][iTime] = PlayerData[playerid][iTime] + (gettime() - PlayerData[playerid][iConnectTime]);
-    PlayerData[playerid][iConnectTime] = gettime();
-	
-	format(tmp, sizeof(tmp), "UPDATE `accounts` SET `score` = %i, `adminlevel` = %i, `money` = %i, `kills` = %i, `deaths` = %i, `time` = %i, `vip` = %i, `medkits` = %i, `cookies` = %i",
-	    PlayerData[playerid][iScore],
-	    PlayerData[playerid][iAdminLevel],
-	    PlayerData[playerid][iMoney],
-	    PlayerData[playerid][iKills],
-	    PlayerData[playerid][iDeaths],
-	    PlayerData[playerid][iTime],
-	    PlayerData[playerid][iVIP],
-	    PlayerData[playerid][iMedkits],
-	    PlayerData[playerid][iCookies]);
-	    
-	strcat(finquery, tmp);
-	
-	format(tmp, sizeof(tmp), " WHERE `name` = '%s' LIMIT 1;",
-	    __GetName(playerid));
-	    
-    strcat(finquery, tmp);
-
-    mysql_tquery(g_pSQL, finquery, "", "");
+    if(PlayerData[playerid][pORM] == ORM:-1) {
+    	Log(LOG_PLAYER, "Crit: ORM -1 in SaveAccount %s, %i", __GetName(playerid), playerid);
+	} else {
+	    orm_update(PlayerData[playerid][pORM]);
+	}
 }
 
 KickEx(playerid)
