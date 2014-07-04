@@ -208,8 +208,6 @@ enum E_PLAYER_DATA
 	iMedkitTime,
 	Text3D:txVIPLabel,
 	iExitType,
-	iCoolDownCommand,
-	iCoolDownText,
 	iCoolDownDeath,
 	bool:bIsDead,
 	bool:bLoadMap,
@@ -439,8 +437,8 @@ public OnGameModeInit()
 	#else
 	Log(LOG_INIT, "Build Configuration: Development");
 	#endif
-	Log(LOG_INIT, "MySQL: Logging: LOG_ERROR | LOG_WARNING");
-	mysql_log(LOG_ERROR | LOG_WARNING, LOG_TYPE_TEXT);
+	Log(LOG_INIT, "MySQL: LOG_ALL");
+	mysql_log(LOG_ALL, LOG_TYPE_TEXT);
 
     MySQL_Connect();
     MySQL_CleanUp();
@@ -687,7 +685,7 @@ public OnPlayerDeath(playerid, killerid, reason)
     PlayerData[playerid][bIsDead] = true;
     
 	PlayerData[playerid][iCoolDownDeath]++;
-	SetTimerEx("CoolDownDeath", COOLDOWN_DEATH, 0, "i", playerid);
+	SetTimerEx("player_death_cooldown", COOLDOWN_DEATH, 0, "i", playerid);
 	if(PlayerData[playerid][iCoolDownDeath] >= 2)
 	{
 		return Kick(playerid);
@@ -828,7 +826,7 @@ public OnPlayerText(playerid, text[])
 	{
 		new string[255];
 	  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, text, __GetIP(playerid));
-		AdminMSG(RED, string);
+		broadcast_admin(RED, string);
 
         SCM(playerid, RED, "Advertising is not allowed!");
         return 0;
@@ -838,7 +836,7 @@ public OnPlayerText(playerid, text[])
 	{
 	    new msgstring[144];
 		format(msgstring, sizeof(msgstring), "[ADMIN CHAT] "LG_E"%s(%i): "LB_E"%s", __GetName(playerid), playerid, text[1]);
-		AdminMSG(COLOR_RED, msgstring);
+		broadcast_admin(COLOR_RED, msgstring);
 		return 0;
 	}
 	
@@ -1073,7 +1071,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {
-	for(new i = 0; i < strlen(inputtext); i++)
+	for(new i = 0, l = strlen(inputtext); i < l; i++)
 	{
 		if(inputtext[i] == '%' || inputtext[i] == ''')
 		{
@@ -1096,7 +1094,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					new string[255];
 				  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, text, __GetIP(playerid));
-					AdminMSG(RED, string);
+					broadcast_admin(RED, string);
 
 			        SCM(playerid, RED, "Advertising is not allowed!");
 			        return 1;
@@ -1118,7 +1116,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					new string[255];
 				  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, text, __GetIP(playerid));
-					AdminMSG(RED, string);
+					broadcast_admin(RED, string);
 
 			        SCM(playerid, RED, "Advertising is not allowed!");
 			        return 1;
@@ -1192,8 +1190,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					PlayerData[playerid][bFirstSpawn] = true;
 					PlayerData[playerid][iExitType] = EXIT_LOGGED;
 					TogglePlayerSpectating(playerid, false);
+					MySQL_UpdateAccount(playerid);
 					MySQL_LoadAccount(playerid);
-					MySQL_LogPlayerIn(playerid);
 				}
 			    return true;
 			}
@@ -1767,7 +1765,7 @@ YCMD:p(playerid, params[], help)
 	{
 		new string[255];
 	  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, msg, __GetIP(playerid));
-		AdminMSG(RED, string);
+		broadcast_admin(RED, string);
 
         SCM(playerid, RED, "Advertising is not allowed!");
         return 1;
@@ -1775,7 +1773,7 @@ YCMD:p(playerid, params[], help)
 
 	new string[255];
 	format(string, sizeof(string), ""white"["lb_e"VIP CHAT"white"] {%06x}%s"white"(%i): %s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, msg);
-	VIPMSG(-1, string);
+	broadcast_vip(-1, string);
 	return 1;
 }
 
@@ -3586,7 +3584,7 @@ YCMD:report(playerid, params[], help)
 		}
 		g_sReports[MAX_REPORTS - 1] = string;
 
-        AdminMSG(-1, string);
+        broadcast_admin(-1, string);
 
 		SCM(playerid, YELLOW, "Your report has been sent to online Admins");
 		PlayerData[playerid][tickLastReport] = tick;
@@ -3716,7 +3714,7 @@ YCMD:pm(playerid, params[], help)
 	{
 		new string[255];
 	  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, msg, __GetIP(playerid));
-		AdminMSG(RED, string);
+		broadcast_admin(RED, string);
 
         SCM(playerid, RED, "Advertising is not allowed!");
         return 1;
@@ -3741,7 +3739,7 @@ YCMD:pm(playerid, params[], help)
 	PlaySound(player, 1057);
 	
 	format(finmsg, sizeof(finmsg), "[PM] from %s(%i) to %s(%i): %s", __GetName(playerid), playerid, __GetName(player), player, msg);
-	AdminMSG(GREY, finmsg);
+	broadcast_admin(GREY, finmsg);
 	return 1;
 }
 
@@ -3761,7 +3759,7 @@ YCMD:r(playerid, params[], help)
 	{
 		new string[255];
 	  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, msg, __GetIP(playerid));
-		AdminMSG(RED, string);
+		broadcast_admin(RED, string);
 
         SCM(playerid, RED, "Advertising is not allowed!");
         return 1;
@@ -3785,7 +3783,7 @@ YCMD:r(playerid, params[], help)
 	PlaySound(lID, 1057);
 
 	format(finmsg, sizeof(finmsg), ""grey"[PM] from %s(%i) to %s(%i): %s", __GetName(playerid), playerid, __GetName(lID), lID, msg);
-	AdminMSG(GREY, finmsg);
+	broadcast_admin(GREY, finmsg);
 	return 1;
 }
 
@@ -3817,19 +3815,7 @@ YCMD:rules(playerid, params[], help)
 	return 1;
 }
 
-function:CoolDownCommand(playerid)
-{
-	PlayerData[playerid][iCoolDownCommand]--;
-	return 1;
-}
-
-function:CoolDownText(playerid)
-{
-	PlayerData[playerid][iCoolDownText]--;
-	return 1;
-}
-
-function:CoolDownDeath(playerid)
+function:player_death_cooldown(playerid)
 {
 	PlayerData[playerid][iCoolDownDeath]--;
 	return 1;
@@ -3842,75 +3828,6 @@ function:IsPlayerAvail(playerid)
 	    return 1;
 	}
 	return 0;
-}
-
-AdminMSG(color, const string[])
-{
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-		if((IsPlayerAvail(i)) && (PlayerData[i][iAdminLevel] >= 1))
-		{
-			SCM(i, color, string);
-		}
-	}
-}
-
-VIPMSG(color, const msg[])
-{
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-		if((IsPlayerAvail(i)) && (PlayerData[i][iVIP] == 1 || PlayerData[i][iAdminLevel] > 0))
-		{
-			SCM(i, color, msg);
-		}
-	}
-}
-
-ResetPlayerVars(playerid)
-{
-    PlayerData[playerid][iExitType] = EXIT_NONE;
-	PlayerData[playerid][iKills] = 0;
-	PlayerData[playerid][iDeaths] = 0;
-	PlayerData[playerid][iCoolDownCommand] = 0;
-	PlayerData[playerid][iCoolDownText] = 0;
-	PlayerData[playerid][iCoolDownDeath] = 0;
-	PlayerData[playerid][bIsDead] = false;
-	PlayerData[playerid][bLoadMap] = false;
-    PlayerData[playerid][iScore] = 0;
-    PlayerData[playerid][iAdminLevel] = 0;
-    PlayerData[playerid][iMoney] = 0;
-    PlayerData[playerid][iTime] = 0;
-    PlayerData[playerid][iVIP] = 0;
-    PlayerData[playerid][iWarnings] = 0;
-    PlayerData[playerid][iMedkits] = 0;
-    PlayerData[playerid][iCookies] = 0;
-    PlayerData[playerid][bMuted] = false;
-    PlayerData[playerid][bLogged] = false;
-   	PlayerData[playerid][iLastLogin] = 0;
-   	PlayerData[playerid][iLastNC] = 0;
-	PlayerData[playerid][iRegisterDate] = 0;
-	PlayerData[playerid][iConnectTime] = 0;
-	PlayerData[playerid][tickLastChat] = 0;
-	PlayerData[playerid][tickPlayerUpdate] = 0;
-	PlayerData[playerid][tickLastReport] = 0;
-	PlayerData[playerid][tickLastPW] = 0;
-	PlayerData[playerid][tickLastJump] = 0;
-	PlayerData[playerid][tickLastMedkit] = 0;
-	PlayerData[playerid][bSoundsDisabled] = false;
-	PlayerData[playerid][bOpenSeason] = false;
-	PlayerData[playerid][tLoadMap] = INVALID_TIMER;
-	PlayerData[playerid][tMedkit] = INVALID_TIMER;
-	PlayerData[playerid][tMute] = INVALID_TIMER;
-	PlayerData[playerid][iTimesHit] = 0;
-	SetPVarInt(playerid, "LastID", -1);
-	g_bPlayerHit[playerid] = false;
-	PlayerData[playerid][gSpecialZed] = zedZOMBIE;
-	
-    if(PlayerData[playerid][txVIPLabel] != Text3D:-1)
-    {
-        DestroyDynamic3DTextLabel(PlayerData[playerid][txVIPLabel]);
-        PlayerData[playerid][txVIPLabel] = Text3D:-1;
-    }
 }
 
 MySQL_Connect()
@@ -3936,7 +3853,15 @@ MySQL_RegisterAccount(playerid, hash[])
 
     new ORM:ormid = PlayerData[playerid][pORM] = orm_create("accounts");
 
- 	orm_addvar_int(ormid, PlayerData[playerid][iAccountID], "id");
+    AssembleORM(ormid, playerid);
+
+	orm_setkey(ormid, "id");
+	orm_insert(ormid, "OnPlayerRegister", "iissss", playerid, YHash(__GetName(playerid)), hash, __GetName(playerid), __GetIP(playerid), __GetSerial(playerid));
+}
+
+AssembleORM(ORM:ormid, playerid)
+{
+	orm_addvar_int(ormid, PlayerData[playerid][iAccountID], "id");
 	orm_addvar_string(ormid, PlayerData[playerid][sName], MAX_PLAYER_NAME + 1, "name");
 	orm_addvar_int(ormid, PlayerData[playerid][iAdminLevel], "adminlevel");
 	orm_addvar_int(ormid, PlayerData[playerid][iScore], "score");
@@ -3947,12 +3872,9 @@ MySQL_RegisterAccount(playerid, hash[])
 	orm_addvar_int(ormid, PlayerData[playerid][iVIP], "vip");
 	orm_addvar_int(ormid, PlayerData[playerid][iCookies], "cookies");
 	orm_addvar_int(ormid, PlayerData[playerid][iMedkits], "medkits");
-	orm_addvar_int(ormid, PlayerData[playerid][iRegisterDate], "reg_date");
-	orm_addvar_int(ormid, PlayerData[playerid][iLastLogin], "lastlogin");
 	orm_addvar_int(ormid, PlayerData[playerid][iLastNC], "lastnc");
-
-	orm_setkey(ormid, "id");
-	orm_insert(ormid, "OnPlayerRegister", "iissss", playerid, YHash(__GetName(playerid)), hash, __GetName(playerid), __GetIP(playerid), __GetSerial(playerid));
+	orm_addvar_int(ormid, PlayerData[playerid][iLastLogin], "lastlogin");
+	orm_addvar_int(ormid, PlayerData[playerid][iRegisterDate], "reg_date");
 }
 
 MySQL_CleanUp()
@@ -3962,11 +3884,10 @@ MySQL_CleanUp()
 	mysql_tquery(g_pSQL, query, "", "");
 }
 
-MySQL_LogPlayerIn(playerid)
+MySQL_UpdateAccount(playerid)
 {
-	new query[150];
-    format(query, sizeof(query), "UPDATE `accounts` SET `logged` = 1, `ip` = '%s' WHERE `name` = '%s' LIMIT 1;", __GetIP(playerid), __GetName(playerid));
-    mysql_tquery(g_pSQL, query, "", "");
+    mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `logged` = 1, `ip` = '%s', `serial` = '%e' WHERE `name` = '%s' LIMIT 1;", __GetIP(playerid), __GetSerial(playerid), __GetName(playerid));
+    mysql_tquery(g_pSQL, gstr2);
 }
 
 MySQL_LoadAccount(playerid)
@@ -4700,20 +4621,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 			{
 				new ORM:ormid = PlayerData[playerid][pORM] = orm_create("accounts");
 
-			 	orm_addvar_int(ormid, PlayerData[playerid][iAccountID], "id");
-				orm_addvar_string(ormid, PlayerData[playerid][sName], MAX_PLAYER_NAME + 1, "name");
-				orm_addvar_int(ormid, PlayerData[playerid][iAdminLevel], "adminlevel");
-				orm_addvar_int(ormid, PlayerData[playerid][iScore], "score");
-				orm_addvar_int(ormid, PlayerData[playerid][iMoney], "money");
-				orm_addvar_int(ormid, PlayerData[playerid][iKills], "kills");
-				orm_addvar_int(ormid, PlayerData[playerid][iDeaths], "deaths");
-				orm_addvar_int(ormid, PlayerData[playerid][iTime], "time");
-				orm_addvar_int(ormid, PlayerData[playerid][iVIP], "vip");
-				orm_addvar_int(ormid, PlayerData[playerid][iCookies], "cookies");
-				orm_addvar_int(ormid, PlayerData[playerid][iMedkits], "medkits");
-				orm_addvar_int(ormid, PlayerData[playerid][iRegisterDate], "reg_date");
-				orm_addvar_int(ormid, PlayerData[playerid][iLastLogin], "lastlogin");
-				orm_addvar_int(ormid, PlayerData[playerid][iLastNC], "lastnc");
+				AssembleORM(ormid, playerid);
 
 				orm_setkey(ormid, "id");
 				orm_apply_cache(ormid, 0);
@@ -4758,30 +4666,25 @@ function:OnPlayerRegister(playerid, namehash, hash[], playername[], ip_address[]
 	random_string(SALT_LENGTH, salt, sizeof(salt));
 	format(tosave, sizeof(tosave), "%s%s", hash, salt);
 
-	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `hash` = '%e', `salt` = '%e', `ip` = '%e', `serial` = '%e' WHERE `name` = '%s';", tosave, salt, ip_address, serial, playername);
+	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `hash` = '%e', `salt` = '%e', `ip` = '%e', `serial` = '%e' WHERE `name` = '%e';", tosave, salt, ip_address, serial, playername);
 	mysql_tquery(g_pSQL, gstr2);
 
 	if(namehash == YHash(__GetName(playerid)))
 	{
-	    PlayerData[playerid][iRegisterDate] = gettime();
-		PlayerData[playerid][iExitType] = EXIT_LOGGED;
 		PlayerData[playerid][iConnectTime] = gettime();
 	    PlayerData[playerid][bLogged] = true;
 	    PlayerData[playerid][bFirstSpawn] = true;
-		TogglePlayerSpectating(playerid, false);
+        PlayerData[playerid][iExitType] = EXIT_LOGGED;
+        TogglePlayerSpectating(playerid, false);
 
-	    new str[144];
-		format(str, sizeof str, ""zmp" %s(%i) "grey"registered, making the server have a total of "green"%i "grey"players registered.", __GetName(playerid), playerid, cache_insert_id());
-		SCMToAll(-1, str);
+		format(gstr, sizeof(gstr), ""zmp" %s(%i) "grey"registered, making the server have a total of "green"%i "grey"players registered.", __GetName(playerid), playerid, cache_insert_id());
+		SCMToAll(-1, gstr);
 
+        GivePlayerMoneyEx(playerid, 10000);
 	    GameTextForPlayer(playerid, "Welcome", 3000, 4);
-  		GivePlayerMoneyEx(playerid, 10000);
   		GameTextForPlayer(playerid, "~n~+$10,000~n~Startcash", 3000, 1);
 		SCM(playerid, -1, ""server_sign" "grey"You are now registered, and have been logged in!");
 		PlaySound(playerid, 1057);
-
-		MySQL_SavePlayer(playerid);
-		MySQL_LogPlayerIn(playerid);
 	}
 	return 1;
 }
@@ -5330,8 +5233,8 @@ AutoLogin(playerid)
     PlayerData[playerid][bFirstSpawn] = true;
     PlayerData[playerid][iExitType] = EXIT_LOGGED;
     TogglePlayerSpectating(playerid, false);
+    MySQL_UpdateAccount(playerid);
     MySQL_LoadAccount(playerid);
-    MySQL_LogPlayerIn(playerid);
 	return 1;
 }
 
@@ -5717,6 +5620,73 @@ ZMP_SyncPlayer(playerid)
 {
     SetPlayerTime(playerid, g_Maps[CURRENT_MAP][e_time], 0);
 	SetPlayerWeather(playerid, g_Maps[CURRENT_MAP][e_weather]);
+}
+
+broadcast_admin(color, const string[])
+{
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+		if(IsPlayerAvail(i) && (PlayerData[i][iAdminLevel] >= 1))
+		{
+			SCM(i, color, string);
+		}
+	}
+}
+
+broadcast_vip(color, const string[])
+{
+	for(new i = 0; i < MAX_PLAYERS; i++)
+	{
+		if(IsPlayerAvail(i) && (PlayerData[i][iVIP] == 1 || PlayerData[i][iAdminLevel] > 0))
+		{
+			SCM(i, color, string);
+		}
+	}
+}
+
+ResetPlayerVars(playerid)
+{
+    PlayerData[playerid][iExitType] = EXIT_NONE;
+	PlayerData[playerid][iKills] = 0;
+	PlayerData[playerid][iDeaths] = 0;
+	PlayerData[playerid][iCoolDownDeath] = 0;
+	PlayerData[playerid][bIsDead] = false;
+	PlayerData[playerid][bLoadMap] = false;
+    PlayerData[playerid][iScore] = 0;
+    PlayerData[playerid][iAdminLevel] = 0;
+    PlayerData[playerid][iMoney] = 0;
+    PlayerData[playerid][iTime] = 0;
+    PlayerData[playerid][iVIP] = 0;
+    PlayerData[playerid][iWarnings] = 0;
+    PlayerData[playerid][iMedkits] = 0;
+    PlayerData[playerid][iCookies] = 0;
+    PlayerData[playerid][bMuted] = false;
+    PlayerData[playerid][bLogged] = false;
+   	PlayerData[playerid][iLastLogin] = 0;
+   	PlayerData[playerid][iLastNC] = 0;
+	PlayerData[playerid][iRegisterDate] = 0;
+	PlayerData[playerid][iConnectTime] = 0;
+	PlayerData[playerid][tickLastChat] = 0;
+	PlayerData[playerid][tickPlayerUpdate] = 0;
+	PlayerData[playerid][tickLastReport] = 0;
+	PlayerData[playerid][tickLastPW] = 0;
+	PlayerData[playerid][tickLastJump] = 0;
+	PlayerData[playerid][tickLastMedkit] = 0;
+	PlayerData[playerid][bSoundsDisabled] = false;
+	PlayerData[playerid][bOpenSeason] = false;
+	PlayerData[playerid][tLoadMap] = INVALID_TIMER;
+	PlayerData[playerid][tMedkit] = INVALID_TIMER;
+	PlayerData[playerid][tMute] = INVALID_TIMER;
+	PlayerData[playerid][iTimesHit] = 0;
+	SetPVarInt(playerid, "LastID", -1);
+	g_bPlayerHit[playerid] = false;
+	PlayerData[playerid][gSpecialZed] = zedZOMBIE;
+
+    if(PlayerData[playerid][txVIPLabel] != Text3D:-1)
+    {
+        DestroyDynamic3DTextLabel(PlayerData[playerid][txVIPLabel]);
+        PlayerData[playerid][txVIPLabel] = Text3D:-1;
+    }
 }
 
 /*
