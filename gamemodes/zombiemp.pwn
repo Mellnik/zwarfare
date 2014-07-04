@@ -4110,7 +4110,7 @@ function:InitSession(playerid)
 function:OnMapDataReceived() // INSERT INTO `maps` VALUES (NULL, 'Outpost', 'zmp_outpost', 'Maps/zmp_outpost.map', -1348.9994, 2378.2124, 96.7093, 90.000, 9, 0, -1334.8137, 2393.3386, 96.2719);
 {
 	new rows, fields;
-	cache_get_data(rows, fields, g_pSQL);
+	cache_get_data(rows, fields);
 	
 	if(rows > 0)
 	{
@@ -4310,7 +4310,7 @@ function:OnMapAdded(playerid)
 function:OnNCReceive(playerid)
 {
 	new rows, fields;
-	cache_get_data(rows, fields, g_pSQL);
+	cache_get_data(rows, fields);
 
 	if(rows > 0)
 	{
@@ -4595,8 +4595,8 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 
 	            cache_get_row(0, 2, szAdmin);
 	            cache_get_row(0, 3, szReason);
-				iLift = cache_get_row_int(0, 4, g_pSQL);
-				u_iBanDate = cache_get_row_int(0, 5, g_pSQL);
+				iLift = cache_get_row_int(0, 4);
+				u_iBanDate = cache_get_row_int(0, 5);
 
 				if(iLift == 0) // Player has a permanent ban
 				{
@@ -4621,7 +4621,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 				}
 	        }
 
-	        mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT * FROM `blacklist` WHERE `IP` = '%e' LIMIT 1;", __GetIP(playerid));
+	        mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT * FROM `blacklist` WHERE `ip` = '%e' LIMIT 1;", __GetIP(playerid));
 	        mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_IP_BANNED);
 	        return 1;
 	    }
@@ -5330,11 +5330,9 @@ AutoLogin(playerid)
 
 RequestLogin(playerid)
 {
-	new newtext[1024], newtext2[128];
-
-    format(newtext2, sizeof(newtext2), ""zmp" Login - %s", __GetName(playerid));
-    format(newtext, sizeof(newtext), ""white"Welcome "grey"%s"white" to "blue"Zombie Multiplayer"white"!\n\nThe name you are using is registered! Please enter the password:", __GetName(playerid));
-	ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, newtext2, newtext, "Login", "");
+    format(gstr, sizeof(gstr), ""zmp" Login - %s", __GetName(playerid));
+    format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"white" to "blue"Zombie Multiplayer"white"!\n\nThe name you are using is registered! Please enter the password:", __GetName(playerid));
+	ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, gstr, gstr2, "Login", "");
     return 1;
 }
 
