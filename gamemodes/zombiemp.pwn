@@ -538,7 +538,7 @@ public OnPlayerDisconnect(playerid, reason)
     
    	if(PlayerData[playerid][iExitType] == EXIT_FIRST_SPAWNED && PlayerData[playerid][bLogged])
 	{
-		MySQL_SavePlayer(playerid);
+		MySQL_SaveAccount(playerid);
 	    MySQL_LogPlayerOut(playerid);
 	}
 	
@@ -681,16 +681,16 @@ public OnPlayerSpawn(playerid)
 
 public OnPlayerDeath(playerid, killerid, reason)
 {
-    ShowPlayerDialog(playerid, -1, DIALOG_STYLE_LIST, "Close", "Close", "Close", "Close");
     PlayerData[playerid][bIsDead] = true;
     
-	PlayerData[playerid][iCoolDownDeath]++;
+	PlayerData[playerid][iCoolDownDeath]++; // TODO: Better anti fake death
 	SetTimerEx("player_death_cooldown", COOLDOWN_DEATH, 0, "i", playerid);
 	if(PlayerData[playerid][iCoolDownDeath] >= 2)
 	{
 		return Kick(playerid);
 	}
     
+    ShowPlayerDialog(playerid, -1, DIALOG_STYLE_LIST, "Close", "Close", "Close", "Close");
     SendDeathMessage(killerid, playerid, reason);
     
     PlayerData[playerid][iDeaths]++;
@@ -824,9 +824,8 @@ public OnPlayerText(playerid, text[])
 
 	if(IsAd(text))
 	{
-		new string[255];
-	  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, text, __GetIP(playerid));
-		broadcast_admin(RED, string);
+	  	format(gstr, sizeof(gstr), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, text, __GetIP(playerid));
+		broadcast_admin(RED, gstr);
 
         SCM(playerid, RED, "Advertising is not allowed!");
         return 0;
@@ -834,54 +833,52 @@ public OnPlayerText(playerid, text[])
 	
 	if(text[0] == '#' && PlayerData[playerid][iAdminLevel] >= 1)
 	{
-	    new msgstring[144];
-		format(msgstring, sizeof(msgstring), "[ADMIN CHAT] "LG_E"%s(%i): "LB_E"%s", __GetName(playerid), playerid, text[1]);
-		broadcast_admin(COLOR_RED, msgstring);
+		format(gstr, sizeof(gstr), "[ADMIN CHAT] "LG_E"%s(%i): "LB_E"%s", __GetName(playerid), playerid, text[1]);
+		broadcast_admin(COLOR_RED, gstr);
 		return 0;
 	}
-	
-	new string[144];
 
-	format(string, sizeof(string), "%s", text);
-	SetPlayerChatBubble(playerid, string, WHITE, 50.0, 7000);
+	SetPlayerChatBubble(playerid, text, WHITE, 50.0, 7000);
 
 	if(strlen(text) > 80)
 	{
 		new pos = strfind(text, " ", true, 60);
+		
 		if(pos == -1 || pos > 80)
-		{
 			pos = 70;
-		}
 
-        new tmp[144];
-		tmp[0] = EOS;
-		if(PlayerData[playerid][iAdminLevel] != 0) strcat(tmp, "{A8DBFF}");
-		strcat(tmp, text[pos]);
+		gstr[0] = EOS;
+		
+		if(PlayerData[playerid][iAdminLevel] != 0)
+			strcat(gstr, "{A8DBFF}");
+
+		strcat(gstr, text[pos], sizeof(gstr));
 		text[pos] = EOS;
+
 		if(PlayerData[playerid][iAdminLevel] == 0)
 		{
-			format(string, sizeof(string), "{%06x}%s"white"(%i): %s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, text);
-			SCMToAll(-1, string);
-			SCMToAll(-1, tmp);
+			format(gstr2, sizeof(gstr2), "{%06x}%s"white"(%i): %s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, text);
+			SCMToAll(-1, gstr2);
+			SCMToAll(-1, gstr);
 		}
 		else
 		{
-			format(string, sizeof(string), "{%06x}%s"white"(%i): {A8DBFF}%s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, text);
-			SCMToAll(-1, string);
-			SCMToAll(-1, tmp);
+			format(gstr2, sizeof(gstr2), "{%06x}%s"white"(%i): {A8DBFF}%s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, text);
+			SCMToAll(-1, gstr2);
+			SCMToAll(-1, gstr);
 		}
 	}
 	else
 	{
 		if(PlayerData[playerid][iAdminLevel] == 0)
 		{
-	 		format(string, sizeof(string), "{%06x}%s"white"(%i): %s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, text);
-			SCMToAll(-1, string);
+	 		format(gstr, sizeof(gstr), "{%06x}%s"white"(%i): %s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, text);
+			SCMToAll(-1, gstr);
   		}
 		else
 		{
- 	 		format(string, sizeof(string), "{%06x}%s"white"(%i): {A8DBFF}%s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, text);
-			SCMToAll(-1, string);
+ 	 		format(gstr, sizeof(gstr), "{%06x}%s"white"(%i): {A8DBFF}%s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, text);
+			SCMToAll(-1, gstr);
 		}
 	}
 	return 0;
@@ -942,10 +939,9 @@ public OnPlayerUpdate(playerid)
 		            {
 		                PlayerData[playerid][bOpenSeason] = true;
 			            ResetPlayerWeapons(playerid);
-			            new string[144];
-			            format(string, sizeof(string), ""yellow"** "red"%s(%i) has been auto-kicked by BitchOnDuty [Reason: Weapon cheats]", __GetName(playerid), playerid);
-			            SCMToAll(-1, string);
-			            print(string);
+			            format(gstr2, sizeof(gstr2), ""yellow"** "red"%s(%i) has been auto-kicked by BitchOnDuty [Reason: Weapon cheats]", __GetName(playerid), playerid);
+			            SCMToAll(-1, gstr2);
+			            print(gstr2);
 			            Kick(playerid);
 					}
 		            return 0;
@@ -1085,16 +1081,16 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 	    {
 	        case DIALOG_LABEL:
 	        {
-	            if(strlen(inputtext) > 35 || strlen(inputtext) < 3) return SCM(playerid, -1, ""er"Inputlength: 3-35");
+	            if(strlen(inputtext) > 35 || strlen(inputtext) < 3)
+					return SCM(playerid, -1, ""er"Inputlength: 3-35");
 
 	            new text[37];
 	            sscanf(inputtext, "s[36]", text);
 
 				if(IsAd(text))
 				{
-					new string[255];
-				  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, text, __GetIP(playerid));
-					broadcast_admin(RED, string);
+				  	format(gstr, sizeof(gstr), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, text, __GetIP(playerid));
+					broadcast_admin(RED, gstr);
 
 			        SCM(playerid, RED, "Advertising is not allowed!");
 			        return 1;
@@ -1114,9 +1110,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 				if(IsAd(text))
 				{
-					new string[255];
-				  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, text, __GetIP(playerid));
-					broadcast_admin(RED, string);
+				  	format(gstr, sizeof(gstr), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, text, __GetIP(playerid));
+					broadcast_admin(RED, gstr);
 
 			        SCM(playerid, RED, "Advertising is not allowed!");
 			        return 1;
@@ -1132,11 +1127,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 if(!strcmp(inputtext, __GetName(playerid), false)) return SCM(playerid, -1, ""er"You are already using that name");
 	            if(!strcmp(inputtext, __GetName(playerid), true)) return SCM(playerid, -1, ""er"The name only differs in case. Just relog with that.");
 
-				new newname[MAX_PLAYER_NAME+1], query[255];
-				mysql_escape_string(inputtext, newname, g_pSQL, MAX_PLAYER_NAME+1);
+				new newname[MAX_PLAYER_NAME + 1];
+				mysql_escape_string(inputtext, newname, g_pSQL, MAX_PLAYER_NAME + 1);
 
-                format(query, sizeof(query), "SELECT `id` FROM `accounts` WHERE `name` = '%s';", newname);
-                mysql_tquery(g_pSQL, query, "OnPlayerNameChangeRequest", "si", newname, playerid);
+                format(gstr, sizeof(gstr), "SELECT `id` FROM `accounts` WHERE `name` = '%s';", newname);
+                mysql_tquery(g_pSQL, gstr, "OnPlayerNameChangeRequest", "is", playerid, newname);
 	            return true;
 	        }
 	        case DIALOG_TOPLIST:
@@ -3004,7 +2999,7 @@ YCMD:setvip(playerid, params[], help)
 				SCMToAll(-1, str);
 				PlayerData[player][iVIP] = 1;
 		    }
-		    MySQL_SavePlayer(player);
+		    MySQL_SaveAccount(player);
 		}
 	}
 	else
@@ -3118,16 +3113,15 @@ YCMD:unstuck(playerid, params[], help)
 
 YCMD:changename(playerid, params[], help)
 {
-    new string[255];
 	if(GetPlayerMoneyEx(playerid) < 50000)
 	{
-		format(string, sizeof(string), ""red"Namechange possible"white"\nCurrent Name: %s\nYou need $50,000 for a namechange!", __GetName(playerid));
-		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Namechange", string, "OK", "");
+		format(gstr, sizeof(gstr), ""red"Namechange possible"white"\nCurrent Name: %s\nYou need $50,000 for a namechange!", __GetName(playerid));
+		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Namechange", gstr, "OK", "");
 	}
 	else
 	{
-		format(string, sizeof(string), ""green"Namechange possible"white"\nCurrent Name: %s\nA namechange costs $50,000\n\nEnter a new valid nickname below:", __GetName(playerid));
-		ShowPlayerDialog(playerid, DIALOG_NAMECHANGE, DIALOG_STYLE_INPUT, ""zmp" - Namechange", string, "OK", "Cancel");
+		format(gstr, sizeof(gstr), ""green"Namechange possible"white"\nCurrent Name: %s\nA namechange costs $50,000\n\nEnter a new valid nickname below:", __GetName(playerid));
+		ShowPlayerDialog(playerid, DIALOG_NAMECHANGE, DIALOG_STYLE_INPUT, ""zmp" - Namechange", gstr, "OK", "Cancel");
 	}
 	return 1;
 }
@@ -3919,7 +3913,7 @@ MySQL_BanIP(const ip[])
  	mysql_tquery(g_pSQL, query, "", "");
 }
 
-MySQL_SavePlayer(playerid)
+MySQL_SaveAccount(playerid)
 {
 	new finquery[1024], tmp[512];
 	
@@ -4265,43 +4259,38 @@ function:ProcessTick()
 	return 1;
 }
 
-function:OnPlayerNameChangeRequest(newname[], playerid)
+function:OnPlayerNameChangeRequest(playerid, newname[])
 {
-	new rows, fields;
-	cache_get_data(rows, fields, g_pSQL);
-
-	if(rows > 0)
+	if(cache_get_row_count() > 0)
 	{
 	    SCM(playerid, -1, ""er"Your name is already in use or contains invalid characters");
 	}
 	else
 	{
-		if(GetPlayerMoneyEx(playerid) < 50000) return 1;
+		if(GetPlayerMoneyEx(playerid) < 50000)
+			return 1;
 
-	    new oldname[MAX_PLAYER_NAME+1], query[255];
+	    new oldname[MAX_PLAYER_NAME + 1];
 	    strmid(oldname, __GetName(playerid), 0, sizeof(oldname), sizeof(oldname));
 
 		if(SetPlayerName(playerid, newname) == 1) // If successfull
         {
-			new cname[25];
-		    GetPlayerName(playerid, cname, 25);
-			PlayerData[playerid][sName][0] = '\0';
-			strcat(PlayerData[playerid][sName], cname, 25);
+			strmid(PlayerData[playerid][sName], newname, MAX_PLAYER_NAME + 1, MAX_PLAYER_NAME + 1);
 			GivePlayerMoneyEx(playerid, -50000);
 
-            format(query, sizeof(query), "UPDATE `accounts` SET `name` = '%s' WHERE `name` = '%s' LIMIT 1;", newname, oldname);
-            mysql_tquery(g_pSQL, query, "", "");
+            format(gstr2, sizeof(gstr2), "UPDATE `accounts` SET `name` = '%s' WHERE `name` = '%s' LIMIT 1;", newname, oldname);
+            mysql_tquery(g_pSQL, gstr2);
 
-            format(query, sizeof(query), "INSERT INTO `ncrecords` VALUES (NULL, '%s', '%s', %i);", oldname, newname, gettime());
-            mysql_tquery(g_pSQL, query, "", "");
+            format(gstr2, sizeof(gstr2), "INSERT INTO `ncrecords` VALUES (NULL, '%s', '%s', UNIX_TIMESTAMP());", oldname, newname);
+            mysql_tquery(g_pSQL, gstr2);
 
-			format(query, sizeof(query), ""white"You have successfully changed your name.\n\nNew name: %s\nOld name: %s", newname, oldname);
-			ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Namechange", query, "OK", "");
+			format(gstr2, sizeof(gstr2), ""white"You have successfully changed your name.\n\nNew name: %s\nOld name: %s", newname, oldname);
+			ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Namechange", gstr2, "OK", "");
 
-			format(query, sizeof(query), ""zmp" %s(%i) has changed their name to %s", oldname, playerid, newname);
-			SCMToAll(-1, query);
+			format(gstr2, sizeof(gstr2), ""zmp" %s(%i) has changed their name to %s", oldname, playerid, newname);
+			SCMToAll(-1, gstr2);
 
-			MySQL_SavePlayer(playerid);
+			MySQL_SaveAccount(playerid);
         }
         else
         {
