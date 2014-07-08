@@ -11,12 +11,12 @@
 
 
 /* Build Dependencies
-|| SA-MP Server 0.3z-R2-2
+|| SA-MP Server 0.3z-R3
 || YSI Library 3.1
 || sscanf Plugin 2.8.1
 || Streamer Plugin v2.7.2
 || MySQL Plugin R38
-|| hash-plugin 0.0.3
+|| hash-plugin 0.0.4
 ||
 || Build specific:
 ||
@@ -1232,10 +1232,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					return RequestRegistration(playerid);
 				}
-				
+
 				new hash[SHA3_LENGTH + 1];
 				sha3(password, hash, sizeof(hash));
-				
+
 			    MySQL_RegisterAccount(playerid, hash);
 			    return true;
 			}
@@ -1525,7 +1525,7 @@ public OnPlayerClickPlayer(playerid, clickedplayerid, source)
 
 public OnQueryError(errorid, error[], callback[], query[], connectionHandle)
 {
-	printf("[MYSQL ERROR]: %i, %s, %s, %s, %i", errorid, error, callback, query, connectionHandle);
+	Log(LOG_FAIL, "MySQL: OnQueryError(%i, %s, %s, %s, %i)", errorid, error, callback, query, connectionHandle);
 	return 1;
 }
 
@@ -2418,18 +2418,17 @@ YCMD:setscore(playerid, params[], help)
 
 		if(IsPlayerAvail(player))
 		{
-			new string[128];
 			if(player != playerid)
 			{
-				format(string, sizeof(string), "Admin %s(%i) has set your score to %i.", __GetName(playerid), playerid, amount);
-				SCM(player, YELLOW, string);
-				format(string, sizeof(string), "You set %s's score to %i.", __GetName(player), amount);
-				SCM(playerid, YELLOW, string);
+				format(gstr, sizeof(gstr), "Admin %s(%i) has set your score to %i.", __GetName(playerid), playerid, amount);
+				SCM(player, YELLOW, gstr);
+				format(gstr, sizeof(gstr), "You set %s's score to %i.", __GetName(player), amount);
+				SCM(playerid, YELLOW, gstr);
 			}
 			else
 			{
-				format(string, sizeof(string), "You have set your score to %i.", amount);
-				SCM(playerid, YELLOW, string);
+				format(gstr, sizeof(gstr), "You have set your score to %i.", amount);
+				SCM(playerid, YELLOW, gstr);
 			}
 			SetPlayerScoreEx(player, amount);
 		}
@@ -2468,32 +2467,26 @@ YCMD:setadminlevel(playerid, params[], help)
 			{
 				return SCM(playerid, -1, ""er"Player is already this level");
 			}
-  			new time[3], string[128];
+  			new time[3];
    			gettime(time[0], time[1], time[2]);
 
 			if(alevel > 0)
-			{
-				format(string, sizeof(string), "Admin %s has set you to Admin Status [level %i]", __GetName(playerid), alevel);
-			}
+				format(gstr, sizeof(gstr), "Admin %s has set you to Admin Status [level %i]", __GetName(playerid), alevel);
 			else
-			{
-				format(string, sizeof(string), "Admin %s has set you to Player Status [level %i]", __GetName(playerid), alevel);
-			}
-			SCM(player, BLUE, string);
+				format(gstr, sizeof(gstr), "Admin %s has set you to Player Status [level %i]", __GetName(playerid), alevel);
+
+			SCM(player, BLUE, gstr);
 
 			if(alevel > PlayerData[player][iAdminLevel])
-			{
 				GameTextForPlayer(player, "Promoted", 5000, 3);
-			}
 			else
-			{
 				GameTextForPlayer(player, "Demoted", 5000, 3);
-			}
-			format(string, sizeof(string), "You have made %s Level %i at %i:%i:%i", __GetName(player), alevel, time[0], time[1], time[2]);
-			SCM(playerid, BLUE, string);
-			format(string, sizeof(string), "Admin %s has made %s Level %i at %i:%i:%i", __GetName(playerid), __GetName(player), alevel, time[0], time[1], time[2]);
-            SCM(player, BLUE, string);
-            print(string);
+
+			format(gstr, sizeof(gstr), "You have made %s Level %i at %i:%i:%i", __GetName(player), alevel, time[0], time[1], time[2]);
+			SCM(playerid, BLUE, gstr);
+			format(gstr, sizeof(gstr), "Admin %s has made %s Level %i at %i:%i:%i", __GetName(playerid), __GetName(player), alevel, time[0], time[1], time[2]);
+            SCM(player, BLUE, gstr);
+            print(gstr);
 			PlayerData[player][iAdminLevel] = alevel;
 		}
 		else
@@ -2560,9 +2553,9 @@ YCMD:healall(playerid, params[], help)
 				SetPlayerHealth(i, 100.0);
 			}
 		}
-		new string[64];
-		format(string, sizeof(string), "Admin %s(%i) healed all players", __GetName(playerid), playerid);
-		SCMToAll(BLUE, string);
+
+		format(gstr, sizeof(gstr), "Admin %s(%i) healed all players", __GetName(playerid), playerid);
+		SCMToAll(BLUE, gstr);
 		GameTextForAll("Health for all!", 3000, 3);
 		SetPlayerHealth(playerid, 100.0);
 	}
@@ -4498,12 +4491,12 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 
 function:OnPlayerRegister(playerid, namehash, hash[], playername[], ip_address[], serial[])
 {
-	new salt[SALT_LENGTH + 1], tosave[sizeof(salt) + SHA3_LENGTH + 1];
+	new salt[SALT_LENGTH + 1], tosave[sizeof(salt) + SHA3_LENGTH + 1], query[512];
 	random_string(SALT_LENGTH, salt, sizeof(salt));
 	format(tosave, sizeof(tosave), "%s%s", hash, salt);
 
-	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `hash` = '%e', `salt` = '%e', `ip` = '%e', `serial` = '%e' WHERE `name` = '%e';", tosave, salt, ip_address, serial, playername);
-	mysql_tquery(g_pSQL, gstr2);
+	mysql_format(g_pSQL, query, sizeof(query), "UPDATE `accounts` SET `hash` = '%e', `salt` = '%e', `ip` = '%e', `serial` = '%e' WHERE `name` = '%e' LIMIT 1;", tosave, salt, ip_address, serial, playername);
+	mysql_tquery(g_pSQL, query);
 
 	if(namehash == YHash(__GetName(playerid)))
 	{
