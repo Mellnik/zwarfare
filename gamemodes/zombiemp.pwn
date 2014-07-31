@@ -175,7 +175,7 @@ enum E_PLAYER_DATA
 	ORM:pORM,
 
 	/* ACCOUNT */
-    iAccountID, // Prefixes: i = Integer, s = String, b = bool, f = Float, p = Pointer, t3d = 3DLabel
+    iAccountID, // Prefixes: i = Integer, s = String, b = bool, f = Float, p = Pointer, t3d = 3DTextLabel, g_ = Global, tick = tickcounts, t = Timer
 	sName[MAX_PLAYER_NAME + 1],
 	sIP[MAX_PLAYER_IP + 1],
 	iKills,
