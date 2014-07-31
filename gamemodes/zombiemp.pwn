@@ -36,7 +36,7 @@
 #include <YSI\y_stringhash>
 #include <sscanf2>
 #include <streamer>
-#include <a_mysql_R38>
+#include <a_mysql_R39-2>
 #include <hash>
 #include <md-sort>
 #include <unixtimetodate> 	// 2.0
