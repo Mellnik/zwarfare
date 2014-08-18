@@ -39,11 +39,11 @@
 #include <a_mysql_R39-2>
 #include <hash>
 #include <md-sort>
-#include <unixtimetodate> 	// 2.0
+#include <utconvert>
 
 native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 
-// Protoypes
+// Prototypes
 Float:GetDistance3D(Float:x1, Float:y1, Float:z1, Float:x2, Float:y2, Float:z2);
 Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 
