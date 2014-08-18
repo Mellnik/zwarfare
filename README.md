@@ -1,7 +1,7 @@
-zmp
+[ZWAR]
 ===
 
-Zomebie Multiplayer
+Zombie Warfare
 
 
 # Scripting
