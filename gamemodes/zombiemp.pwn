@@ -11,10 +11,10 @@
 
 
 /* Build Dependencies
-|| SA-MP Server 0.3z-R3
+|| SA-MP Server 0.3z-R4
 || YSI Library 3.1
 || sscanf Plugin 2.8.1
-|| Streamer Plugin v2.7.2
+|| Streamer Plugin v2.7
 || MySQL Plugin R38
 || hash-plugin 0.0.4
 ||
@@ -36,7 +36,7 @@
 #include <YSI\y_stringhash>
 #include <sscanf2>
 #include <streamer>
-#include <a_mysql_R39-2>
+#include <a_mysql_R38>
 #include <hash>
 #include <md-sort>
 #include <utconvert>
