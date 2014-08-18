@@ -1,6 +1,6 @@
 /*======================================================================*\
 || #################################################################### ||
-|| # Project Zombie Warfare - Version 1.0.0            			  	  # ||
+|| # Project Zombie Warfare - 1.X Series            			  	  # ||
 || # ---------------------------------------------------------------- # ||
 || # Copyright ©2013-2014 Zombie Warfare     		  				  # ||
 || # Created by Mellnik                                               # ||
@@ -41,6 +41,7 @@
 #include <md-sort>
 #include <utconvert>
 
+// Missing function natives
 native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 
 // Prototypes
@@ -5609,13 +5610,13 @@ IsPlayerAvail(playerid)
 	}
 	return 0;
 }
-
+/*
 MAKEVERSION(major = VERSION_MAJOR, minor = VERSION_MINOR, patch = VERSION_PATCH)
 {
 	new szVersion[16];
 	format(szVersion, sizeof(szVersion), "%i.%i.%i", major, minor, patch);
 	return szVersion;
-}
+}*/
 
 /*
 1. Do not map objects away from the mainland or the map gets bugged
