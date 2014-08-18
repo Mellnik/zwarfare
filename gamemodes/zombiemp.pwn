@@ -1,11 +1,11 @@
 /*======================================================================*\
 || #################################################################### ||
-|| # Project Zombie Multiplayer - Version 1.0.0            			  # ||
+|| # Project Zombie Warfare - Version 1.0.0            			  	  # ||
 || # ---------------------------------------------------------------- # ||
-|| # Copyright ©2013-2014 Zombie Multiplayer		  				  # ||
+|| # Copyright ©2013-2014 Zombie Warfare     		  				  # ||
 || # Created by Mellnik                                               # ||
 || # ---------------------------------------------------------------- # ||
-|| # http://ZombieMP.com		                          			  # ||
+|| # http://zwarfare.com		                          			  # ||
 || #################################################################### ||
 \*======================================================================*/
 
@@ -48,10 +48,9 @@ Float:GetDistance3D(Float:x1, Float:y1, Float:z1, Float:x2, Float:y2, Float:z2);
 Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 
 // General
-#define VERSION                         "1.0.0"
-#define VERSION_MAJOR                   1
-#define VERSION_MINOR                   0
-#define VERSION_PATCH                   0
+#define VERSION_MAJOR					1
+#define VERSION_MINOR					0
+#define VERSION_PATCH					0
 #define URL                     		"www.zombiemp.com"
 #define FURL                            "www.ZombieMP.com"
 #define HOSTNAME                        "« "R_ZMP_NAME" "VERSION" (0.3z) »"
@@ -5609,6 +5608,13 @@ IsPlayerAvail(playerid)
 	    return 1;
 	}
 	return 0;
+}
+
+MAKEVERSION(major = VERSION_MAJOR, minor = VERSION_MINOR, patch = VERSION_PATCH)
+{
+	new szVersion[16];
+	format(szVersion, sizeof(szVersion), "%i.%i.%i", major, minor, patch);
+	return szVersion;
 }
 
 /*
