@@ -53,12 +53,12 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define VERSION_MAJOR					1
 #define VERSION_MINOR					0
 #define VERSION_PATCH					0
-#define URL                     		"www.zombiemp.com"
-#define FURL                            "www.ZombieMP.com"
+#define URL                     		"www.zwarfare.com"
+#define FURL                            "www.Zwarfare.com"
 #define HOSTNAME                        "« "R_ZMP_NAME" "VERSION" (0.3z) »"
-#define R_ZMP_NAME              		"Zombie Multiplayer"
-#define R_ZMP_SIGN              		"ZMP"
-#define zmp                             "{FFFFFF}[{969696}ZombieMP{FFFFFF}]"
+#define R_ZMP_NAME              		"Zombie Warfare"
+#define R_ZMP_SIGN              		"ZWAR"
+#define zmp                             "{FFFFFF}[{969696}ZWAR{FFFFFF}]"
 #define server_sign                     "{FFFFFF}[{FF005F}SERVER{FFFFFF}]"
 #define SQL_HOST   						"127.0.0.1"
 #define SQL_PORT                        (3306)
@@ -176,7 +176,7 @@ enum E_PLAYER_DATA
 	ORM:pORM,
 
 	/* ACCOUNT */
-    iAccountID, // Prefixes: i = Integer, s = String, b = bool, f = Float, p = Pointer, t3d = 3DTextLabel, g_ = Global, tick = tickcounts, t = Timer
+    iAccountID, // Prefixes: i = Integer, s = String, b = bool, f = Float, p = Pointer, t3d = 3DTextLabel, g_ = Global, tick = tickcounts, t = Timer, bw = bitwise
 	sName[MAX_PLAYER_NAME + 1],
 	sIP[MAX_PLAYER_IP + 1],
 	iKills,
@@ -339,7 +339,7 @@ enum e_top_rtests
 	E_test
 };
 
-new	g_pSQL = -1, // g = Global, p = Pointer, txt = Textdraw, b = bool, s = string, i = integer
+new	g_pSQL = -1,
 	g_World = 0,
 	g_ShopID = -1,
 	g_GlobalStatus = e_Status_Inactive,
@@ -403,11 +403,11 @@ new const ServerMSGS[9][] =
 {
 	""yellow_e"- Server - "grey"Visit our site: "FURL"",
 	""yellow_e"- Server - "grey"View /help and /cmds for more information",
-	""yellow_e"- Server - "grey"Join our forums! forum.zombiemp.com",
-	""yellow_e"- Server - "grey"Get VIP (/vip) today! "URL"/vip.php",
+	""yellow_e"- Server - "grey"Join our forums! zwarfare.com",
+	""yellow_e"- Server - "grey"Get VIP (/vip) today! "URL"/samp-vip",
 	""yellow_e"- Server - "grey"Saw a cheater? Use /report and don't write in chat",
 	""yellow_e"- Server - "grey"Please follow the /rules",
-	""yellow_e"- Server - "grey"View changelogs on our forums. forum.zombiemp.com",
+	""yellow_e"- Server - "grey"View changelogs on our forums zwarfare.com",
 	""yellow_e"- Server - "grey"Get VIP now (/vip). Constantly updating.",
 	""yellow_e"- Server - "grey"Welcome on Zombie Multiplayer "VERSION""
 };
@@ -509,7 +509,7 @@ public OnPlayerConnect(playerid)
 	}
 	else
 	{
-        PlayAudioStreamForPlayer(playerid, "http://zombiemp.com/ztheme.mp3");
+        PlayAudioStreamForPlayer(playerid, "http://zwarfare.com/ztheme.mp3");
 		TogglePlayerSpectating(playerid, true);
 
         player_init_session(playerid);
@@ -1469,11 +1469,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					}
 					case 4:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 5, DIALOG_STYLE_MSGBOX, ""zmp" - Help", ""dl"I found a bug/glitch where can I report it?\n\nPlease report them on our forums. forum.zombiemp.com", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 5, DIALOG_STYLE_MSGBOX, ""zmp" - Help", ""dl"I found a bug/glitch where can I report it?\n\nPlease report them on our forums zwarfare.com", "OK", "Back");
 					}
 					case 5:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 6, DIALOG_STYLE_MSGBOX, ""zmp" - Help", ""dl"I have more questions!\n\nFeel free to join our forums for questions. forum.zombiemp.com", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 6, DIALOG_STYLE_MSGBOX, ""zmp" - Help", ""dl"I have more questions!\n\nFeel free to join our forums for questions zwarfare.com", "OK", "Back");
 					}
 					case 6:
 					{
@@ -1586,6 +1586,12 @@ public OnPlayerEnterDynamicCP(playerid, checkpointid)
 /* AUTHORITATIVE SERVER */
 public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
+	/* ANTI FAKE DATA */
+	if(weaponid == 0) {
+		Log(LOG_SUSPECT, "OPWS triggered by %i using %i, %i, %i", playerid, weaponid, hittype, hitid);
+	    return 0;
+	}
+	
 	/* PLAYER QUEUED FOR KICK */
 	if(hittype == BULLET_HIT_TYPE_PLAYER) {
 	    if(hitid != INVALID_PLAYER_ID) {
@@ -1593,6 +1599,22 @@ public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY
 		        return 0;
 		    }
 		}
+	}
+	return 1;
+}
+
+public OnUnoccupiedVehicleUpdate(vehicleid, playerid, passenger_seat, Float:new_x, Float:new_y, Float:new_z, Float:vel_x, Float:vel_y, Float:vel_z)
+{
+	if(PlayerData[playerid][bOpenSeason]) {
+		return 0;
+	}
+	return 1;
+}
+
+public OnTrailerUpdate(playerid, vehicleid)
+{
+	if(PlayerData[playerid][bOpenSeason]) {
+		return 0;
 	}
 	return 1;
 }
@@ -1858,7 +1880,7 @@ YCMD:stats(playerid, params[], help)
         	PlayerData[player1][iDeaths],
         	Float:PlayerData[player1][iKills] / Float:pDeaths,
         	PlayerData[player1][iScore],
-        	ToCurrency(GetPlayerMoneyEx(player1)));
+        	number_format(GetPlayerMoneyEx(player1)));
 
         format(string2, sizeof(string2), "Playing Time: %s\nVIP: %s\nMedkits: %i\nRegister Date: %s\nLast log in: %s",
             GetPlayingTimeFormat(player1),
@@ -2375,14 +2397,14 @@ YCMD:setcash(playerid, params[], help)
 			new string[128];
 			if(player != playerid)
 			{
-				format(string, sizeof(string), "Admin %s(%i) has set your cash to $%s.", __GetName(playerid), playerid, ToCurrency(amount));
+				format(string, sizeof(string), "Admin %s(%i) has set your cash to $%s.", __GetName(playerid), playerid, number_format(amount));
 				SCM(player, YELLOW, string);
-				format(string, sizeof(string), "You have set %s's cash to $%s.", __GetName(player), ToCurrency(amount));
+				format(string, sizeof(string), "You have set %s's cash to $%s.", __GetName(player), number_format(amount));
 				SCM(playerid, YELLOW, string);
 			}
 			else
 			{
-				format(string, sizeof(string), "You have set your cash to $%s.", ToCurrency(amount));
+				format(string, sizeof(string), "You have set your cash to $%s.", number_format(amount));
 				SCM(playerid, YELLOW, string);
 			}
 			SetPlayerMoneyEx(player, amount);
@@ -2828,7 +2850,7 @@ YCMD:ban(playerid, params[], help)
 				SCMToAll(YELLOW, string);
 				print(string);
 
-	    		format(string, sizeof(string), ""red"You have been banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on forum.zombiemp.com", __GetName(playerid), reason);
+	    		format(string, sizeof(string), ""red"You have been banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", __GetName(playerid), reason);
 	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Notice", string, "OK", "");
 	    		KickEx(player);
 
@@ -2916,7 +2938,7 @@ YCMD:tban(playerid, params[], help)
 				SCMToAll(YELLOW, string);
 				print(string);
 
-	    		format(string, sizeof(string), ""red"You have been time banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\nExpires:\t\t%s\nIf you think that you have been banned wrongly,\nwrite a ban appeal on forum.zombiemp.com", __GetName(playerid), reason, UTConvert(gettime() + (mins * 60)));
+	    		format(string, sizeof(string), ""red"You have been time banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\nExpires:\t\t%s\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", __GetName(playerid), reason, UTConvert(gettime() + (mins * 60)));
 	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Notice", string, "OK", "");
 	    		KickEx(player);
 
@@ -3458,7 +3480,7 @@ YCMD:richlist(playerid, params[], help)
 	{
 	    if(richlist[i][E_money] != -1)
 	    {
-		    format(tmpstring, sizeof(tmpstring), "{%06x}%i - %s(%i) - Money: $%s\n", GetPlayerColor(richlist[i][E_playerid]) >>> 8, i + 1, __GetName(richlist[i][E_playerid]), richlist[i][E_playerid], ToCurrency(richlist[i][E_money]));
+		    format(tmpstring, sizeof(tmpstring), "{%06x}%i - %s(%i) - Money: $%s\n", GetPlayerColor(richlist[i][E_playerid]) >>> 8, i + 1, __GetName(richlist[i][E_playerid]), richlist[i][E_playerid], number_format(richlist[i][E_money]));
 		    strcat(finstring, tmpstring);
 		}
 		else
@@ -3556,7 +3578,7 @@ COMMAND:pay(playerid, params[])
 		new string[100];
       	GivePlayerMoneyEx(playerid, -cash);
       	GivePlayerMoneyEx(player, cash);
-        format(string, sizeof(string), "Info: %s paid you $%s", __GetName(playerid), ToCurrency(cash));
+        format(string, sizeof(string), "Info: %s paid you $%s", __GetName(playerid), number_format(cash));
         SCM(player, YELLOW, string);
         SCM(playerid, YELLOW, "Successfully paid the money!");
     }
@@ -4372,7 +4394,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 
 				if(iLift == 0) // Player has a permanent ban
 				{
-				    format(gstr2, sizeof(gstr2), ""red"You have been banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nDate: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on forum.zombiemp.com", szAdmin, __GetName(playerid), szReason, UTConvert(u_iBanDate));
+				    format(gstr2, sizeof(gstr2), ""red"You have been banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nDate: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", szAdmin, __GetName(playerid), szReason, UTConvert(u_iBanDate));
 					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" :: Notice", gstr2, "OK", "");
 					KickEx(playerid);
 					return 1;
@@ -4386,7 +4408,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 				}
 				else
 				{
-				    format(gstr2, sizeof(gstr2), ""red"You have been time banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nExpires: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on forum.zombiemp.com", szAdmin, __GetName(playerid), szReason, UTConvert(iLift));
+				    format(gstr2, sizeof(gstr2), ""red"You have been time banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nExpires: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", szAdmin, __GetName(playerid), szReason, UTConvert(iLift));
 					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" :: Notice", gstr2, "OK", "");
 					KickEx(playerid);
 					return 1;
@@ -4617,7 +4639,7 @@ GetTickCountEx()
 Log(E_LOG_LEVEL:log_level, const fmat[], va_args<>)
 {
 	va_format(gstr2, sizeof(gstr2), fmat, va_start<2>);
-
+	
 	switch(log_level)
 	{
 	    case LOG_INIT: strins(gstr2, "LogInit: ", 0, sizeof(gstr2));
@@ -4791,7 +4813,7 @@ ZMP_PlayerStatsUpdate(playerid)
 {
 	format(gstr2, sizeof(gstr2), "~w~Score: %i~n~Money: $%s~n~Kills: %i~n~Deaths: %i~n~K/D: %.2f",
 	    PlayerData[playerid][iScore],
-	    ToCurrency(PlayerData[playerid][iMoney]),
+	    number_format(PlayerData[playerid][iMoney]),
 	    PlayerData[playerid][iKills],
 	    PlayerData[playerid][iDeaths],
         Float:PlayerData[playerid][iKills] / (PlayerData[playerid][iDeaths] == 0 ? 1.00 : Float:PlayerData[playerid][iDeaths]));
@@ -4982,7 +5004,7 @@ ZMP_EndGame()
 		if(IsPlayerAvail(i))
 		{
 	    	if(!PlayerData[i][bIsDead]) TogglePlayerControllable(i, false);
-	    	PlayAudio(i, "http://zombiemp.com/re.mp3");
+	    	PlayAudio(i, "http://zwarfare.com/re.mp3");
 		}
 	}
 
@@ -5037,7 +5059,7 @@ ZMP_BeginNewGame()
 		    ZMP_SetPlayerHuman(i);
             ZMP_SyncPlayer(i);
 
-            PlayAudio(i, "http://zombiemp.com/rs.mp3");
+            PlayAudio(i, "http://zwarfare.com/rs.mp3");
 			LoadMap(i);
 			
             count++;
@@ -5135,7 +5157,7 @@ GivePlayerMoneyEx(playerid, amount, bool:populate = true)
         }
         else
         {
-	        format(str, sizeof(str), "~g~~h~~h~+$%s", ToCurrency(amount));
+	        format(str, sizeof(str), "~g~~h~~h~+$%s", number_format(amount));
 		}
 		PlayerTextDrawSetString(playerid, TXTMoney[playerid], str);
         PlayerTextDrawShow(playerid, TXTMoney[playerid]);
@@ -5168,7 +5190,7 @@ GivePlayerScoreEx(playerid, amount, bool:populate = true)
         }
         else
         {
-	        format(str, sizeof(str), "~y~~h~+%s Score", ToCurrency(amount));
+	        format(str, sizeof(str), "~y~~h~+%s Score", number_format(amount));
 		}
 		PlayerTextDrawSetString(playerid, TXTScore[playerid], str);
         PlayerTextDrawShow(playerid, TXTScore[playerid]);
@@ -5179,7 +5201,9 @@ GivePlayerScoreEx(playerid, amount, bool:populate = true)
 
 SetPlayerScoreEx(playerid, amount)
 {
-    if(playerid == INVALID_PLAYER_ID) return 1;
+    if(playerid == INVALID_PLAYER_ID) 
+		return -1;
+		
 	PlayerData[playerid][iScore] = amount;
     SetPlayerScore(playerid, PlayerData[playerid][iScore]);
     ZMP_PlayerStatsUpdate(playerid);
@@ -5188,7 +5212,9 @@ SetPlayerScoreEx(playerid, amount)
 
 GetPlayerScoreEx(playerid)
 {
-    if(playerid == INVALID_PLAYER_ID) return -1;
+    if(playerid == INVALID_PLAYER_ID) 
+		return -1;
+		
 	return PlayerData[playerid][iScore];
 }
 
@@ -5224,10 +5250,10 @@ UTConvert(unixtime)
 	return u_date;
 }
 
-ToCurrency(CCash)
+number_format(integer)
 {
     new szStr[16];
-    format(szStr, sizeof(szStr), "%i", CCash);
+    format(szStr, sizeof(szStr), "%i", integer);
 
     for(new iLen = strlen(szStr) - 3; iLen > 0; iLen -= 3)
     {
