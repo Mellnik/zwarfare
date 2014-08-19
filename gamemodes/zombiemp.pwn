@@ -83,7 +83,6 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define COOLDOWN_CMD_CHANGEPASS         (60000)
 #define COOLDOWN_JUMP                   (5000)
 #define COOLDOWN_CMD_MEDKIT             (30000)
-#define COOLDOWN_DEATH                  (3000)
 #define RANDOM_BROADCAST_TIME           (300000)
 #define MAX_REPORTS 					(7)
 #define MAX_MAPS                        (20)
@@ -203,13 +202,14 @@ enum E_PLAYER_DATA
 	tickLastReport,
 	tickPlayerUpdate,
 	tickLastPW,
+	iLastDeathTime,
+	iDeathCountThreshold,
 	tMute,
 	tLoadMap,
 	tMedkit,
 	iMedkitTime,
 	Text3D:t3dVIPLabel,
 	iExitType,
-	iCoolDownDeath,
 	bool:bIsDead,
 	bool:bLoadMap,
 	bool:bMuted,
@@ -374,7 +374,7 @@ new	g_pSQL = -1,
 	iRescue = DEFAULT_RESCUE_TIME,
 	iOldMap;
 	
-new const zedskins[7] =
+static const zedskins[7] =
 {
     134,
     135,
@@ -385,7 +385,7 @@ new const zedskins[7] =
     218
 };
 
-new const humanskins[10] =
+static const humanskins[10] =
 {
 	1,
 	10,
@@ -399,7 +399,7 @@ new const humanskins[10] =
  	299
 };
 
-new const ServerMSGS[9][] =
+static const g_szRandomServerMessages[9][] =
 {
 	""yellow_e"- Server - "grey"Visit our site: "FURL"",
 	""yellow_e"- Server - "grey"View /help and /cmds for more information",
@@ -419,7 +419,7 @@ main()
 
 public OnGameModeInit()
 {
-	Log(LOG_INIT, "ZMP Server Copyright (c)2013 - 2014 "R_ZMP_NAME"");
+	Log(LOG_INIT, "NEF Server Copyright (c)2013 - 2014 "R_ZMP_NAME"");
     Log(LOG_INIT, "Version: "VERSION"");
 	#if IS_RELEASE_BUILD == true
 	Log(LOG_INIT, "Build Configuration: Release");
@@ -437,7 +437,7 @@ public OnGameModeInit()
 	server_fetch_mapdata();
 
     SetTimer("ProcessTick", 1000, 1);
-    SetTimer("server_random_broadcast", RANDOM_BROADCAST_TIME, 1);
+    SetTimer("server_broadcast_random", RANDOM_BROADCAST_TIME, 1);
     
 	AddPlayerClass(0, 1958.3783, 1343.1572, 15.3746, 269.1425, 0, 0, 0, 0, 0, 0);
 	return 1;
@@ -711,20 +711,31 @@ public OnPlayerSpawn(playerid)
 
 public OnPlayerDeath(playerid, killerid, reason)
 {
+	// Closing open dialogs in order to avoid some exploits.
+	ShowPlayerDialog(playerid, -1, DIALOG_STYLE_LIST, "Close", "Close", "Close", "Close");
+	
     PlayerData[playerid][bIsDead] = true;
-    
-	PlayerData[playerid][iCoolDownDeath]++; // TODO: Better anti fake death
-	SetTimerEx("player_death_cooldown", COOLDOWN_DEATH, 0, "i", playerid);
-	if(PlayerData[playerid][iCoolDownDeath] >= 2)
+	
+	new cstime = gettime(); // http://forum.sa-mp.com/showpost.php?p=1820351&postcount=41
+	switch(cstime - PlayerData[playerid][iLastDeathTime])
 	{
-		return Kick(playerid);
+	    case 0..3:
+	    {
+		    if(++PlayerData[playerid][iDeathCountThreshold] == 4)
+		    {
+			    format(gstr, sizeof(gstr), "[SUSPECT] Fake deaths/kills detected, kicking (%s, %i)", __GetName(playerid), playerid);
+			    admin_broadcast(RED, gstr);
+			    Log(LOG_NET, gstr);
+				return Kick(playerid);
+		    }
+	    }
+	    default: PlayerData[playerid][iDeathCountThreshold] = 0;
 	}
-    
-    ShowPlayerDialog(playerid, -1, DIALOG_STYLE_LIST, "Close", "Close", "Close", "Close");
-    SendDeathMessage(killerid, playerid, reason);
+	PlayerData[playerid][iLastDeathTime] = cstime;
     
     PlayerData[playerid][iDeaths]++;
     ZMP_PlayerStatsUpdate(playerid);
+	SendDeathMessage(killerid, playerid, reason);
     
 	if(PlayerData[playerid][bLoadMap])
 	{
@@ -3859,12 +3870,6 @@ YCMD:rules(playerid, params[], help)
 	return 1;
 }
 
-function:player_death_cooldown(playerid)
-{
-	PlayerData[playerid][iCoolDownDeath]--;
-	return 1;
-}
-
 MySQL_Connect()
 {
     g_pSQL = mysql_connect(SQL_HOST, SQL_USER, SQL_DATA, SQL_PASS, SQL_PORT, true);
@@ -4292,9 +4297,9 @@ function:p_medkit(playerid)
 	return 1;
 }
 
-function:server_random_broadcast()
+function:server_broadcast_random()
 {
-    SCMToAll(WHITE, ServerMSGS[random(sizeof(ServerMSGS))]);
+    SCMToAll(WHITE, g_szRandomServerMessages[random(sizeof(g_szRandomServerMessages))]);
 	return 1;
 }
 
@@ -5527,7 +5532,6 @@ ResetPlayerVars(playerid)
     PlayerData[playerid][iExitType] = EXIT_NONE;
 	PlayerData[playerid][iKills] = 0;
 	PlayerData[playerid][iDeaths] = 0;
-	PlayerData[playerid][iCoolDownDeath] = 0;
 	PlayerData[playerid][bIsDead] = false;
 	PlayerData[playerid][bLoadMap] = false;
     PlayerData[playerid][iScore] = 0;
@@ -5543,6 +5547,8 @@ ResetPlayerVars(playerid)
    	PlayerData[playerid][iLastLogin] = 0;
    	PlayerData[playerid][iLastNC] = 0;
 	PlayerData[playerid][iRegisterDate] = 0;
+	PlayerData[playerid][iLastDeathTime] = 0;
+	PlayerData[playerid][iDeathCountThreshold] = 0;
 	PlayerData[playerid][iConnectTime] = 0;
 	PlayerData[playerid][tickLastChat] = 0;
 	PlayerData[playerid][tickPlayerUpdate] = 0;
