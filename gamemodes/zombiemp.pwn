@@ -3887,7 +3887,7 @@ AssembleORM(ORM:ormid, playerid)
 	orm_addvar_int(ormid, PlayerData[playerid][iMedkits], "medkits");
 	orm_addvar_int(ormid, PlayerData[playerid][iLastNC], "lastnc");
 	orm_addvar_int(ormid, PlayerData[playerid][iLastLogin], "lastlogin");
-	orm_addvar_int(ormid, PlayerData[playerid][iRegisterDate], "reg_date");
+	orm_addvar_int(ormid, PlayerData[playerid][iRegisterDate], "regdate");
 }
 
 MySQL_CleanUp()
