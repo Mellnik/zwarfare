@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: ::1
--- Generation Time: Sep 13, 2014 at 09:18 PM
+-- Generation Time: Sep 13, 2014 at 09:56 PM
 -- Server version: 5.5.37-MariaDB
 -- PHP Version: 5.4.16
 
@@ -148,7 +148,7 @@ ALTER TABLE `bans`
 -- Indexes for table `blacklist`
 --
 ALTER TABLE `blacklist`
- ADD PRIMARY KEY (`id`);
+ ADD PRIMARY KEY (`id`), ADD UNIQUE KEY `ip` (`ip`);
 
 --
 -- Indexes for table `loginlog`

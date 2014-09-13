@@ -76,6 +76,7 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 // General rule set
 #define MAX_REPORTS 					(7)
 #define MAX_MAPS                        (20)
+#define MAX_MAPS_STRING                 "20"
 #define MAX_ADMIN_LEVEL         		(6)
 #define MAX_WARNINGS 					(3)
 #define COOLDOWN_CMD                  	(5000)
@@ -522,7 +523,7 @@ public OnPlayerConnect(playerid)
         player_init_session(playerid);
         ZMP_ShowLogo(playerid);
 		
-		mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT `id` FROM `accounts` WHERE `name` = '%e' LIMIT 1;" __GetName(playerid));
+		mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT `id` FROM `accounts` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
 		mysql_pquery(g_pSQL, gstr, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_PRELOAD_ID);
  	}
 	return 1;
@@ -4426,17 +4427,17 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	        {
 	            new szAdmin[MAX_PLAYER_NAME + 1],
 					szReason[64 + 1],
-					iLift,
+					u_iLift,
 					u_iDate,
 					u_iTime;
 					
 				cache_get_row(0, 0, szAdmin);
 				cache_get_row(0, 1, szReason);
-				iLift = cache_get_row_int(0, 2);
-				iDate = cache_get_row_int(0, 3);
+				u_iLift = cache_get_row_int(0, 2);
+				u_iDate = cache_get_row_int(0, 3);
 				u_iTime = cache_get_row_int(0, 4);
 				
-				if(iLift < u_iTime && iLift != 0)
+				if(u_iLift < u_iTime && u_iLift != 0)
 				{
 					// The time ban expired, delete it from database and continue
 				    mysql_format(g_pSQL, gstr2, sizeof(gstr2), "DELETE FROM `bans` WHERE `id` = %i LIMIT 1;", PlayerData[playerid][iAccountID]);
@@ -4445,25 +4446,25 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 				    SCM(playerid, -1, ""zwar" Your time ban expired, you've been unbanned!");
 				    goto _continue;
 				}
-				else if(iLift != 0)
+				else if(u_iLift != 0)
 				{
 				    format(gstr2, sizeof(gstr2), ""red"You have been time banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nBan Expires: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on "URL"",
 								szAdmin,
 								__GetName(playerid),
 								szReason,
-								UTConvert(iLift));
+								UTConvert(u_iLift));
 								
 					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" :: Notice", gstr2, "OK", "");
 					KickEx(playerid);
 					return 1;
 				}
-				else if(Lift == 0)
+				else if(u_iLift == 0)
 				{
 				    format(gstr2, sizeof(gstr2), ""red"You have been permanently banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nDate: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on "URL"",
 								szAdmin,
 								__GetName(playerid),
 								szReason,
-								UTConvert(iDate));
+								UTConvert(u_iDate));
 								
 					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" :: Notice", gstr2, "OK", "");
 					KickEx(playerid);
@@ -5467,7 +5468,7 @@ server_load_textdraws()
 
 server_fetch_mapdata()
 {
-	mysql_tquery(g_pSQL, "SELECT `maps`.*, `accounts`.`name` FROM `maps` INNER JOIN `accounts` ON `maps`.`author` = `accounts`.`id` LIMIT "MAX_MAPS";", "OnMapDataLoad");
+	mysql_tquery(g_pSQL, "SELECT `maps`.*, `accounts`.`name` FROM `maps` INNER JOIN `accounts` ON `maps`.`author` = `accounts`.`id` LIMIT "MAX_MAPS_STRING";", "OnMapDataLoad");
 }
 
 Map_Load(index)
