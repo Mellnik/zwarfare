@@ -20,9 +20,12 @@
 ||
 || Build specific:
 ||
+|| Script limits:
+||
+||
 */
 
-#pragma dynamic 8192        // Required for md-sort
+#pragma dynamic 8192        	// Required for md-sort
 
 #define IS_RELEASE_BUILD (true)
 #define _YSI_NO_VERSION_CHECK
@@ -49,7 +52,7 @@ native gpci(playerid, serial[], maxlen); // undefined in a_samp.inc
 Float:GetDistance3D(Float:x1, Float:y1, Float:z1, Float:x2, Float:y2, Float:z2);
 Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 
-// General
+// Server
 #define VERSION                         "1.0.0"
 #define URL                     		"www.zwarfare.com"
 #define FANCY_URL                       "www.Zwarfare.com"
@@ -61,19 +64,20 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define SQL_HOST   						"::1"
 #define SQL_PORT                        (3306)
 #if IS_RELEASE_BUILD == true
-#define SQL_USER   						"zmpserver"
-#define SQL_PASS   						"tAfl3qAJQgSc2Xqal"
-#define SQL_DATA   						"zmpserver"
+#define SQL_USER   						"zwarserver"
+#define SQL_PASS   						"JESIcFVvHC;qkC$Aj(XK2y%HvMoZ"
+#define SQL_DATA   						"zwarserver"
 #else
 #define SQL_USER   						"zmpdev"
 #define SQL_PASS   						"pass2"
 #define SQL_DATA                        "zmpdev"
 #endif
 
-// Enviroment
-#define TEAM_Z                          (10)
-#define TEAM_H                          (20)
+// General rule set
+#define MAX_REPORTS 					(7)
+#define MAX_MAPS                        (20)
 #define MAX_ADMIN_LEVEL         		(6)
+#define MAX_WARNINGS 					(3)
 #define COOLDOWN_CMD                  	(5000)
 #define COOLDOWN_TEXT                   (5000)
 #define COOLDOWN_CHAT                   (5500)
@@ -82,33 +86,36 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define COOLDOWN_JUMP                   (5000)
 #define COOLDOWN_CMD_MEDKIT             (30000)
 #define RANDOM_BROADCAST_TIME           (300000)
-#define MAX_REPORTS 					(7)
-#define MAX_MAPS                        (20)
+
+// Accounting
 #define MAX_ADMIN_LEVEL         		(6)
-#define MAX_WARNINGS 					(3)
-#define ID_HUNTER                       (230)
-#define ID_BLOOMER                      (264)
-#define DEFAULT_INFESTATION_TIME        (65)
-#define DEFAULT_RESCUE_TIME             (420)
+#define MAX_PLAYER_IP                   (16)
+#define SALT_LENGTH                     (32)
+
+// Scripting
 #define INVALID_TIMER                   (-1)
 #define SCM SendClientMessage
 #define SPD ShowPlayerDialog
 #define SCMToAll SendClientMessageToAll
+#define nocash(%1) GameTextForPlayer(%1, "~g~~h~~h~Not enough money!", 2000, 3)
 #define Key(%0) 						(((newkeys & (%0)) == (%0)) && ((oldkeys & (%0)) != (%0)))
 #define function:%1(%2) \
 	forward public %1(%2); \
 	public %1(%2)
 
-// Other
+// Gameplay
+#define TEAM_Z                          (10)
+#define TEAM_H                          (20)
+#define ID_HUNTER                       (230)
+#define ID_BLOOMER                      (264)
+#define DEFAULT_INFESTATION_TIME        (65)
+#define DEFAULT_RESCUE_TIME             (420)
+
+// Visuals
 #define er                      		"{F42626}[INFO] {D2D2D2}"
 #define NO_PERM                     	"{F42626}[INFO] {D2D2D2}Insufficient Permissions"
 #define dl                              "{969696}• {F0F0F0}"
 #define NOT_AVAIL                       "{2DFF00}Info: {D2D2D2}You can´t use this command now!"
-#define nocash(%1) GameTextForPlayer(%1, "~g~~h~~h~Not enough money!", 2000, 3)
-#define MAX_PLAYER_IP                   (16)
-#define SALT_LENGTH                     (32)
-
-// Colors
 #define SEMI_TRANS                      (0x0A0A0A55)
 #define SEMI_WHITE                      (0xFEFEFEC3)
 #define PURPLE                  		(0x7800FF85)
@@ -418,7 +425,7 @@ main()
 public OnGameModeInit()
 {
 	Log(LOG_INIT, "NEF Server Copyright (c)2013 - 2014 "ZWAR_NAME"");
-    Log(LOG_INIT, "Version: "VERSION"");
+	Log(LOG_INIT, "Mod Zombie Warfare "VERSION"");
 	#if IS_RELEASE_BUILD == true
 	Log(LOG_INIT, "Build Configuration: Release");
 	#else
@@ -722,7 +729,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 		    if(++PlayerData[playerid][iDeathCountThreshold] == 4)
 		    {
 			    format(gstr, sizeof(gstr), "[SUSPECT] Fake deaths/kills detected, kicking (%s, %i)", __GetName(playerid), playerid);
-			    admin_broadcast(RED, gstr);
+			    //admin_broadcast(RED, gstr);
 			    Log(LOG_NET, gstr);
 				return Kick(playerid);
 		    }
@@ -1595,6 +1602,13 @@ public OnPlayerEnterDynamicCP(playerid, checkpointid)
 /* AUTHORITATIVE SERVER */
 public OnPlayerWeaponShot(playerid, weaponid, hittype, hitid, Float:fX, Float:fY, Float:fZ)
 {
+	/* Bullet Crasher http://forum.sa-mp.com/showthread.php?t=535559 */
+	if(hittype == BULLET_HIT_TYPE_PLAYER) {
+	    if( !( -20.0 <= fX <= 20.0 ) || !( -20.0 <= fY <= 20.0 ) || !( -20.0 <= fZ <= 20.0 ) ) {
+		    return 0;
+  		}
+	}
+
 	/* ANTI FAKE DATA */
 	if(weaponid == 0) {
 		Log(LOG_SUSPECT, "OPWS triggered by %i using %i, %i, %i", playerid, weaponid, hittype, hitid);
