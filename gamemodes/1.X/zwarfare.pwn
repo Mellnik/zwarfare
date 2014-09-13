@@ -34,6 +34,7 @@
 #include <a_samp>
 #undef MAX_PLAYERS
 #define MAX_PLAYERS (200)
+#include <crashdetect>
 #include <YSI\y_iterate>
 #include <YSI\y_commands>
 #include <YSI\y_master>
@@ -4673,13 +4674,8 @@ server_initialize()
 	SendRconCommand("weburl "URL"");
     SetGameModeText("(-|-) ZombieMPSurvivalFunHorror");
 	SendRconCommand("mapname ZombieMPSurvivalFunHorror");
-	SendRconCommand("playertimeout 7000");
-	SendRconCommand("ackslimit 4000");
-	SendRconCommand("messageslimit 500");
-	SendRconCommand("messageholelimit 1800");
-	SendRconCommand("rcon 0");
-	SendRconCommand("maxnpc 0");
 	
+	FuckOffGayAssFaggotNigger();
     EnableVehicleFriendlyFire();
     ShowPlayerMarkers(PLAYER_MARKERS_MODE_STREAMED);
     DisableInteriorEnterExits();
@@ -4688,7 +4684,6 @@ server_initialize()
     AllowInteriorWeapons(1);
     UsePlayerPedAnims();
     EnableStuntBonusForAll(0);
-    SollIchDirMaEtWatSagen();
 	SetWeather(43);
     SetWorldTime(7);
 
@@ -5348,7 +5343,7 @@ number_format(integer)
     return szStr;
 }
 
-SollIchDirMaEtWatSagen()
+FuckOffGayAssFaggotNigger()
 {
 	new a[][] =
 	{
