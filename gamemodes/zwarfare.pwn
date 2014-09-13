@@ -25,6 +25,7 @@
 #pragma dynamic 8192        // Required for md-sort
 
 #define IS_RELEASE_BUILD (true)
+#define _YSI_NO_VERSION_CHECK
 #define YSI_IS_SERVER
 
 #include <a_samp>
@@ -50,17 +51,14 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 
 // General
 #define VERSION                         "1.0.0"
-#define VERSION_MAJOR					1
-#define VERSION_MINOR					0
-#define VERSION_PATCH					0
 #define URL                     		"www.zwarfare.com"
-#define FURL                            "www.Zwarfare.com"
-#define HOSTNAME                        "« "R_ZMP_NAME" "VERSION" (0.3z) »"
-#define R_ZMP_NAME              		"Zombie Warfare"
-#define R_ZMP_SIGN              		"ZWAR"
-#define zmp                             "{FFFFFF}[{969696}ZWAR{FFFFFF}]"
+#define FANCY_URL                       "www.Zwarfare.com"
+#define HOSTNAME                        "« "ZWAR_NAME" "VERSION" (0.3z) »"
+#define ZWAR_NAME              			"Zombie Warfare"
+#define ZWAR_SHORT              		"ZWAR"
+#define zwar                            "{FFFFFF}[{969696}ZWAR{FFFFFF}]"
 #define server_sign                     "{FFFFFF}[{FF005F}SERVER{FFFFFF}]"
-#define SQL_HOST   						"127.0.0.1"
+#define SQL_HOST   						"::1"
 #define SQL_PORT                        (3306)
 #if IS_RELEASE_BUILD == true
 #define SQL_USER   						"zmpserver"
@@ -401,7 +399,7 @@ static const humanskins[10] =
 
 static const g_szRandomServerMessages[9][] =
 {
-	""yellow_e"- Server - "grey"Visit our site: "FURL"",
+	""yellow_e"- Server - "grey"Visit our site: "FANCY_URL"",
 	""yellow_e"- Server - "grey"View /help and /cmds for more information",
 	""yellow_e"- Server - "grey"Join our forums! zwarfare.com",
 	""yellow_e"- Server - "grey"Get VIP (/vip) today! "URL"/samp-vip",
@@ -419,7 +417,7 @@ main()
 
 public OnGameModeInit()
 {
-	Log(LOG_INIT, "NEF Server Copyright (c)2013 - 2014 "R_ZMP_NAME"");
+	Log(LOG_INIT, "NEF Server Copyright (c)2013 - 2014 "ZWAR_NAME"");
     Log(LOG_INIT, "Version: "VERSION"");
 	#if IS_RELEASE_BUILD == true
 	Log(LOG_INIT, "Build Configuration: Release");
@@ -559,7 +557,7 @@ public OnPlayerDisconnect(playerid, reason)
 			        KillTimer(tInfestation);
 
 			        new str[144];
-			        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+			        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 			        SCMToAll(-1, str);
 				}
 			}
@@ -590,7 +588,7 @@ public OnPlayerDisconnect(playerid, reason)
 			        KillTimer(tInfestation);
 
 			        new str[144];
-			        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+			        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 			        SCMToAll(-1, str);
 				}
 	            else if(ZMP_GetZombies() == 0)
@@ -765,7 +763,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 		        KillTimer(tInfestation);
 		        
 		        new str[144];
-		        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+		        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 		        SCMToAll(-1, str);
 			}
 			else
@@ -821,7 +819,7 @@ public OnPlayerDeath(playerid, killerid, reason)
 	        KillTimer(tInfestation);
 
 	        new str[144];
-	        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+	        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 	        SCMToAll(-1, str);
 		}
 	}
@@ -1051,7 +1049,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 				        KillTimer(tInfestation);
 
 				        new str[144];
-				        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+				        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 				        SCMToAll(-1, str);
 					}
 			    }
@@ -1091,7 +1089,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 					        KillTimer(tInfestation);
 
 					        new str[144];
-					        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+					        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 					        SCMToAll(-1, str);
 						}
 					}
@@ -1257,15 +1255,15 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			    {
 			        case 0:
 			        {
-			    		ShowPlayerDialog(playerid, DIALOG_SHOP + 1, DIALOG_STYLE_LIST, ""zmp" - Shop > Weapons", "$500\tChainsaw\n$800\tMolotov Cocktail\n$400\tDesert Eagle\n$320\tShotgun\n$550\tCombat Shotgun\n$500\tMP5\n$600\tAK-47\n$620\tM4\n$500\tTEC-9\n$700\tSniper", "Buy", "Back");
+			    		ShowPlayerDialog(playerid, DIALOG_SHOP + 1, DIALOG_STYLE_LIST, ""zwar" - Shop > Weapons", "$500\tChainsaw\n$800\tMolotov Cocktail\n$400\tDesert Eagle\n$320\tShotgun\n$550\tCombat Shotgun\n$500\tMP5\n$600\tAK-47\n$620\tM4\n$500\tTEC-9\n$700\tSniper", "Buy", "Back");
 					}
 					case 1:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_SHOP + 2, DIALOG_STYLE_LIST, ""zmp" - Shop > Skins", "$50\tAndre\n$75\tBarry \"Big Bear\" Thorne [Big]\n$65\tTruth\n$30\tUnemployed\n$100\tBackpacker\n$80\tMafia Boss\n$50\tJohhny Sindacco\n$75\tFarm Inhabitant\n$100\tBig Smoke Armored\n$90\tBlack MIB agent\n$150\tJeffery \"OG Loc\" Martin/Cross\n$200\tClaude Speed\n$190\tMichael Toreno", "Buy", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_SHOP + 2, DIALOG_STYLE_LIST, ""zwar" - Shop > Skins", "$50\tAndre\n$75\tBarry \"Big Bear\" Thorne [Big]\n$65\tTruth\n$30\tUnemployed\n$100\tBackpacker\n$80\tMafia Boss\n$50\tJohhny Sindacco\n$75\tFarm Inhabitant\n$100\tBig Smoke Armored\n$90\tBlack MIB agent\n$150\tJeffery \"OG Loc\" Martin/Cross\n$200\tClaude Speed\n$190\tMichael Toreno", "Buy", "Back");
 					}
 					case 2:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_SHOP + 3, DIALOG_STYLE_LIST, ""zmp" - Shop > V.I.P Packages", ""white"[FREE]\tUZI\n$300\tSawn-Off\n[FREE]\tJizzy\n[FREE]\tKatana", "Select", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_SHOP + 3, DIALOG_STYLE_LIST, ""zwar" - Shop > V.I.P Packages", ""white"[FREE]\tUZI\n$300\tSawn-Off\n[FREE]\tJizzy\n[FREE]\tKatana", "Select", "Back");
 					}
 					case 3:
 					{
@@ -1342,7 +1340,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			            GivePlayerMoneyEx(playerid, -700);
 			        }
 			    }
-			    ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zmp" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900\tMedkit", "Select", "Cancel");
+			    ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zwar" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900\tMedkit", "Select", "Cancel");
 			    return true;
 			}
 			case DIALOG_SHOP + 2:
@@ -1428,7 +1426,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						GivePlayerMoneyEx(playerid, -190);
 			        }
 			    }
-			    ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zmp" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900 Medkit", "Select", "Cancel");
+			    ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zwar" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900 Medkit", "Select", "Cancel");
 			    return true;
 			}
 			case DIALOG_SHOP + 3:
@@ -1455,7 +1453,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			            GivePlayerWeapon(playerid, 8, 1);
 			        }
 			    }
-			    ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zmp" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900 Medkit", "Select", "Cancel");
+			    ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zwar" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900 Medkit", "Select", "Cancel");
 			    return true;
 			}
 			case DIALOG_HELP:
@@ -1464,31 +1462,31 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			    {
 					case 0:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 1, DIALOG_STYLE_MSGBOX, ""zmp" - Help", ""dl"What can I do on this server?\n\nSurvive with others, when you get infected, go and hunt humans!", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 1, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"What can I do on this server?\n\nSurvive with others, when you get infected, go and hunt humans!", "OK", "Back");
 					}
 					case 1:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 2, DIALOG_STYLE_MSGBOX, ""zmp" - Help", ""dl"How do I infect others?\n\nPunch humans to infect them.", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 2, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"How do I infect others?\n\nPunch humans to infect them.", "OK", "Back");
 					}
 					case 2:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 3, DIALOG_STYLE_MSGBOX, ""zmp" - Help", ""dl"How do I get money/score and what can I do with it?\n\nKill zombies or infect humans to get money and score. You can\nspend your money on weapons, equipment and skins.", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 3, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"How do I get money/score and what can I do with it?\n\nKill zombies or infect humans to get money and score. You can\nspend your money on weapons, equipment and skins.", "OK", "Back");
 					}
 					case 3:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 4, DIALOG_STYLE_MSGBOX, ""zmp" - Help", ""dl"How do I become a V.I.P?\n\nSimply go to "URL"/vip.php", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 4, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"How do I become a V.I.P?\n\nSimply go to "URL"/vip.php", "OK", "Back");
 					}
 					case 4:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 5, DIALOG_STYLE_MSGBOX, ""zmp" - Help", ""dl"I found a bug/glitch where can I report it?\n\nPlease report them on our forums zwarfare.com", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 5, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"I found a bug/glitch where can I report it?\n\nPlease report them on our forums zwarfare.com", "OK", "Back");
 					}
 					case 5:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 6, DIALOG_STYLE_MSGBOX, ""zmp" - Help", ""dl"I have more questions!\n\nFeel free to join our forums for questions zwarfare.com", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 6, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"I have more questions!\n\nFeel free to join our forums for questions zwarfare.com", "OK", "Back");
 					}
 					case 6:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 7, DIALOG_STYLE_MSGBOX, ""zmp" - Help", ""dl"How do I use medkits?\n\nUse /mk to consume them. See /stats for amount available.", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 7, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"How do I use medkits?\n\nUse /mk to consume them. See /stats for amount available.", "OK", "Back");
 					}
 			    }
 			    return true;
@@ -1506,7 +1504,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 	        }
 	        case DIALOG_SHOP + 1..DIALOG_SHOP + 3:
 	        {
-	            ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zmp" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900 Medkit", "Select", "Cancel");
+	            ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zwar" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900 Medkit", "Select", "Cancel");
 	            return true;
 	        }
 	        case DIALOG_LOGIN:
@@ -1589,7 +1587,7 @@ public OnPlayerEnterDynamicCP(playerid, checkpointid)
     
     if(checkpointid == g_ShopID && gTeam[playerid] == gHUMAN && g_GlobalStatus == e_Status_Prepare)
     {
-        ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zmp" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900 Medkit", "Select", "Cancel");
+        ShowPlayerDialog(playerid, DIALOG_SHOP, DIALOG_STYLE_LIST, ""zwar" - Shop", ""dl"Weapons\n"dl"Skins\n"dl"V.I.P Packages\n"dl"$900 Medkit", "Select", "Cancel");
     }
 	return 1;
 }
@@ -1679,7 +1677,7 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 		        KillTimer(tInfestation);
 
 		        new str[144];
-		        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+		        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 		        SCMToAll(-1, str);
 			}
 		}
@@ -1737,7 +1735,7 @@ YCMD:vips(playerid, params[], help)
 	{
 	    format(tempstring, sizeof(tempstring), "\n\n"white"Total of "blue"%i "white"aVIPs online!", count);
 	    strcat(finstring, tempstring);
-		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - VIPs", finstring, "OK", "");
+		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - VIPs", finstring, "OK", "");
 	}
 	return 1;
 }
@@ -1752,7 +1750,7 @@ YCMD:vip(playerid, params[], help)
 	strcat(string, "\n"dl" Message to all players when joining the server");
 	strcat(string, "\n\n"blue"Get VIP today! Go To:\n");
 	strcat(string, ""red"-> "yellow_e""URL"/vip.php");
-    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Very Important Player (VIP)", string, "OK", "");
+    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Very Important Player (VIP)", string, "OK", "");
 	return 1;
 }
 
@@ -1762,7 +1760,7 @@ YCMD:label(playerid, params[], help)
 	{
 	    if(PlayerData[playerid][t3dVIPLabel] == Text3D:-1)
 	    {
-	        ShowPlayerDialog(playerid, DIALOG_LABEL, DIALOG_STYLE_INPUT, ""zmp" - Attach VIP Label", ""white"Enter some text which your label shall display\n"blue"* "white"Input length: 3-35", "Next", "Cancel");
+	        ShowPlayerDialog(playerid, DIALOG_LABEL, DIALOG_STYLE_INPUT, ""zwar" - Attach VIP Label", ""white"Enter some text which your label shall display\n"blue"* "white"Input length: 3-35", "Next", "Cancel");
 	    }
 	    else
 	    {
@@ -1782,7 +1780,7 @@ YCMD:elabel(playerid, params[], help)
 	{
 	    if(PlayerData[playerid][t3dVIPLabel] != Text3D:-1)
 	    {
-	        ShowPlayerDialog(playerid, DIALOG_LABEL + 1, DIALOG_STYLE_INPUT, ""zmp" - Change VIP Label Text", ""white"Enter the new text which your label shall display\n"blue"* "white"Input length: 3-35", "Next", "Cancel");
+	        ShowPlayerDialog(playerid, DIALOG_LABEL + 1, DIALOG_STYLE_INPUT, ""zwar" - Change VIP Label Text", ""white"Enter the new text which your label shall display\n"blue"* "white"Input length: 3-35", "Next", "Cancel");
 	    }
 	    else
 	    {
@@ -1903,7 +1901,7 @@ YCMD:stats(playerid, params[], help)
 		strcat(finstring, string1);
 		strcat(finstring, string2);
 
-		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Player Statistics", finstring, "OK", "");
+		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Player Statistics", finstring, "OK", "");
 	}
 	else
 	{
@@ -2286,9 +2284,9 @@ YCMD:giveweapon(playerid, params[], help)
 			GivePlayerWeapon(player, weaponID, ammo_a);
 			GetWeaponName(weaponID, weaponName, sizeof(weaponName));
 
-			format(str, sizeof(str), ""WHITE_E"["BLUE_E""R_ZMP_SIGN""WHITE_E"] "GREY_E"Administrator %s(%i) gave you a %s(%i) with %i ammo.", __GetName(playerid), playerid, weaponName, weaponID, ammo_a);
+			format(str, sizeof(str), ""WHITE_E"["BLUE_E""ZWAR_SHORT""WHITE_E"] "GREY_E"Administrator %s(%i) gave you a %s(%i) with %i ammo.", __GetName(playerid), playerid, weaponName, weaponID, ammo_a);
 			SCM(player, -1, str);
-			format(str, sizeof(str), ""WHITE_E"["BLUE_E""R_ZMP_SIGN""WHITE_E"] "GREY_E"You gave %s(%i) a %s(%i) with %i ammo.", __GetName(player), player, weaponName, weaponID, ammo_a);
+			format(str, sizeof(str), ""WHITE_E"["BLUE_E""ZWAR_SHORT""WHITE_E"] "GREY_E"You gave %s(%i) a %s(%i) with %i ammo.", __GetName(player), player, weaponName, weaponID, ammo_a);
 			SCM(playerid, -1, str);
 		}
 		else
@@ -2862,7 +2860,7 @@ YCMD:ban(playerid, params[], help)
 				print(string);
 
 	    		format(string, sizeof(string), ""red"You have been banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", __GetName(playerid), reason);
-	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Notice", string, "OK", "");
+	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Notice", string, "OK", "");
 	    		KickEx(player);
 
 	    		PlayerPlaySound(playerid, 1184, 0.0, 0.0, 0.0);
@@ -2950,7 +2948,7 @@ YCMD:tban(playerid, params[], help)
 				print(string);
 
 	    		format(string, sizeof(string), ""red"You have been time banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\nExpires:\t\t%s\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", __GetName(playerid), reason, UTConvert(gettime() + (mins * 60)));
-	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Notice", string, "OK", "");
+	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Notice", string, "OK", "");
 	    		KickEx(player);
 
 	    		PlayerPlaySound(playerid, 1184, 0.0, 0.0, 0.0);
@@ -3045,13 +3043,13 @@ YCMD:setvip(playerid, params[], help)
 		    new str[144];
 		    if(PlayerData[player][iVIP] == 1)
 		    {
-				format(str, sizeof(str), ""zmp" Admin %s(%i) has removed %s(%i) VIP status.", __GetName(playerid), playerid, __GetName(player), player);
+				format(str, sizeof(str), ""zwar" Admin %s(%i) has removed %s(%i) VIP status.", __GetName(playerid), playerid, __GetName(player), player);
 				SCMToAll(-1, str);
 				PlayerData[player][iVIP] = 0;
 		    }
 		    else
 		    {
-				format(str, sizeof(str), ""zmp" Admin %s(%i) has given %s(%i) VIP status.", __GetName(playerid), playerid, __GetName(player), player);
+				format(str, sizeof(str), ""zwar" Admin %s(%i) has given %s(%i) VIP status.", __GetName(playerid), playerid, __GetName(player), player);
 				SCMToAll(-1, str);
 				PlayerData[player][iVIP] = 1;
 		    }
@@ -3078,7 +3076,7 @@ YCMD:adminhelp(playerid, params[], help)
 	    strcat(string, ""yellow_e"Level 5:\n"white"/setcash /setscore\n\n");
 	    strcat(string, ""yellow_e"Level 6:\n"white"/main /setvip /reloadmaps");
 
-        ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Admin Commands", string, "OK", "");
+        ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Admin Commands", string, "OK", "");
 	}
   	else
 	{
@@ -3108,7 +3106,7 @@ YCMD:cmds(playerid, params[], help)
 	strcat(cstring, ""yellow"/stopanim "white"- stop animations\n");
 	strcat(cstring, ""yellow"/pay "white"- pay someone money\n");
 
-	ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Commands", cstring, "OK", "");
+	ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Commands", cstring, "OK", "");
 	return 1;
 }
 
@@ -3120,7 +3118,7 @@ YCMD:help(playerid, params[], help)
 	strcat(string, ""dl"How do I infect others?\n"dl"How do I get money/score and what can I do with it?\n"dl"How do I become a V.I.P?\n"dl"I found a bug/glitch where can I report it?\n"dl"I have more questions!");
 	strcat(string, ""dl"How do I use medkits?");
 	
-	ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_LIST, ""zmp" - Help", string, "OK", "");
+	ShowPlayerDialog(playerid, DIALOG_HELP, DIALOG_STYLE_LIST, ""zwar" - Help", string, "OK", "");
     return 1;
 }
 
@@ -3172,12 +3170,12 @@ YCMD:changename(playerid, params[], help)
 	if(GetPlayerMoneyEx(playerid) < 50000)
 	{
 		format(gstr, sizeof(gstr), ""red"Namechange possible"white"\nCurrent Name: %s\nYou need $50,000 for a namechange!", __GetName(playerid));
-		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Namechange", gstr, "OK", "");
+		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Namechange", gstr, "OK", "");
 	}
 	else
 	{
 		format(gstr, sizeof(gstr), ""green"Namechange possible"white"\nCurrent Name: %s\nA namechange costs $50,000\n\nEnter a new valid nickname below:", __GetName(playerid));
-		ShowPlayerDialog(playerid, DIALOG_NAMECHANGE, DIALOG_STYLE_INPUT, ""zmp" - Namechange", gstr, "OK", "Cancel");
+		ShowPlayerDialog(playerid, DIALOG_NAMECHANGE, DIALOG_STYLE_INPUT, ""zwar" - Namechange", gstr, "OK", "Cancel");
 	}
 	return 1;
 }
@@ -3223,7 +3221,7 @@ YCMD:anims(playerid, params[], help)
 	strcat(cstring, ""blue"To stop an animation:");
 	strcat(cstring, "\n"white"You can press: [SHIFT], [ENTER], [LMB].\nOr try /stopanim");
 
-	ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Animations", cstring, "OK", "");
+	ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Animations", cstring, "OK", "");
 	return 1;
 }
 
@@ -3339,7 +3337,7 @@ YCMD:uptime(playerid, params[], help)
 
 YCMD:top(playerid, params[], help)
 {
-	ShowPlayerDialog(playerid, DIALOG_TOPLIST, DIALOG_STYLE_LIST, ""zmp" - Toplists", ""dl"Richlist (/richlist)\n"dl"Score (/score)\n"dl"Most Kills (/kills)\n"dl"Most Deaths (/deaths)\n"dl"Most playing time (/toptime)", "Select", "Cancel");
+	ShowPlayerDialog(playerid, DIALOG_TOPLIST, DIALOG_STYLE_LIST, ""zwar" - Toplists", ""dl"Richlist (/richlist)\n"dl"Score (/score)\n"dl"Most Kills (/kills)\n"dl"Most Deaths (/deaths)\n"dl"Most playing time (/toptime)", "Select", "Cancel");
 	return 1;
 }
 
@@ -3381,7 +3379,7 @@ YCMD:toptime(playerid, params[], help)
 		}
 	}
 
-    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Most Playing Time", finstring, "OK", "");
+    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Most Playing Time", finstring, "OK", "");
 	return 1;
 }
 
@@ -3421,7 +3419,7 @@ YCMD:deaths(playerid, params[], help)
 		}
 	}
 
-    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Most Deaths", finstring, "OK", "");
+    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Most Deaths", finstring, "OK", "");
 	return 1;
 }
 
@@ -3461,7 +3459,7 @@ YCMD:kills(playerid, params[], help)
 		}
 	}
 
-    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Most Kills", finstring, "OK", "");
+    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Most Kills", finstring, "OK", "");
 	return 1;
 }
 
@@ -3501,7 +3499,7 @@ YCMD:richlist(playerid, params[], help)
 		}
 	}
 
-    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Richlist", finstring, "OK", "");
+    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Richlist", finstring, "OK", "");
 	return 1;
 }
 
@@ -3540,7 +3538,7 @@ YCMD:score(playerid, params[], help)
 		    strcat(finstring, tmpstring);
 		}
 	}
-	ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Score", finstring, "OK", "");
+	ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Score", finstring, "OK", "");
 	return 1;
 }
 
@@ -3708,7 +3706,7 @@ YCMD:admins(playerid, params[], help)
 	{
 	    format(tempstring, sizeof(tempstring), "\n"white"Total of "blue"%i "white"Admins online!", count);
 	    strcat(finstring, tempstring);
-		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Admins", finstring, "OK", "");
+		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Admins", finstring, "OK", "");
 	}
 	return 1;
 }
@@ -3866,7 +3864,7 @@ YCMD:rules(playerid, params[], help)
 	strcat(rules, "\n- Do not go AFK for too long or you may get kicked");
 	strcat(rules, "\n- No score/money farming\n- Do not use joypad\n- No spawnkilling!\n\nNever give your password to anyone!");
 
-    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Rules", rules, "OK", "");
+    ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Rules", rules, "OK", "");
 	return 1;
 }
 
@@ -4015,7 +4013,7 @@ function:ZMP_InfestationCountDown()
         
 		if(ZMP_GetPlayers() <= 1)
 		{
-		    SCMToAll(-1, ""zmp" "red"Could not infect due to lack of players!");
+		    SCMToAll(-1, ""zwar" "red"Could not infect due to lack of players!");
 
 			ZMP_EndGame();
 		}
@@ -4058,7 +4056,7 @@ function:ZMP_RescueCountDown()
 	        KillTimer(tInfestation);
 	        
 	        new str[144];
-	        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+	        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 	        SCMToAll(-1, str);
 		}
 		else
@@ -4071,7 +4069,7 @@ function:ZMP_RescueCountDown()
 	        KillTimer(tInfestation);
 
 	        new str[144];
-	        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+	        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 	        SCMToAll(-1, str);
 		}
 	}
@@ -4128,7 +4126,7 @@ function:OnNCReceive(playerid)
 	        strcat(string, tmp);
 	    }
 
-		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Namechange Records", string, "OK", "");
+		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Namechange Records", string, "OK", "");
 	}
 	return 1;
 }
@@ -4151,7 +4149,7 @@ function:OnNCReceive2(playerid, name[])
 	        strcat(string, tmp);
 	    }
 
-		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Namechange Records", string, "OK", "");
+		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Namechange Records", string, "OK", "");
 	}
 	else SCM(playerid, -1, ""er"No records found for that player");
 	return 1;
@@ -4224,9 +4222,9 @@ function:OnPlayerNameChangeRequest(playerid, newname[])
             mysql_tquery(g_pSQL, gstr2);
 
 			format(gstr2, sizeof(gstr2), ""white"You have successfully changed your name.\n\nNew name: %s\nOld name: %s", newname, oldname);
-			ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" - Namechange", gstr2, "OK", "");
+			ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Namechange", gstr2, "OK", "");
 
-			format(gstr2, sizeof(gstr2), ""zmp" %s(%i) has changed their name to %s", oldname, playerid, newname);
+			format(gstr2, sizeof(gstr2), ""zwar" %s(%i) has changed their name to %s", oldname, playerid, newname);
 			SCMToAll(-1, gstr2);
 
 			MySQL_SaveAccount(playerid);
@@ -4400,7 +4398,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 				if(iLift == 0) // Player has a permanent ban
 				{
 				    format(gstr2, sizeof(gstr2), ""red"You have been banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nDate: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", szAdmin, __GetName(playerid), szReason, UTConvert(u_iBanDate));
-					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" :: Notice", gstr2, "OK", "");
+					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" :: Notice", gstr2, "OK", "");
 					KickEx(playerid);
 					return 1;
 				}
@@ -4409,12 +4407,12 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 				    mysql_format(g_pSQL, gstr2, sizeof(gstr2), "DELETE FROM `bans` WHERE `PlayerName` = '%e' LIMIT 1;", __GetName(playerid)); // Delete time ban
 				    mysql_pquery(g_pSQL, gstr2);
 
-				    SCM(playerid, -1, ""zmp" Your time ban expired, you've been unbanned!");
+				    SCM(playerid, -1, ""zwar" Your time ban expired, you've been unbanned!");
 				}
 				else
 				{
 				    format(gstr2, sizeof(gstr2), ""red"You have been time banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nExpires: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", szAdmin, __GetName(playerid), szReason, UTConvert(iLift));
-					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zmp" :: Notice", gstr2, "OK", "");
+					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" :: Notice", gstr2, "OK", "");
 					KickEx(playerid);
 					return 1;
 				}
@@ -4534,7 +4532,7 @@ function:OnPlayerRegister(playerid, namehash, hash[], playername[], ip_address[]
         PlayerData[playerid][iExitType] = EXIT_LOGGED;
         TogglePlayerSpectating(playerid, false);
 
-		format(gstr, sizeof(gstr), ""zmp" %s(%i) "grey"registered, making the server have a total of "green"%i "grey"players registered.", __GetName(playerid), playerid, cache_insert_id());
+		format(gstr, sizeof(gstr), ""zwar" %s(%i) "grey"registered, making the server have a total of "green"%i "grey"players registered.", __GetName(playerid), playerid, cache_insert_id());
 		SCMToAll(-1, gstr);
 
         GivePlayerMoneyEx(playerid, 10000);
@@ -4886,7 +4884,7 @@ ZMP_RandomInfection()
         KillTimer(tInfestation);
 
         new str[144];
-        format(str, sizeof(str), ""zmp" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
         SCMToAll(-1, str);
 
 	    // Server empty or what? lol | this shouldn't even be called lul
@@ -4914,7 +4912,7 @@ ZMP_RandomInfection()
 		}
 
 		new string[128];
-		format(string, sizeof(string), ""zmp" "yellow"%s(%i) has been infected by the infestation!", __GetName(pid), pid);
+		format(string, sizeof(string), ""zwar" "yellow"%s(%i) has been infected by the infestation!", __GetName(pid), pid);
 		SCMToAll(-1, string);
 
         ZMP_SetPlayerZombie(pid, false);
@@ -5051,7 +5049,7 @@ ZMP_BeginNewGame()
 
 	TextDrawHideForAll(txtRescue);
 
-	format(gstr, sizeof(gstr), ""zmp" "green"Starting new round! Map: %s", g_Maps[g_CurrentMap][e_mapname]);
+	format(gstr, sizeof(gstr), ""zwar" "green"Starting new round! Map: %s", g_Maps[g_CurrentMap][e_mapname]);
 	SCMToAll(-1, gstr);
 
 	g_World = random_int(10000, 100000);
@@ -5106,7 +5104,7 @@ trans(col)
 
 RequestRegistration(playerid)
 {
-    format(gstr, sizeof(gstr), ""zmp" Registration - %s", __GetName(playerid));
+    format(gstr, sizeof(gstr), ""zwar" Registration - %s", __GetName(playerid));
 	format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"white" to Zombie "red"Multiplayer"white"!\n\nEnter a password for your new account below:", __GetName(playerid));
 	ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, gstr, gstr2, "Register", "");
 	return 1;
@@ -5125,7 +5123,7 @@ AutoLogin(playerid)
 
 RequestLogin(playerid)
 {
-    format(gstr, sizeof(gstr), ""zmp" Login - %s", __GetName(playerid));
+    format(gstr, sizeof(gstr), ""zwar" Login - %s", __GetName(playerid));
     format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"white" to "blue"Zombie Multiplayer"white"!\n\nThe name you are using is registered! Please enter the password:", __GetName(playerid));
 	ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, gstr, gstr2, "Login", "");
     return 1;
