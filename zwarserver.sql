@@ -1,9 +1,9 @@
 -- phpMyAdmin SQL Dump
--- version 4.2.7
+-- version 4.2.7.1
 -- http://www.phpmyadmin.net
 --
--- Host: 127.0.0.1
--- Generation Time: Aug 19, 2014 at 08:27 AM
+-- Host: ::1
+-- Generation Time: Sep 13, 2014 at 08:28 PM
 -- Server version: 5.5.37-MariaDB
 -- PHP Version: 5.4.16
 
@@ -17,7 +17,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8 */;
 
 --
--- Database: `zmpserver`
+-- Database: `zwarserver`
 --
 
 -- --------------------------------------------------------
@@ -30,21 +30,27 @@ CREATE TABLE IF NOT EXISTS `accounts` (
 `id` int(10) unsigned NOT NULL,
   `name` varchar(24) NOT NULL,
   `ip` varchar(16) NOT NULL,
+  `email` varchar(30) NOT NULL,
+  `version` varchar(20) NOT NULL,
   `serial` varchar(64) NOT NULL,
   `hash` varchar(128) NOT NULL,
   `salt` varchar(32) NOT NULL,
-  `score` int(10) unsigned NOT NULL,
-  `adminlevel` tinyint(1) unsigned NOT NULL,
+  `admin` tinyint(1) unsigned NOT NULL,
+  `mapper` tinyint(1) unsigned NOT NULL,
+  `exp` int(10) unsigned NOT NULL,
   `money` int(10) NOT NULL,
   `kills` mediumint(6) unsigned NOT NULL,
   `deaths` mediumint(6) unsigned NOT NULL,
+  `skin` smallint(6) unsigned NOT NULL,
   `time` int(10) unsigned NOT NULL,
-  `vip` tinyint(1) unsigned NOT NULL,
   `medkits` mediumint(6) unsigned NOT NULL,
   `cookies` mediumint(6) unsigned NOT NULL,
+  `vip` tinyint(1) unsigned NOT NULL,
   `lastnc` int(10) unsigned NOT NULL,
   `lastlogin` int(10) unsigned NOT NULL,
-  `regdate` int(10) unsigned NOT NULL
+  `regdate` int(10) unsigned NOT NULL,
+  `timeskick` int(10) unsigned NOT NULL,
+  `timeslogin` int(10) unsigned NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
@@ -57,8 +63,8 @@ CREATE TABLE IF NOT EXISTS `bans` (
 `id` int(10) unsigned NOT NULL,
   `player_id` int(10) unsigned NOT NULL,
   `admin_id` int(10) unsigned NOT NULL,
-  `reason` varchar(70) NOT NULL,
-  `lift` int(10) unsigned NOT NULL,
+  `reason` varchar(64) NOT NULL,
+  `lift` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '0 = perm ban',
   `date` int(10) unsigned NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
@@ -71,7 +77,7 @@ CREATE TABLE IF NOT EXISTS `bans` (
 CREATE TABLE IF NOT EXISTS `blacklist` (
 `id` int(10) unsigned NOT NULL,
   `ip` varchar(16) NOT NULL,
-  `admin_id` int(10) unsigned NOT NULL,
+  `admin_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '0 = not directly banned by an admin in a ban command',
   `date` int(10) unsigned NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
@@ -97,6 +103,7 @@ CREATE TABLE IF NOT EXISTS `loginlog` (
 CREATE TABLE IF NOT EXISTS `maps` (
 `id` mediumint(6) unsigned NOT NULL,
   `mapname` varchar(24) NOT NULL,
+  `author` int(10) unsigned NOT NULL,
   `spawnx` float(14,4) NOT NULL,
   `spawny` float(14,4) NOT NULL,
   `spawnz` float(14,4) NOT NULL,
