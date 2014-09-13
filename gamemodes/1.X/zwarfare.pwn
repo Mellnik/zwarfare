@@ -1209,7 +1209,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					return RequestLogin(playerid);
 				}
 				
-				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT `hash`, `salt` FROM `accounts` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
+				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT `hash`, `salt` FROM `accounts` WHERE `id` = %i LIMIT 1;", PlayerData[playerid][iAccountID]);
 				
 				new db_hash[SHA3_LENGTH + 1], db_salt[SALT_LENGTH + 1],
 					Cache:query = mysql_query(g_pSQL, gstr2, true),
@@ -3934,24 +3934,29 @@ AssembleORM(ORM:ormid, playerid)
 
 MySQL_CleanUp()
 {
-	mysql_tquery(g_pSQL, "UPDATE `accounts` SET `logged` = 0 WHERE `logged` = 1;");
+	mysql_tquery(g_pSQL, "UPDATE `accounts` SET `signed` = 0;");
 }
 
 MySQL_UpdateAccount(playerid)
 {
-    mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `logged` = 1, `ip` = '%s', `serial` = '%e' WHERE `name` = '%s' LIMIT 1;", __GetIP(playerid), __GetSerial(playerid), __GetName(playerid));
+    mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `signed` = 1, `ip` = '%s', `serial` = '%e', `version` = '%e' WHERE `id` = %i LIMIT 1;",
+		__GetIP(playerid),
+		__GetSerial(playerid),
+		__GetVersion(playerid),
+		PlayerData[playerid][iAccountID]);
+		
     mysql_tquery(g_pSQL, gstr2);
 }
 
 MySQL_LoadAccount(playerid)
 {
-	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT * FROM `accounts` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
+	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT * FROM `accounts` WHERE `id` = %i LIMIT 1;", PlayerData[playerid][iAccountID]);
 	mysql_tquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_LOAD);
 }
 
 MySQL_LogPlayerOut(playerid)
 {
-	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `logged` = 0 WHERE `name` = '%s' LIMIT 1;", __GetName(playerid));
+	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `signed` = 0 WHERE `id` = %i LIMIT 1;", PlayerData[playerid][iAccountID]);
 	mysql_tquery(g_pSQL, gstr2);
 }
 
@@ -4835,6 +4840,18 @@ __GetSerial(playerid)
 
     gpci(playerid, tmp, sizeof(tmp));
     return tmp;
+}
+
+__GetVersion(playerid)
+{
+	new tmp[20 + 1];
+	
+	GetPlayerVersion(playerid, tmp, sizeof(tmp));
+	
+	if(strlen(tmp) > 20)
+		strmid(tmp, "INVALID_VERSION", 0, 20, 20);
+		
+	return tmp;
 }
 
 GetUptime()
