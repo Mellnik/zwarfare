@@ -21,7 +21,7 @@
 || Build specific:
 ||
 || Script limits:
-||
+|| Maximum maps: 20 (MAX_MAPS)
 ||
 */
 
@@ -288,16 +288,18 @@ enum E_MAP_DATA
 {
 	e_id,
 	e_mapname[25],
+	e_author[MAX_PLAYER_NAME + 1],
 	Float:e_spawn_x,
 	Float:e_spawn_y,
 	Float:e_spawn_z,
 	Float:e_spawn_a,
 	e_weather,
 	e_time,
-	e_require_preload,
 	Float:e_shop_x,
 	Float:e_shop_y,
-	Float:e_shop_z
+	Float:e_shop_z,
+	e_times_played,
+	e_require_preload
 };
 
 enum
@@ -514,7 +516,7 @@ public OnPlayerConnect(playerid)
 	}
 	else
 	{
-        PlayAudioStreamForPlayer(playerid, "http://zwarfare.com/ztheme.mp3");
+        PlayAudioStreamForPlayer(playerid, "http://files.horzine.net/zwarfare.mp3");
 		TogglePlayerSpectating(playerid, true);
 
         player_init_session(playerid);
@@ -3732,14 +3734,14 @@ YCMD:id(playerid, params[], help)
 		SCM(playerid, YELLOW, "Usage: /id <nick/part of nick>");
 		return 1;
 	}
-	new found, string[128], playername[MAX_PLAYER_NAME+1];
+	new found, string[128], playername[MAX_PLAYER_NAME + 1];
 	format(string, sizeof(string), "Searched for: %s ", params);
 	SCM(playerid, GREEN, string);
 	for(new i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(IsPlayerAvail(i))
 		{
-	  		GetPlayerName(i, playername, MAX_PLAYER_NAME+1);
+	  		GetPlayerName(i, playername, MAX_PLAYER_NAME + 1);
 			new namelen = strlen(playername), bool:searched = false;
 	    	for(new pos = 0; pos < namelen; pos++)
 			{
@@ -4590,20 +4592,22 @@ function:_server_shutdown()
 
 function:OnMapDataLoad()
 {
-	for(new i = 0, c = cache_get_row_count(); i < c; i++)
+	for(new i = 0, c = cache_get_row_count(); i < c; ++i)
 	{
 	    g_Maps[i][e_id] = cache_get_row_int(i, 0);
 	    cache_get_row(i, 1, g_Maps[i][e_mapname], g_pSQL, 24);
-	    g_Maps[i][e_spawn_x] = cache_get_row_float(i, 2);
-	    g_Maps[i][e_spawn_y] = cache_get_row_float(i, 3);
-	    g_Maps[i][e_spawn_z] = cache_get_row_float(i, 4);
-	    g_Maps[i][e_spawn_a] = cache_get_row_float(i, 5);
-	    g_Maps[i][e_weather] = cache_get_row_int(i, 6);
-	    g_Maps[i][e_time] = cache_get_row_int(i, 7);
-	    g_Maps[i][e_require_preload] = cache_get_row_int(i, 8);
+	    g_Maps[i][e_spawn_x] = cache_get_row_float(i, 3);
+	    g_Maps[i][e_spawn_y] = cache_get_row_float(i, 4);
+	    g_Maps[i][e_spawn_z] = cache_get_row_float(i, 5);
+	    g_Maps[i][e_spawn_a] = cache_get_row_float(i, 6);
+	    g_Maps[i][e_weather] = cache_get_row_int(i, 7);
+	    g_Maps[i][e_time] = cache_get_row_int(i, 8);
 	    g_Maps[i][e_shop_x] = cache_get_row_float(i, 9);
 	    g_Maps[i][e_shop_y] = cache_get_row_float(i, 10);
 	    g_Maps[i][e_shop_z] = cache_get_row_float(i, 11);
+	    g_Maps[i][e_times_played] = cache_get_row_int(i, 12);
+	    g_Maps[i][e_require_preload] = cache_get_row_int(i, 13);
+	    cache_get_row(i, 14, g_Maps[i][e_author], g_pSQL, MAX_PLAYER_NAME + 1);
 	}
 	Log(LOG_ONLINE, "Retrieved %i maps", cache_get_row_count());
 	return 1;
@@ -5424,7 +5428,7 @@ server_load_textdraws()
 
 server_fetch_mapdata()
 {
-	mysql_tquery(g_pSQL, "SELECT * FROM `maps`;", "OnMapDataLoad");
+	mysql_tquery(g_pSQL, "SELECT `maps`.*, `accounts`.`name` FROM `maps` INNER JOIN `accounts` ON `maps`.`author` = `accounts`.`id` LIMIT "MAX_MAPS";", "OnMapDataLoad");
 }
 
 Map_Load(index)

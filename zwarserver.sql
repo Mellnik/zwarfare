@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: ::1
--- Generation Time: Sep 13, 2014 at 08:28 PM
+-- Generation Time: Sep 13, 2014 at 09:02 PM
 -- Server version: 5.5.37-MariaDB
 -- PHP Version: 5.4.16
 
@@ -113,7 +113,8 @@ CREATE TABLE IF NOT EXISTS `maps` (
   `shopx` float(14,4) NOT NULL,
   `shopy` float(14,4) NOT NULL,
   `shopz` float(14,4) NOT NULL,
-  `timesplayed` int(10) unsigned NOT NULL
+  `timesplayed` int(10) unsigned NOT NULL,
+  `preload` tinyint(1) unsigned NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
