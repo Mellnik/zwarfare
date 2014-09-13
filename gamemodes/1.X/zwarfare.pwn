@@ -441,8 +441,8 @@ public OnGameModeInit()
 	Log(LOG_INIT, "MySQL: LOG_ALL");
 	mysql_log(LOG_ALL, LOG_TYPE_TEXT);
 
-    MySQL_Connect();
-    MySQL_CleanUp();
+    SQL_Connect();
+    SQL_CleanUp();
     
     server_initialize();
     server_load_textdraws();
@@ -539,8 +539,8 @@ public OnPlayerDisconnect(playerid, reason)
     
    	if(PlayerData[playerid][iExitType] == EXIT_FIRST_SPAWNED && PlayerData[playerid][bLogged])
 	{
-		MySQL_SaveAccount(playerid);
-	    MySQL_LogPlayerOut(playerid);
+		SQL_SaveAccount(playerid);
+	    SQL_LogPlayerOut(playerid);
 	}
 	
     switch(gTeam[playerid])
@@ -1239,8 +1239,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					PlayerData[playerid][iExitType] = EXIT_LOGGED;
 					PlayerData[playerid][iLastLogin] = gettime();
 					TogglePlayerSpectating(playerid, false);
-					MySQL_UpdateAccount(playerid);
-					MySQL_LoadAccount(playerid);
+					SQL_UpdateAccount(playerid);
+					SQL_LoadAccount(playerid);
 				}
 			    return true;
 			}
@@ -1260,7 +1260,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				new hash[SHA3_LENGTH + 1];
 				sha3(password, hash, sizeof(hash));
 
-			    MySQL_RegisterAccount(playerid, hash);
+			    SQL_RegisterAccount(playerid, hash);
 			    return true;
 			}
 			case DIALOG_SHOP:
@@ -2873,8 +2873,8 @@ YCMD:ban(playerid, params[], help)
                 PlayerData[player][bOpenSeason] = true;
 				new string[255];
 
-	   			MySQL_CreateBan(__GetName(player), __GetName(playerid), reason);
-                MySQL_BanIP(__GetIP(player));
+	   			SQL_CreateBan(__GetName(player), __GetName(playerid), reason);
+                SQL_BanIP(__GetIP(player));
 
 				format(string, sizeof(string), ""yellow"** "red"%s(%i) has been banned by Admin %s(%i) [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, reason);
 				SCMToAll(YELLOW, string);
@@ -2962,7 +2962,7 @@ YCMD:tban(playerid, params[], help)
 			    PlayerData[player][bOpenSeason] = true;
 				new string[255];
 
-	   			MySQL_CreateBan(__GetName(player), __GetName(playerid), reason, gettime() + (mins * 60));
+	   			SQL_CreateBan(__GetName(player), __GetName(playerid), reason, gettime() + (mins * 60));
 
 				format(string, sizeof(string), ""yellow"** "red"%s(%i) has been time banned for %i minutes by Admin %s(%i) [Reason: %s]", __GetName(player), player, mins, __GetName(playerid), playerid, reason);
 				SCMToAll(YELLOW, string);
@@ -3074,7 +3074,7 @@ YCMD:setvip(playerid, params[], help)
 				SCMToAll(-1, str);
 				PlayerData[player][iVIP] = 1;
 		    }
-		    MySQL_SaveAccount(player);
+		    SQL_SaveAccount(player);
 		}
 	}
 	else
@@ -3225,7 +3225,7 @@ YCMD:changepass(playerid, params[], help)
 	new hash[SHA3_LENGTH + 1];
 	sha3(pass, hash, sizeof(hash));
 	
-    MySQL_UpdatePlayerPass(playerid, hash);
+    SQL_UpdatePlayerPass(playerid, hash);
 	PlaySound(playerid, 1057);
     format(gstr, sizeof(gstr), ""server_sign" "r_besch"You have successfully changed your password to %s", pass);
 	SCM(playerid, -1, gstr);
@@ -3889,7 +3889,7 @@ YCMD:rules(playerid, params[], help)
 	return 1;
 }
 
-MySQL_Connect()
+SQL_Connect()
 {
     g_pSQL = mysql_connect(SQL_HOST, SQL_USER, SQL_DATA, SQL_PASS, SQL_PORT, true);
 
@@ -3905,7 +3905,7 @@ MySQL_Connect()
     }
 }
 
-MySQL_RegisterAccount(playerid, hash[])
+SQL_RegisterAccount(playerid, hash[])
 {
 	PlayerData[playerid][iLastLogin] = gettime();
     PlayerData[playerid][iRegisterDate] = gettime();
@@ -3940,12 +3940,12 @@ AssembleORM(ORM:ormid, playerid)
 	orm_addvar_int(ormid, PlayerData[playerid][iRegisterDate], "regdate");
 }
 
-MySQL_CleanUp()
+SQL_CleanUp()
 {
 	mysql_tquery(g_pSQL, "UPDATE `accounts` SET `signed` = 0;");
 }
 
-MySQL_UpdateAccount(playerid)
+SQL_UpdateAccount(playerid)
 {
     mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `signed` = 1, `ip` = '%s', `serial` = '%e', `version` = '%e' WHERE `id` = %i LIMIT 1;",
 		__GetIP(playerid),
@@ -3956,19 +3956,19 @@ MySQL_UpdateAccount(playerid)
     mysql_tquery(g_pSQL, gstr2);
 }
 
-MySQL_LoadAccount(playerid)
+SQL_LoadAccount(playerid)
 {
 	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT * FROM `accounts` WHERE `id` = %i LIMIT 1;", PlayerData[playerid][iAccountID]);
 	mysql_tquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_LOAD);
 }
 
-MySQL_LogPlayerOut(playerid)
+SQL_LogPlayerOut(playerid)
 {
 	mysql_format(g_pSQL, gstr2, sizeof(gstr2), "UPDATE `accounts` SET `signed` = 0 WHERE `id` = %i LIMIT 1;", PlayerData[playerid][iAccountID]);
 	mysql_tquery(g_pSQL, gstr2);
 }
 
-MySQL_UpdatePlayerPass(playerid, hash[])
+SQL_UpdatePlayerPass(playerid, hash[])
 {
 	new salt[SALT_LENGTH + 1];
 	random_string(SALT_LENGTH, salt, sizeof(salt)); // Generate a new salt for this account
@@ -3977,7 +3977,7 @@ MySQL_UpdatePlayerPass(playerid, hash[])
  	mysql_tquery(g_pSQL, gstr2);
 }
 
-MySQL_CreateBan(PlayerName[], AdminName[], Reason[], lift=0)
+SQL_CreateBan(PlayerName[], AdminName[], Reason[], lift=0)
 {
 	new query[300], rescape[129], aescape[25], pescape[25];
 	mysql_escape_string(Reason, rescape, g_pSQL, 129);
@@ -3987,14 +3987,14 @@ MySQL_CreateBan(PlayerName[], AdminName[], Reason[], lift=0)
     mysql_tquery(g_pSQL, query, "", "");
 }
 
-MySQL_BanIP(const ip[])
+SQL_BanIP(const ip[])
 {
 	new query[100];
  	format(query, sizeof(query), "INSERT INTO `blacklist` VALUES (NULL, '%s', %i);", ip, gettime());
  	mysql_tquery(g_pSQL, query, "", "");
 }
 
-MySQL_SaveAccount(playerid)
+SQL_SaveAccount(playerid)
 {
     if(PlayerData[playerid][pORM] == ORM:-1) {
     	Log(LOG_PLAYER, "Crit: ORM -1 in SaveAccount %s, %i", __GetName(playerid), playerid);
@@ -4257,7 +4257,7 @@ function:OnPlayerNameChangeRequest(playerid, newname[])
 			format(gstr2, sizeof(gstr2), ""zwar" %s(%i) has changed their name to %s", oldname, playerid, newname);
 			SCMToAll(-1, gstr2);
 
-			MySQL_SaveAccount(playerid);
+			SQL_SaveAccount(playerid);
         }
         else
         {
@@ -4386,8 +4386,8 @@ function:OnOfflineBanAttempt2(playerid, ban[], reason[])
 	    new ip[16];
 		cache_get_row(0, 1, ip, g_pSQL, sizeof(ip));
 	    
-		MySQL_CreateBan(ban, __GetName(playerid), reason);
-		MySQL_BanIP(ip);
+		SQL_CreateBan(ban, __GetName(playerid), reason);
+		SQL_BanIP(ip);
 		
 		SCM(playerid, -1, ""er"Player has been banned!");
 	}
@@ -5199,8 +5199,8 @@ AutoLogin(playerid)
     PlayerData[playerid][bFirstSpawn] = true;
     PlayerData[playerid][iExitType] = EXIT_LOGGED;
     TogglePlayerSpectating(playerid, false);
-    MySQL_UpdateAccount(playerid);
-    MySQL_LoadAccount(playerid);
+    SQL_UpdateAccount(playerid);
+    SQL_LoadAccount(playerid);
 	return 1;
 }
 
