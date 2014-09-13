@@ -246,6 +246,7 @@ enum (+= 21)
 
 enum (+= 10)
 {
+    ACCOUNT_REQUEST_PRELOAD_ID,
 	ACCOUNT_REQUEST_BANNED,
 	ACCOUNT_REQUEST_IP_BANNED,
 	ACCOUNT_REQUEST_EXIST,
@@ -522,8 +523,8 @@ public OnPlayerConnect(playerid)
         player_init_session(playerid);
         ZMP_ShowLogo(playerid);
 		
-		mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT * FROM `bans` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
-		mysql_pquery(g_pSQL, gstr, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_BANNED);
+		mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT `id` FROM `accounts` WHERE `name` = '%e' LIMIT 1;" __GetName(playerid));
+		mysql_pquery(g_pSQL, gstr, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_PRELOAD_ID);
  	}
 	return 1;
 }
@@ -4397,6 +4398,22 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 
 	switch(request)
 	{
+	    case ACCOUNT_REQUEST_PRELOAD_ID:
+	    {
+	        if (cache_get_row_count() == 0)
+	        {
+	            // Account does not exist and therefore not banned
+	            
+	        }
+	        else
+	        {
+	            PlayerData[playerid][iAccountID] = cache_get_row_int(0, 0);
+
+				mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT * FROM `bans` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
+				mysql_pquery(g_pSQL, gstr, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_BANNED);
+	        }
+			return 1;
+	    }
 	    case ACCOUNT_REQUEST_BANNED:
 	    {
 	        if(cache_get_row_count() != 0)

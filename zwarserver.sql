@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: ::1
--- Generation Time: Sep 13, 2014 at 09:02 PM
+-- Generation Time: Sep 13, 2014 at 09:18 PM
 -- Server version: 5.5.37-MariaDB
 -- PHP Version: 5.4.16
 
@@ -60,13 +60,12 @@ CREATE TABLE IF NOT EXISTS `accounts` (
 --
 
 CREATE TABLE IF NOT EXISTS `bans` (
-`id` int(10) unsigned NOT NULL,
-  `player_id` int(10) unsigned NOT NULL,
+  `id` int(10) unsigned NOT NULL,
   `admin_id` int(10) unsigned NOT NULL,
   `reason` varchar(64) NOT NULL,
   `lift` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '0 = perm ban',
   `date` int(10) unsigned NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -143,7 +142,7 @@ ALTER TABLE `accounts`
 -- Indexes for table `bans`
 --
 ALTER TABLE `bans`
- ADD PRIMARY KEY (`id`), ADD UNIQUE KEY `name` (`player_id`);
+ ADD KEY `id` (`id`);
 
 --
 -- Indexes for table `blacklist`
@@ -179,11 +178,6 @@ ALTER TABLE `ncrecords`
 ALTER TABLE `accounts`
 MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
 --
--- AUTO_INCREMENT for table `bans`
---
-ALTER TABLE `bans`
-MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
---
 -- AUTO_INCREMENT for table `blacklist`
 --
 ALTER TABLE `blacklist`
@@ -196,6 +190,12 @@ MODIFY `id` mediumint(6) unsigned NOT NULL AUTO_INCREMENT;
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `bans`
+--
+ALTER TABLE `bans`
+ADD CONSTRAINT `bans_ibfk_1` FOREIGN KEY (`id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `loginlog`
