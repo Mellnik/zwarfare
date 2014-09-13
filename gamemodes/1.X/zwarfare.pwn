@@ -249,7 +249,6 @@ enum (+= 10)
     ACCOUNT_REQUEST_PRELOAD_ID,
 	ACCOUNT_REQUEST_BANNED,
 	ACCOUNT_REQUEST_IP_BANNED,
-	ACCOUNT_REQUEST_EXIST,
 	ACCOUNT_REQUEST_AUTO_LOGIN,
 	ACCOUNT_REQUST_VERIFY_REGISTER,
 	ACCOUNT_REQUEST_LOAD,
@@ -4403,64 +4402,87 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	        if (cache_get_row_count() == 0)
 	        {
 	            // Account does not exist and therefore not banned
-	            
+		        mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT * FROM `blacklist` WHERE `ip` = '%e' LIMIT 1;", __GetIP(playerid));
+		        mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_IP_BANNED + 1);
 	        }
 	        else
 	        {
 	            PlayerData[playerid][iAccountID] = cache_get_row_int(0, 0);
 
-				mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT * FROM `bans` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
+				mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT accounts.name, bans.reason, bans.lift, bans.date, UNIX_TIMESTAMP() FROM bans INNER JOIN accounts ON bans.admin_id = accounts.id WHERE bans.id = %i LIMIT 1;",
+							PlayerData[playerid][iAccountID]);
 				mysql_pquery(g_pSQL, gstr, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_BANNED);
 	        }
 			return 1;
 	    }
 	    case ACCOUNT_REQUEST_BANNED:
 	    {
-	        if(cache_get_row_count() != 0)
+	        if(cache_get_row_count() == 0)
+	        {
+	            // No admin account associated with the ban therefore not banned
+	            goto _continue;
+	        }
+	        else
 	        {
 	            new szAdmin[MAX_PLAYER_NAME + 1],
-	                szReason[128],
-	                u_iBanDate,
-	                iLift;
-
-	            cache_get_row(0, 2, szAdmin);
-	            cache_get_row(0, 3, szReason);
-				iLift = cache_get_row_int(0, 4);
-				u_iBanDate = cache_get_row_int(0, 5);
-
-				if(iLift == 0) // Player has a permanent ban
+					szReason[64 + 1],
+					iLift,
+					u_iDate,
+					u_iTime;
+					
+				cache_get_row(0, 0, szAdmin);
+				cache_get_row(0, 1, szReason);
+				iLift = cache_get_row_int(0, 2);
+				iDate = cache_get_row_int(0, 3);
+				u_iTime = cache_get_row_int(0, 4);
+				
+				if(iLift < u_iTime && iLift != 0)
 				{
-				    format(gstr2, sizeof(gstr2), ""red"You have been banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nDate: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", szAdmin, __GetName(playerid), szReason, UTConvert(u_iBanDate));
+					// The time ban expired, delete it from database and continue
+				    mysql_format(g_pSQL, gstr2, sizeof(gstr2), "DELETE FROM `bans` WHERE `id` = %i LIMIT 1;", PlayerData[playerid][iAccountID]);
+				    mysql_pquery(g_pSQL, gstr2);
+
+				    SCM(playerid, -1, ""zwar" Your time ban expired, you've been unbanned!");
+				    goto _continue;
+				}
+				else if(iLift != 0)
+				{
+				    format(gstr2, sizeof(gstr2), ""red"You have been time banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nBan Expires: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on "URL"",
+								szAdmin,
+								__GetName(playerid),
+								szReason,
+								UTConvert(iLift));
+								
 					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" :: Notice", gstr2, "OK", "");
 					KickEx(playerid);
 					return 1;
 				}
-				else if(iLift < gettime()) // Player is time banned, checking if ban ran out
+				else if(Lift == 0)
 				{
-				    mysql_format(g_pSQL, gstr2, sizeof(gstr2), "DELETE FROM `bans` WHERE `PlayerName` = '%e' LIMIT 1;", __GetName(playerid)); // Delete time ban
-				    mysql_pquery(g_pSQL, gstr2);
-
-				    SCM(playerid, -1, ""zwar" Your time ban expired, you've been unbanned!");
-				}
-				else
-				{
-				    format(gstr2, sizeof(gstr2), ""red"You have been time banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nExpires: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", szAdmin, __GetName(playerid), szReason, UTConvert(iLift));
+				    format(gstr2, sizeof(gstr2), ""red"You have been permanently banned!"white"\n\nAdmin: %s\nYour name: %s\nReason: %s\nDate: %s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on "URL"",
+								szAdmin,
+								__GetName(playerid),
+								szReason,
+								UTConvert(iDate));
+								
 					ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" :: Notice", gstr2, "OK", "");
 					KickEx(playerid);
 					return 1;
 				}
 	        }
-
+	        
+	        _continue:
 	        mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT * FROM `blacklist` WHERE `ip` = '%e' LIMIT 1;", __GetIP(playerid));
 	        mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_IP_BANNED);
 	        return 1;
 	    }
 	    case ACCOUNT_REQUEST_IP_BANNED:
 	    {
-            if(cache_get_row_count() == 0) // IP Address is not blacklisted
+            if(cache_get_row_count() == 0)
             {
-				mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT `id` FROM `accounts` WHERE `name` = '%e' LIMIT 1;", __GetName(playerid));
-				mysql_pquery(g_pSQL, gstr, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_EXIST); // Check if the account already exist
+                // IP Address is not blacklisted
+				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT `id` FROM `accounts` WHERE `id` = %i AND `ip` = '%s' LIMIT 1;", PlayerData[playerid][iAccountID], __GetIP(playerid));
+				mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_AUTO_LOGIN); // Check auto login
             }
             else
 			{
@@ -4469,23 +4491,23 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 			}
 	        return 1;
 	    }
-	    case ACCOUNT_REQUEST_EXIST:
-	    {
-		    if(cache_get_row_count() != 0) // acc exists
-		    {
-				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT `id` FROM `accounts` WHERE `name` = '%e' AND `ip` = '%s' LIMIT 1;", __GetName(playerid), __GetIP(playerid));
-				mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_AUTO_LOGIN); // Check auto login
-		    }
-		    else
-		    {
-		        // Create New Account
+		case ACCOUNT_REQUEST_IP_BANNED + 1:
+		{
+            if(cache_get_row_count() == 0)
+            {
+                // IP Address is not blacklisted
 				RequestRegistration(playerid);
 
 				InterpolateCameraPos(playerid, -2004.7083, 760.5217, 54.0513, -1999.1829, 921.1962, 56.4846, 50000, CAMERA_MOVE);
 				InterpolateCameraLookAt(playerid, -2004.4877, 759.5416, 53.9013, -1998.5679, 920.4014, 56.3046, 50000, CAMERA_MOVE);
-		    }
+            }
+            else
+			{
+	 		   	SCM(playerid, -1, ""server_sign" You have been banned.");
+       			KickEx(playerid);
+			}
 	        return 1;
-	    }
+		}
 	    case ACCOUNT_REQUEST_AUTO_LOGIN:
 	    {
 	        if(cache_get_row_count() > 0) // Account with IP found
