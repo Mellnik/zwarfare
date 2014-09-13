@@ -187,14 +187,18 @@ enum E_PLAYER_DATA
 	iKills,
 	iDeaths,
 	iAdminLevel,
-	iScore,
+	iMapper,
+	iEXP,
 	iMoney,
 	iTime,
 	iVIP,
+	iSkin,
 	iMedkits,
 	iCookies,
 	iLastLogin,
 	iLastNC,
+	iTimesKick,
+	iTimesLogin,
 	iRegisterDate,
 	
 	/* INTERNAL */
@@ -1905,7 +1909,7 @@ YCMD:stats(playerid, params[], help)
 	 		PlayerData[player1][iKills],
         	PlayerData[player1][iDeaths],
         	Float:PlayerData[player1][iKills] / Float:pDeaths,
-        	PlayerData[player1][iScore],
+        	PlayerData[player1][iEXP],
         	number_format(GetPlayerMoneyEx(player1)));
 
         format(string2, sizeof(string2), "Playing Time: %s\nVIP: %s\nMedkits: %i\nRegister Date: %s\nLast log in: %s",
@@ -3918,17 +3922,21 @@ AssembleORM(ORM:ormid, playerid)
 {
 	orm_addvar_int(ormid, PlayerData[playerid][iAccountID], "id");
 	orm_addvar_string(ormid, PlayerData[playerid][sName], MAX_PLAYER_NAME + 1, "name");
-	orm_addvar_int(ormid, PlayerData[playerid][iAdminLevel], "adminlevel");
-	orm_addvar_int(ormid, PlayerData[playerid][iScore], "score");
+	orm_addvar_int(ormid, PlayerData[playerid][iAdminLevel], "admin");
+	orm_addvar_int(ormid, PlayerData[playerid][iMapper], "mapper");
+	orm_addvar_int(ormid, PlayerData[playerid][iEXP], "exp");
 	orm_addvar_int(ormid, PlayerData[playerid][iMoney], "money");
 	orm_addvar_int(ormid, PlayerData[playerid][iKills], "kills");
 	orm_addvar_int(ormid, PlayerData[playerid][iDeaths], "deaths");
 	orm_addvar_int(ormid, PlayerData[playerid][iTime], "time");
 	orm_addvar_int(ormid, PlayerData[playerid][iVIP], "vip");
+	orm_addvar_int(ormid, PlayerData[playerid][iSkin], "skin");
 	orm_addvar_int(ormid, PlayerData[playerid][iCookies], "cookies");
 	orm_addvar_int(ormid, PlayerData[playerid][iMedkits], "medkits");
 	orm_addvar_int(ormid, PlayerData[playerid][iLastNC], "lastnc");
 	orm_addvar_int(ormid, PlayerData[playerid][iLastLogin], "lastlogin");
+	orm_addvar_int(ormid, PlayerData[playerid][iTimesKick], "timeskick");
+	orm_addvar_int(ormid, PlayerData[playerid][iTimesLogin], "timeslogin");
 	orm_addvar_int(ormid, PlayerData[playerid][iRegisterDate], "regdate");
 }
 
@@ -4543,7 +4551,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 				orm_apply_cache(ormid, 0);
 
 			 	SetPlayerMoneyEx(playerid, PlayerData[playerid][iMoney]);
-			 	SetPlayerScore(playerid, PlayerData[playerid][iScore]);
+			 	SetPlayerScore(playerid, PlayerData[playerid][iEXP]);
 			 	PlayerData[playerid][iConnectTime] = gettime();
 
 				if(PlayerData[playerid][iAdminLevel] > 0)
@@ -4890,7 +4898,7 @@ GetUptime()
 ZMP_PlayerStatsUpdate(playerid)
 {
 	format(gstr2, sizeof(gstr2), "~w~Score: %i~n~Money: $%s~n~Kills: %i~n~Deaths: %i~n~K/D: %.2f",
-	    PlayerData[playerid][iScore],
+	    PlayerData[playerid][iEXP],
 	    number_format(PlayerData[playerid][iMoney]),
 	    PlayerData[playerid][iKills],
 	    PlayerData[playerid][iDeaths],
@@ -5254,8 +5262,8 @@ GivePlayerScoreEx(playerid, amount, bool:populate = true)
 {
     if(playerid == INVALID_PLAYER_ID) return 1;
 
-    PlayerData[playerid][iScore] += amount;
-	SetPlayerScore(playerid, PlayerData[playerid][iScore]);
+    PlayerData[playerid][iEXP] += amount;
+	SetPlayerScore(playerid, PlayerData[playerid][iEXP]);
 
     ZMP_PlayerStatsUpdate(playerid);
 
@@ -5282,8 +5290,8 @@ SetPlayerScoreEx(playerid, amount)
     if(playerid == INVALID_PLAYER_ID) 
 		return -1;
 		
-	PlayerData[playerid][iScore] = amount;
-    SetPlayerScore(playerid, PlayerData[playerid][iScore]);
+	PlayerData[playerid][iEXP] = amount;
+    SetPlayerScore(playerid, PlayerData[playerid][iEXP]);
     ZMP_PlayerStatsUpdate(playerid);
 	return 1;
 }
@@ -5293,7 +5301,7 @@ GetPlayerScoreEx(playerid)
     if(playerid == INVALID_PLAYER_ID) 
 		return -1;
 		
-	return PlayerData[playerid][iScore];
+	return PlayerData[playerid][iEXP];
 }
 
 GetPlayingTimeFormat(playerid)
@@ -5607,7 +5615,7 @@ ResetPlayerVars(playerid)
 	PlayerData[playerid][iDeaths] = 0;
 	PlayerData[playerid][bIsDead] = false;
 	PlayerData[playerid][bLoadMap] = false;
-    PlayerData[playerid][iScore] = 0;
+    PlayerData[playerid][iEXP] = 0;
     PlayerData[playerid][iAdminLevel] = 0;
     PlayerData[playerid][iMoney] = 0;
     PlayerData[playerid][iTime] = 0;
