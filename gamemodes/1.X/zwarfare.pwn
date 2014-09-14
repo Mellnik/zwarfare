@@ -416,11 +416,11 @@ static const g_szRandomServerMessages[9][] =
 {
 	""yellow_e"- Server - "grey"Visit our site: "FANCY_URL"",
 	""yellow_e"- Server - "grey"View /help and /cmds for more information",
-	""yellow_e"- Server - "grey"Join our forums! zwarfare.com",
-	""yellow_e"- Server - "grey"Get VIP (/vip) today! "URL"/samp-vip",
+	""yellow_e"- Server - "grey"Join our forums! "FANCY_URL"",
+	""yellow_e"- Server - "grey"Get VIP (/vip) today! "URL"/vip",
 	""yellow_e"- Server - "grey"Saw a cheater? Use /report and don't write in chat",
 	""yellow_e"- Server - "grey"Please follow the /rules",
-	""yellow_e"- Server - "grey"View changelogs on our forums zwarfare.com",
+	""yellow_e"- Server - "grey"View changelogs on our forums "URL"",
 	""yellow_e"- Server - "grey"Get VIP now (/vip). Constantly updating.",
 	""yellow_e"- Server - "grey"Welcome on Zombie Multiplayer "VERSION""
 };
@@ -1493,11 +1493,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					}
 					case 4:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 5, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"I found a bug/glitch where can I report it?\n\nPlease report them on our forums zwarfare.com", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 5, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"I found a bug/glitch where can I report it?\n\nPlease report them on our forums "URL", "OK", "Back");
 					}
 					case 5:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 6, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"I have more questions!\n\nFeel free to join our forums for questions zwarfare.com", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 6, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"I have more questions!\n\nFeel free to join our forums for questions "URL"", "OK", "Back");
 					}
 					case 6:
 					{
@@ -2881,7 +2881,7 @@ YCMD:ban(playerid, params[], help)
 				SCMToAll(YELLOW, string);
 				print(string);
 
-	    		format(string, sizeof(string), ""red"You have been banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", __GetName(playerid), reason);
+	    		format(string, sizeof(string), ""red"You have been banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on "URL"", __GetName(playerid), reason);
 	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Notice", string, "OK", "");
 	    		KickEx(player);
 
@@ -2969,7 +2969,7 @@ YCMD:tban(playerid, params[], help)
 				SCMToAll(YELLOW, string);
 				print(string);
 
-	    		format(string, sizeof(string), ""red"You have been time banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\nExpires:\t\t%s\nIf you think that you have been banned wrongly,\nwrite a ban appeal on zwarfare.com", __GetName(playerid), reason, UTConvert(gettime() + (mins * 60)));
+	    		format(string, sizeof(string), ""red"You have been time banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\nExpires:\t\t%s\nIf you think that you have been banned wrongly,\nwrite a ban appeal on "URL"", __GetName(playerid), reason, UTConvert(gettime() + (mins * 60)));
 	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Notice", string, "OK", "");
 	    		KickEx(player);
 
@@ -4191,7 +4191,7 @@ function:ProcessTick()
 	if(g_GlobalStatus != e_Status_Inactive)
 	{
 		new string[64];
-		format(string, sizeof(string), "(%i|%i) ZombieMPSurvivalFunHorror", ZMP_GetZombies(), ZMP_GetHumans());
+		format(string, sizeof(string), "(%i|%i) ZombieSurvivalFunHorror", ZMP_GetZombies(), ZMP_GetHumans());
 		SetGameModeText(string);
 	}
 	
@@ -4672,8 +4672,8 @@ server_initialize()
 	format(gstr, sizeof(gstr), "hostname %s", HOSTNAME);
 	SendRconCommand(gstr);
 	SendRconCommand("weburl "URL"");
-    SetGameModeText("(-|-) ZombieMPSurvivalFunHorror");
-	SendRconCommand("mapname ZombieMPSurvivalFunHorror");
+    SetGameModeText("(-|-) ZombieSurvivalFunHorror");
+	SendRconCommand("mapname ZombieSurvivalFunHorror");
 	
 	FuckOffGayAssFaggotNigger();
     EnableVehicleFriendlyFire();
@@ -5423,7 +5423,7 @@ server_load_textdraws()
 	TextDrawSetProportional(txtZMPLogo[0], 1);
 	TextDrawSetSelectable(txtZMPLogo[0], 0);
 
-	txtZMPLogo[1] = TextDrawCreate(324.000000, 99.000000, "zombie~r~~h~~h~mp~w~.com");
+	txtZMPLogo[1] = TextDrawCreate(324.000000, 99.000000, "zombie~r~~h~~h~warfare~w~.com");
 	TextDrawBackgroundColor(txtZMPLogo[1], 255);
 	TextDrawFont(txtZMPLogo[1], 1);
 	TextDrawLetterSize(txtZMPLogo[1], 0.299999, 1.699999);
@@ -5441,7 +5441,7 @@ server_load_textdraws()
 	TextDrawSetProportional(txtZMPLogo[2], 1);
 	TextDrawSetSelectable(txtZMPLogo[2], 0);
 
-	txtHealthOverlay = TextDrawCreate(546.000000, 67.000000, "~w~Zombie~r~~h~~h~MP~w~.com");
+	txtHealthOverlay = TextDrawCreate(546.000000, 67.000000, "~w~Zombie~r~~h~~h~warfare~w~.com");
 	TextDrawBackgroundColor(txtHealthOverlay, 255);
 	TextDrawFont(txtHealthOverlay, 1);
 	TextDrawLetterSize(txtHealthOverlay, 0.240000, 0.799999);
