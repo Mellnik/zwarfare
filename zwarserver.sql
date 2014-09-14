@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: ::1
--- Generation Time: Sep 13, 2014 at 09:56 PM
+-- Generation Time: Sep 14, 2014 at 05:37 PM
 -- Server version: 5.5.37-MariaDB
 -- PHP Version: 5.4.16
 
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   `name` varchar(24) NOT NULL,
   `ip` varchar(16) NOT NULL,
   `email` varchar(30) NOT NULL,
-  `version` varchar(20) NOT NULL,
+  `version` varchar(20) NOT NULL DEFAULT 'notset',
   `serial` varchar(64) NOT NULL,
   `hash` varchar(128) NOT NULL,
   `salt` varchar(32) NOT NULL,
@@ -50,7 +50,8 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   `lastlogin` int(10) unsigned NOT NULL,
   `regdate` int(10) unsigned NOT NULL,
   `timeskick` int(10) unsigned NOT NULL,
-  `timeslogin` int(10) unsigned NOT NULL
+  `timeslogin` int(10) unsigned NOT NULL,
+  `signed` tinyint(1) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- --------------------------------------------------------
@@ -77,6 +78,22 @@ CREATE TABLE IF NOT EXISTS `blacklist` (
 `id` int(10) unsigned NOT NULL,
   `ip` varchar(16) NOT NULL,
   `admin_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '0 = not directly banned by an admin in a ban command',
+  `date` int(10) unsigned NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `fractions`
+--
+
+CREATE TABLE IF NOT EXISTS `fractions` (
+`id` int(10) unsigned NOT NULL,
+  `fname` varchar(22) NOT NULL,
+  `ftag` varchar(4) NOT NULL,
+  `fhead` int(10) unsigned NOT NULL,
+  `fscore` int(10) unsigned NOT NULL,
+  `fcolor` int(10) NOT NULL,
   `date` int(10) unsigned NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
@@ -151,6 +168,12 @@ ALTER TABLE `blacklist`
  ADD PRIMARY KEY (`id`), ADD UNIQUE KEY `ip` (`ip`);
 
 --
+-- Indexes for table `fractions`
+--
+ALTER TABLE `fractions`
+ ADD PRIMARY KEY (`id`), ADD UNIQUE KEY `fname` (`fname`);
+
+--
 -- Indexes for table `loginlog`
 --
 ALTER TABLE `loginlog`
@@ -181,6 +204,11 @@ MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
 -- AUTO_INCREMENT for table `blacklist`
 --
 ALTER TABLE `blacklist`
+MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
+--
+-- AUTO_INCREMENT for table `fractions`
+--
+ALTER TABLE `fractions`
 MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
 --
 -- AUTO_INCREMENT for table `maps`
