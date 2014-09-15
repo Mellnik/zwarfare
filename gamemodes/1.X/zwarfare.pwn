@@ -28,6 +28,7 @@
 #pragma dynamic 8192        	// Required for md-sort
 
 #define IS_RELEASE_BUILD (true)
+#define RUS_BUILD (false)
 #define _YSI_NO_VERSION_CHECK
 #define YSI_IS_SERVER
 
@@ -39,6 +40,7 @@
 #include <YSI\y_commands>
 #include <YSI\y_master>
 #include <YSI\y_stringhash>
+#include <progress2>
 #include <sscanf2>
 #include <streamer>
 #include <a_mysql_R38>
@@ -57,7 +59,11 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define VERSION                         "1.0.0"
 #define URL                     		"www.zwarfare.com"
 #define FANCY_URL                       "www.Zwarfare.com"
-#define HOSTNAME                        "« "ZWAR_NAME" "VERSION" (0.3z) »"
+#ifdef RUS_BUILD
+#define HOSTNAME                        "[RUS] « "ZWAR_NAME" v"VERSION" (0.3z) »"
+#else
+#define HOSTNAME                        "[ENG] « "ZWAR_NAME" v"VERSION" (0.3z) »"
+#endif
 #define ZWAR_NAME              			"Zombie Warfare"
 #define ZWAR_SHORT              		"ZWAR"
 #define zwar                            "{FFFFFF}[{969696}ZWAR{FFFFFF}]"
@@ -117,7 +123,7 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define er                      		"{F42626}[INFO] {D2D2D2}"
 #define NO_PERM                     	"{F42626}[INFO] {D2D2D2}Insufficient Permissions"
 #define dl                              "{969696}• {F0F0F0}"
-#define NOT_AVAIL                       "{2DFF00}Info: {D2D2D2}You can´t use this command now!"
+#define NOT_AVAIL                       "{2DFF00}Info: {D2D2D2}You can't use this command now!"
 #define SEMI_TRANS                      (0x0A0A0A55)
 #define SEMI_WHITE                      (0xFEFEFEC3)
 #define PURPLE                  		(0x7800FF85)
@@ -1558,7 +1564,7 @@ public OnPlayerCommandReceived(playerid, cmdtext[])
 {
 	if(PlayerData[playerid][bIsDead])
 	{
-	    SCM(playerid, -1, ""er"You can´t use commands while being dead!");
+	    SCM(playerid, -1, ""er"You can't use commands while being dead!");
 	    return 0;
 	}
 	if(PlayerData[playerid][iExitType] != EXIT_FIRST_SPAWNED)
@@ -1568,7 +1574,7 @@ public OnPlayerCommandReceived(playerid, cmdtext[])
 	}
 	if(PlayerData[playerid][bLoadMap])
 	{
-	    SCM(playerid, -1, ""er"You can´t use commands now!");
+	    SCM(playerid, -1, ""er"You can't use commands now!");
 	    return 0;
 	}
 
@@ -3575,9 +3581,8 @@ YCMD:ping(playerid, params[], help)
     if(player == INVALID_PLAYER_ID) return SCM(playerid, -1, ""er"Invalid player!");
 	if(!IsPlayerConnected(player)) return SCM(playerid, -1, ""er"Player not connected!");
 
-	new string[128];
-	format(string, sizeof(string), ""green" %s´s(%i) ping is %i", __GetName(player), player, GetPlayerPing(player));
-	SCM(playerid, -1, string);
+	format(gstr, sizeof(gstr), ""green" %s's(%i) ping is %i", __GetName(player), player, GetPlayerPing(player));
+	SCM(playerid, -1, gstr);
 	return 1;
 }
 
@@ -3801,7 +3806,7 @@ YCMD:pm(playerid, params[], help)
 	}
 	if(player == playerid)
 	{
-	    return SCM(playerid, -1, ""er"You can´t pm yourself");
+	    return SCM(playerid, -1, ""er"You can't pm yourself");
 	}
 	
 	format(finmsg, sizeof(finmsg), "***[PM] from %s(%i): %s", __GetName(playerid), playerid, msg);
