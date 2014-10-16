@@ -19,7 +19,7 @@ There can still be version numbers greater than 9 like 3.14.2 etc.
 
 # Compiler setup
 
-For release/live builds we're using "-O1 -d0" as compiler parameters. For debug builds "-d3".
+For release/live builds use "-O1 -d0" as compiler parameters. For debug builds "-d3".
 
 # Layout
 
@@ -32,4 +32,4 @@ Script layout:
 4. global variables
 5. samp callbacks
 6. custom callbacks/public functions
-7. naked/stock functions
+7. naked functions
