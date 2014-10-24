@@ -1,9 +1,9 @@
 -- phpMyAdmin SQL Dump
--- version 4.2.7.1
+-- version 4.2.10
 -- http://www.phpmyadmin.net
 --
 -- Host: ::1
--- Generation Time: Sep 14, 2014 at 05:37 PM
+-- Generation Time: Oct 24, 2014 at 09:03 PM
 -- Server version: 5.5.37-MariaDB
 -- PHP Version: 5.4.16
 
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `accounts` (
 `id` int(10) unsigned NOT NULL,
   `name` varchar(24) NOT NULL,
   `ip` varchar(16) NOT NULL,
-  `email` varchar(30) NOT NULL,
+  `email` varchar(30) NOT NULL DEFAULT 'notset',
   `version` varchar(20) NOT NULL DEFAULT 'notset',
   `serial` varchar(64) NOT NULL,
   `hash` varchar(128) NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   `timeskick` int(10) unsigned NOT NULL,
   `timeslogin` int(10) unsigned NOT NULL,
   `signed` tinyint(1) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS `blacklist` (
   `ip` varchar(16) NOT NULL,
   `admin_id` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '0 = not directly banned by an admin in a ban command',
   `date` int(10) unsigned NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS `fractions` (
   `fscore` int(10) unsigned NOT NULL,
   `fcolor` int(10) NOT NULL,
   `date` int(10) unsigned NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -130,8 +130,9 @@ CREATE TABLE IF NOT EXISTS `maps` (
   `shopy` float(14,4) NOT NULL,
   `shopz` float(14,4) NOT NULL,
   `timesplayed` int(10) unsigned NOT NULL,
-  `preload` tinyint(1) unsigned NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+  `preload` tinyint(1) unsigned NOT NULL,
+  `world` int(10) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -143,6 +144,20 @@ CREATE TABLE IF NOT EXISTS `ncrecords` (
   `id` int(10) unsigned NOT NULL,
   `newname` varchar(24) NOT NULL,
   `date` int(10) unsigned NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `reports`
+--
+
+CREATE TABLE IF NOT EXISTS `reports` (
+  `id` int(10) unsigned NOT NULL,
+  `reported_id` int(10) unsigned NOT NULL,
+  `playerid` smallint(6) NOT NULL,
+  `reason` varchar(64) NOT NULL,
+  `date` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -192,6 +207,12 @@ ALTER TABLE `ncrecords`
  ADD KEY `id` (`id`);
 
 --
+-- Indexes for table `reports`
+--
+ALTER TABLE `reports`
+ ADD KEY `id` (`id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -236,6 +257,12 @@ ADD CONSTRAINT `loginlog_ibfk_1` FOREIGN KEY (`id`) REFERENCES `accounts` (`id`)
 --
 ALTER TABLE `ncrecords`
 ADD CONSTRAINT `ncrecords_ibfk_1` FOREIGN KEY (`id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `reports`
+--
+ALTER TABLE `reports`
+ADD CONSTRAINT `reports_ibfk_1` FOREIGN KEY (`id`) REFERENCES `accounts` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
