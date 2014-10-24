@@ -23,6 +23,8 @@
 || Script limits:
 || Maximum maps: 20 (MAX_MAPS)
 ||
+||
+|| Prefixes: i = Integer, s = String, b = bool, f = Float, p = Pointer, t3d = 3DTextLabel, g_ = Global, g = game, tick = tickcount, t = Timer, bw = bitwise
 */
 
 #pragma dynamic 8192        	// Required for md-sort
@@ -58,7 +60,7 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 // Server
 #define VERSION                         "1.0.0"
 #define URL                     		"www.zwarfare.com"
-#define FANCY_URL                       "www.Zwarfare.com"
+#define FANCY_URL                       "www.zwarfare.com"
 #ifdef RUS_BUILD
 #define HOSTNAME                        "[RUS] « "ZWAR_NAME" v"VERSION" (0.3z) »"
 #else
@@ -188,7 +190,7 @@ enum E_PLAYER_DATA
 	ORM:pORM,
 
 	/* ACCOUNT */
-    iAccountID, // Prefixes: i = Integer, s = String, b = bool, f = Float, p = Pointer, t3d = 3DTextLabel, g_ = Global, tick = tickcounts, t = Timer, bw = bitwise
+    iAccountID,
 	sName[MAX_PLAYER_NAME + 1],
 	sIP[MAX_PLAYER_IP + 1],
 	iKills,
@@ -428,7 +430,7 @@ static const g_szRandomServerMessages[9][] =
 	""yellow_e"- Server - "grey"Please follow the /rules",
 	""yellow_e"- Server - "grey"View changelogs on our forums "URL"",
 	""yellow_e"- Server - "grey"Get VIP now (/vip). Constantly updating.",
-	""yellow_e"- Server - "grey"Welcome on Zombie Multiplayer "VERSION""
+	""yellow_e"- Server - "grey"Welcome on Zombie Warfare "VERSION""
 };
 
 main()
@@ -5188,7 +5190,7 @@ trans(col)
 RequestRegistration(playerid)
 {
     format(gstr, sizeof(gstr), ""zwar" Registration - %s", __GetName(playerid));
-	format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"white" to Zombie "red"Multiplayer"white"!\n\nEnter a password for your new account below:", __GetName(playerid));
+	format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"white" to Zombie "red"Warfare"white"!\n\nEnter a password for your new account below:", __GetName(playerid));
 	ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, gstr, gstr2, "Register", "");
 	return 1;
 }
@@ -5207,7 +5209,7 @@ AutoLogin(playerid)
 RequestLogin(playerid)
 {
     format(gstr, sizeof(gstr), ""zwar" Login - %s", __GetName(playerid));
-    format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"white" to "blue"Zombie Multiplayer"white"!\n\nThe name you are using is registered! Please enter the password:", __GetName(playerid));
+    format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"white" to "blue"Zombie Warfare"white"!\n\nThe name you are using is registered! Please enter the password:", __GetName(playerid));
 	ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, gstr, gstr2, "Login", "");
     return 1;
 }
@@ -5419,7 +5421,7 @@ ZMP_HideLogo(playerid)
 
 server_load_textdraws()
 {
-	txtZMPLogo[0] = TextDrawCreate(231.000000, 85.000000, "Zombie~n~   ~r~~h~~h~Multiplayer");
+	txtZMPLogo[0] = TextDrawCreate(231.000000, 85.000000, "Zombie~n~   ~r~~h~~h~Warfare");
 	TextDrawBackgroundColor(txtZMPLogo[0], 255);
 	TextDrawFont(txtZMPLogo[0], 0);
 	TextDrawLetterSize(txtZMPLogo[0], 0.959999, 3.899998);
