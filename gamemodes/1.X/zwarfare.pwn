@@ -24,6 +24,8 @@
 || Maximum maps: 20 (MAX_MAPS)
 ||
 ||
+|| Notes:
+|| maybe remove ZMP_SyncPlayer in future? (global weather being set before)
 || Prefixes: i = Integer, s = String, b = bool, f = Float, p = Pointer, t3d = 3DTextLabel, g_ = Global, g = game, tick = tickcount, t = Timer, bw = bitwise
 */
 
@@ -4632,7 +4634,8 @@ function:OnMapDataLoad()
 	    g_Maps[i][e_shop_z] = cache_get_row_float(i, 11);
 	    g_Maps[i][e_times_played] = cache_get_row_int(i, 12);
 	    g_Maps[i][e_require_preload] = cache_get_row_int(i, 13);
-	    cache_get_row(i, 14, g_Maps[i][e_author], g_pSQL, MAX_PLAYER_NAME + 1);
+		g_Maps[i][e_world] = cache_get_row_int(i, 14);
+	    cache_get_row(i, 15, g_Maps[i][e_author], g_pSQL, MAX_PLAYER_NAME + 1);
 	}
 	Log(LOG_ONLINE, "Retrieved %i maps", cache_get_row_count());
 	return 1;
@@ -4742,9 +4745,7 @@ LoadMap(playerid)
 		TogglePlayerControllable(playerid, false);
 		TextDrawShowForPlayer(playerid, txtLoading);
 
-		new ping = GetPlayerPing(playerid);
-
-		switch(ping)
+		switch(GetPlayerPing(playerid))
 		{
 			case 0..50:
 			{
@@ -5101,7 +5102,10 @@ ZMP_BeginNewGame()
 	format(gstr, sizeof(gstr), ""zwar" "green"Starting new round! Map: %s", g_Maps[g_CurrentMap][e_mapname]);
 	SCMToAll(-1, gstr);
 
-	g_World = random_int(10000, 100000);
+	if(g_Maps[g_CurrentMap][e_world] == 0)
+		g_World = random_int(1000, 100000);
+	else
+		g_World = g_Maps[g_CurrentMap][e_world];
 
 	new count = 0;
 	for(new i = 0; i < MAX_PLAYERS; i++)
@@ -5111,7 +5115,6 @@ ZMP_BeginNewGame()
 		    ZMP_SetPlayerHuman(i);
             ZMP_SyncPlayer(i);
 
-            PlayAudio(i, "http://zwarfare.com/rs.mp3");
 			LoadMap(i);
 			
             count++;
@@ -5459,7 +5462,7 @@ server_load_textdraws()
 
 server_fetch_mapdata()
 {
-	mysql_tquery(g_pSQL, "SELECT `maps`.*, `accounts`.`name` FROM `maps` INNER JOIN `accounts` ON `maps`.`author` = `accounts`.`id` LIMIT "MAX_MAPS_STRING";", "OnMapDataLoad");
+	mysql_tquery(g_pSQL, "SELECT `maps`.*, `accounts`.`name` FROM `maps` INNER JOIN `accounts` ON `accounts`.`author` = `maps`.`id` LIMIT "MAX_MAPS_STRING";", "OnMapDataLoad");
 }
 
 Map_Load(index)
