@@ -211,6 +211,7 @@ enum E_PLAYER_DATA
 	iRegisterDate,
 	
 	/* INTERNAL */
+	iLastPM,
 	iWarnings,
 	iConnectTime,
 	iTimesHit,
@@ -313,7 +314,8 @@ enum E_MAP_DATA
 	Float:e_shop_y,
 	Float:e_shop_z,
 	e_times_played,
-	e_require_preload
+	e_require_preload,
+	e_world
 };
 
 enum
@@ -429,7 +431,7 @@ static const g_szRandomServerMessages[9][] =
 	""yellow_e"- Server - "grey"Saw a cheater? Use /report and don't write in chat",
 	""yellow_e"- Server - "grey"Please follow the /rules",
 	""yellow_e"- Server - "grey"View changelogs on our forums "URL"",
-	""yellow_e"- Server - "grey"Get VIP now (/vip). Constantly updating.",
+	""yellow_e"- Server - "grey"Great VIP features are waiting for you (/vip). Constantly updating.",
 	""yellow_e"- Server - "grey"Welcome on Zombie Warfare "VERSION""
 };
 
@@ -3783,7 +3785,7 @@ YCMD:pm(playerid, params[], help)
 	    return 0;
 	}
 	
-	new player, msg[144], finmsg[144];
+	new player, msg[144];
 	if(sscanf(params, "rs[144]", player, msg))
 	{
 		return SCM(playerid, YELLOW, "Usage: /pm <playerid> <message>");
@@ -3811,25 +3813,25 @@ YCMD:pm(playerid, params[], help)
 	    return SCM(playerid, -1, ""er"You can't pm yourself");
 	}
 	
-	format(finmsg, sizeof(finmsg), "***[PM] from %s(%i): %s", __GetName(playerid), playerid, msg);
-    SCM(player, YELLOW, finmsg);
-	format(finmsg, sizeof(finmsg), ">>>[PM] to %s(%i): %s", __GetName(player), player, msg);
-	SCM(playerid, YELLOW, finmsg);
-	SetPVarInt(player, "LastID", playerid);
+	format(gstr, sizeof(gstr), "***[PM] from %s(%i): %s", __GetName(playerid), playerid, msg);
+    SCM(player, YELLOW, gstr);
+	format(gstr, sizeof(gstr), ">>>[PM] to %s(%i): %s", __GetName(player), player, msg);
+	SCM(playerid, YELLOW, gstr);
+	PlayerData[player][iLastPM] = playerid;
 	
 	PlaySound(playerid, 1057);
 	PlaySound(player, 1057);
 	
-	format(finmsg, sizeof(finmsg), "[PM] from %s(%i) to %s(%i): %s", __GetName(playerid), playerid, __GetName(player), player, msg);
-	broadcast_admin(GREY, finmsg);
+	format(gstr, sizeof(gstr), "[PM] from %s(%i) to %s(%i): %s", __GetName(playerid), playerid, __GetName(player), player, msg);
+	broadcast_admin(GREY, gstr);
 	return 1;
 }
 
 YCMD:r(playerid, params[], help)
 {
-    if(GetPVarInt(playerid, "LastID") == -1)
+    if(PlayerData[player][iLastPM] == INVALID_PLAYER_ID)
 	{
-		return SCM(playerid, -1, ""er"Noone has send you a message yet");
+		return SCM(playerid, -1, ""er"Nobody has send you a message yet");
 	}
 
 	extract params -> new string:msg[128]; else
@@ -3839,33 +3841,29 @@ YCMD:r(playerid, params[], help)
 
 	if(IsAd(msg))
 	{
-		new string[255];
-	  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, msg, __GetIP(playerid));
-		broadcast_admin(RED, string);
+	  	format(gstr, sizeof(gstr), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, msg, __GetIP(playerid));
+		broadcast_admin(RED, gstr);
 
         SCM(playerid, RED, "Advertising is not allowed!");
         return 1;
 	}
 
-    new finmsg[144];
-
-	new lID = GetPVarInt(playerid, "LastID");
-	if(!IsPlayerAvail(lID))
+	if(!IsPlayerAvail(PlayerData[player][iLastPM]))
 	{
 		return SCM(playerid, -1, ""er"Player is not connected!");
 	}
 
-	format(finmsg, sizeof(finmsg), "***[PM] from %s(%i): %s", __GetName(playerid), playerid, msg);
-    SCM(lID, YELLOW, finmsg);
-	format(finmsg, sizeof(finmsg), ">>>[PM] to %s(%i): %s", __GetName(lID), lID, msg);
-	SCM(playerid, YELLOW, finmsg);
-	SetPVarInt(lID, "LastID", playerid);
+	format(gstr, sizeof(gstr), "***[PM] from %s(%i): %s", __GetName(playerid), playerid, msg);
+    SCM(PlayerData[player][iLastPM], YELLOW, gstr);
+	format(gstr, sizeof(gstr), ">>>[PM] to %s(%i): %s", __GetName(PlayerData[player][iLastPM]), PlayerData[player][iLastPM], msg);
+	SCM(playerid, YELLOW, gstr);
+	PlayerData[player][iLastPM] = playerid;
 
 	PlaySound(playerid, 1057);
-	PlaySound(lID, 1057);
+	PlaySound(PlayerData[player][iLastPM], 1057);
 
-	format(finmsg, sizeof(finmsg), ""grey"[PM] from %s(%i) to %s(%i): %s", __GetName(playerid), playerid, __GetName(lID), lID, msg);
-	broadcast_admin(GREY, finmsg);
+	format(gstr, sizeof(gstr), ""grey"[PM] from %s(%i) to %s(%i): %s", __GetName(playerid), playerid, __GetName(PlayerData[player][iLastPM]), PlayerData[player][iLastPM], msg);
+	broadcast_admin(GREY, gstr);
 	return 1;
 }
 
@@ -5645,7 +5643,7 @@ ResetPlayerVars(playerid)
 	PlayerData[playerid][tMedkit] = INVALID_TIMER;
 	PlayerData[playerid][tMute] = INVALID_TIMER;
 	PlayerData[playerid][iTimesHit] = 0;
-	SetPVarInt(playerid, "LastID", -1);
+	PlayerData[playerid][iLastPM] = INVALID_PLAYER_ID;
 	g_bPlayerHit[playerid] = false;
 	PlayerData[playerid][gSpecialZed] = zedZOMBIE;
 
