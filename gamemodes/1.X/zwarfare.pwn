@@ -532,7 +532,7 @@ public OnPlayerConnect(playerid)
 	}
 	else
 	{
-        PlayAudioStreamForPlayer(playerid, "http://files.horzine.net/zwarfare.mp3");
+        PlayAudioStreamForPlayer(playerid, "http://s.utnet.net/z/zw.mp3");
 		TogglePlayerSpectating(playerid, true);
 
         player_init_session(playerid);
@@ -4410,7 +4410,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 		return 0;
 
 	if(YHash(__GetName(playerid)) != namehash) {
-	    Log(LOG_NET, "OnPlayerAccountRequest data race detected, kicking (%s, %i, %i, %i)", __GetName(playerid), playerid, YHash(__GetName(playerid)), namehash);
+	    Log(LOG_NET, "OnPlayerAccountRequest data race detected, kicking (%s, %i, %i, %i, req:%i)", __GetName(playerid), playerid, YHash(__GetName(playerid)), namehash, request);
 	    Kick(playerid);
 		return 0;
 	}
@@ -4421,7 +4421,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	    {
 	        if (cache_get_row_count() == 0)
 	        {
-	            // Account does not exist and therefore not banned
+	            // Account does not exist and therefore not banned but might their IP
 		        mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT * FROM `blacklist` WHERE `ip` = '%e' LIMIT 1;", __GetIP(playerid));
 		        mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_IP_BANNED + 1);
 	        }
@@ -4429,7 +4429,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	        {
 	            PlayerData[playerid][iAccountID] = cache_get_row_int(0, 0);
 
-				mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT accounts.name, bans.reason, bans.lift, bans.date, UNIX_TIMESTAMP() FROM bans INNER JOIN accounts ON bans.admin_id = accounts.id WHERE bans.id = %i LIMIT 1;",
+				mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT accounts.name, bans.reason, bans.lift, bans.date, UNIX_TIMESTAMP() FROM bans INNER JOIN accounts ON accounts.admin_id = bans.id WHERE bans.id = %i LIMIT 1;",
 							PlayerData[playerid][iAccountID]);
 				mysql_pquery(g_pSQL, gstr, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_BANNED);
 	        }
@@ -4439,7 +4439,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	    {
 	        if(cache_get_row_count() == 0)
 	        {
-	            // No admin account associated with the ban therefore not banned
+	            // No ban row associated with the account therefore not banned
 	            goto _continue;
 	        }
 	        else
@@ -4535,7 +4535,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	            // Auto Login
 				AutoLogin(playerid);
 	        }
-	        else // ip on account is not the same as current connection
+	        else // IP on account is not the same as current connection
 	        {
 	            // Login Dialog
 	            RequestLogin(playerid);
