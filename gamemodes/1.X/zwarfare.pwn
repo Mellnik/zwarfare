@@ -583,9 +583,8 @@ public OnPlayerDisconnect(playerid, reason)
 			        KillTimer(tRescue);
 			        KillTimer(tInfestation);
 
-			        new str[144];
-			        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
-			        SCMToAll(-1, str);
+			        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+			        SCMToAll(-1, gstr);
 				}
 			}
         }
@@ -614,9 +613,8 @@ public OnPlayerDisconnect(playerid, reason)
 			        KillTimer(tRescue);
 			        KillTimer(tInfestation);
 
-			        new str[144];
-			        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
-			        SCMToAll(-1, str);
+			        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+			        SCMToAll(-1, gstr);
 				}
 	            else if(ZMP_GetZombies() == 0)
 	            {
@@ -668,6 +666,7 @@ public OnPlayerSpawn(playerid)
 		{
 			ZMP_SetPlayerHuman(playerid);
 			ZMP_SyncPlayer(playerid);
+			
 			TextDrawShowForPlayer(playerid, txtInfestationArrival);
 			LoadMap(playerid);
 		    return 1;
@@ -675,15 +674,11 @@ public OnPlayerSpawn(playerid)
 		case e_Status_Playing: // Round already started
 		{
 		    if(gTeam[playerid] == gHUMAN)
-		    {
 				ZMP_SetPlayerHuman(playerid);
-				ZMP_SyncPlayer(playerid);
-			}
 			else
-			{
 				ZMP_SetPlayerZombie(playerid);
-				ZMP_SyncPlayer(playerid);
-			}
+
+			ZMP_SyncPlayer(playerid);
 
 			TextDrawShowForPlayer(playerid, txtRescue);
 			LoadMap(playerid);
@@ -755,9 +750,8 @@ public OnPlayerDeath(playerid, killerid, reason)
 		        KillTimer(tRescue);
 		        KillTimer(tInfestation);
 		        
-		        new str[144];
-		        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
-		        SCMToAll(-1, str);
+		        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+		        SCMToAll(-1, gstr);
 			}
 			else
 			{
@@ -811,9 +805,8 @@ public OnPlayerDeath(playerid, killerid, reason)
 	        KillTimer(tRescue);
 	        KillTimer(tInfestation);
 
-	        new str[144];
-	        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
-	        SCMToAll(-1, str);
+	        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+	        SCMToAll(-1, gstr);
 		}
 	}
     
@@ -1041,9 +1034,8 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 				        KillTimer(tRescue);
 				        KillTimer(tInfestation);
 
-				        new str[144];
-				        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
-				        SCMToAll(-1, str);
+				        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+				        SCMToAll(-1, gstr);
 					}
 			    }
 			}
@@ -1676,9 +1668,8 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 		        KillTimer(tRescue);
 		        KillTimer(tInfestation);
 
-		        new str[144];
-		        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
-		        SCMToAll(-1, str);
+		        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+		        SCMToAll(-1, gstr);
 			}
 		}
 		else
@@ -1828,17 +1819,15 @@ YCMD:p(playerid, params[], help)
 
 	if(IsAd(msg))
 	{
-		new string[255];
-	  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, msg, __GetIP(playerid));
-		broadcast_admin(RED, string);
+	  	format(gstr, sizeof(gstr), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, msg, __GetIP(playerid));
+		broadcast_admin(RED, gstr);
 
         SCM(playerid, RED, "Advertising is not allowed!");
         return 1;
 	}
 
-	new string[255];
-	format(string, sizeof(string), ""white"["lb_e"VIP CHAT"white"] {%06x}%s"white"(%i): %s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, msg);
-	broadcast_vip(-1, string);
+	format(gstr, sizeof(gstr), ""white"["lb_e"VIP CHAT"white"] {%06x}%s"white"(%i): %s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, msg);
+	broadcast_vip(-1, gstr);
 	return 1;
 }
 
