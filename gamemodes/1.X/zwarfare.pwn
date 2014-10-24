@@ -657,12 +657,12 @@ public OnPlayerSpawn(playerid)
 	
 	switch(g_GlobalStatus)
 	{
-		case e_Status_Inactive:
+		case e_Status_Inactive: // Server was probably empty and this player is the first one
 		{
 		    ZMP_BeginNewGame();
 		    return 1;
 		}
-		case e_Status_Prepare:
+		case e_Status_Prepare: // Round is in prepare phase
 		{
 			ZMP_SetPlayerHuman(playerid);
 			ZMP_SyncPlayer(playerid);
@@ -670,7 +670,7 @@ public OnPlayerSpawn(playerid)
 			LoadMap(playerid);
 		    return 1;
 		}
-		case e_Status_Playing:
+		case e_Status_Playing: // Round already started
 		{
 		    if(gTeam[playerid] == gHUMAN)
 		    {
@@ -694,40 +694,6 @@ public OnPlayerSpawn(playerid)
 			TogglePlayerControllable(playerid, false);
 		    return 1;
 		}
-	}
-	
-	if(g_GlobalStatus == e_Status_Inactive)
-	{
-	    ZMP_BeginNewGame();
-	}
-	else if(g_GlobalStatus == e_Status_Prepare)
-	{
-		ZMP_SetPlayerHuman(playerid);
-		ZMP_SyncPlayer(playerid);
-		TextDrawShowForPlayer(playerid, txtInfestationArrival);
-		LoadMap(playerid);
-	}
-	else if(g_GlobalStatus == e_Status_Playing)
-	{
-	    if(gTeam[playerid] == gHUMAN)
-	    {
-			ZMP_SetPlayerHuman(playerid);
-			ZMP_SyncPlayer(playerid);
-		}
-		else
-		{
-			ZMP_SetPlayerZombie(playerid);
-			ZMP_SyncPlayer(playerid);
-		}
-		
-		TextDrawShowForPlayer(playerid, txtRescue);
-		LoadMap(playerid);
-	}
-	else if(g_GlobalStatus == e_Status_RoundEnd)
-	{
-		SetPlayerPos(playerid, g_Maps[g_CurrentMap][e_spawn_x], g_Maps[g_CurrentMap][e_spawn_y], g_Maps[g_CurrentMap][e_spawn_z] + 4.0);
-		SetPlayerFacingAngle(playerid, g_Maps[g_CurrentMap][e_spawn_a]);
-		TogglePlayerControllable(playerid, false);
 	}
 	return 1;
 }
