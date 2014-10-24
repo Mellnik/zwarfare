@@ -63,7 +63,7 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define VERSION                         "1.0.0"
 #define URL                     		"www.zwarfare.com"
 #define FANCY_URL                       "www.zwarfare.com"
-#ifdef RUS_BUILD
+#if defined RUS_BUILD
 #define HOSTNAME                        "[RUS] « "ZWAR_NAME" v"VERSION" (0.3z) »"
 #else
 #define HOSTNAME                        "[ENG] « "ZWAR_NAME" v"VERSION" (0.3z) »"
@@ -838,13 +838,12 @@ public OnPlayerText(playerid, text[])
   	}
 	
     new File:lFile = fopen("Logs/chatlog.txt", io_append),
-     	logData[255],
         time[3];
 
     gettime(time[0], time[1], time[2]);
 
-    format(logData, sizeof(logData), "[%02d:%02d:%02d] [%i]%s: %s \r\n", time[0], time[1], time[2], playerid, __GetName(playerid), text);
-    fwrite(lFile, logData);
+    format(gstr2, sizeof(gstr2), "[%02d:%02d:%02d] [%i]%s: %s \r\n", time[0], time[1], time[2], playerid, __GetName(playerid), text);
+    fwrite(lFile, gstr2);
     fclose(lFile);
 
 	if(IsAd(text))
@@ -1463,7 +1462,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					}
 					case 4:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_HELP + 5, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"I found a bug/glitch where can I report it?\n\nPlease report them on our forums "URL", "OK", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_HELP + 5, DIALOG_STYLE_MSGBOX, ""zwar" - Help", ""dl"I found a bug/glitch where can I report it?\n\nPlease report them on our forums "URL"", "OK", "Back");
 					}
 					case 5:
 					{
@@ -1549,13 +1548,12 @@ public OnPlayerCommandReceived(playerid, cmdtext[])
 public OnPlayerCommandPerformed(playerid, cmdtext[], success)
 {
     new File:lFile = fopen("Logs/cmdlog.txt", io_append),
-     	logData[255],
         time[3];
 
     gettime(time[0], time[1], time[2]);
 
-    format(logData, sizeof(logData), "[%02d:%02d:%02d] [%i]%s -> %s success: %i\r\n", time[0], time[1], time[2], playerid, __GetName(playerid), cmdtext, success);
-    fwrite(lFile, logData);
+    format(gstr2, sizeof(gstr2), "[%02d:%02d:%02d] [%i]%s -> %s success: %i\r\n", time[0], time[1], time[2], playerid, __GetName(playerid), cmdtext, success);
+    fwrite(lFile, gstr2);
     fclose(lFile);
 
 	if(!success)
@@ -1811,23 +1809,22 @@ YCMD:p(playerid, params[], help)
 {
 	if(PlayerData[playerid][iVIP] != 1 && PlayerData[playerid][iAdminLevel] == 0) return Command_ReProcess(playerid, "/vip", false);
 
-	new msg[144];
-	if(sscanf(params, "s[144]", msg))
+	if(sscanf(params, "s[144]", gstr))
 	{
 	    return SCM(playerid, YELLOW, "Usage: /p <text>");
 	}
 
-	if(IsAd(msg))
+	if(IsAd(gstr))
 	{
-	  	format(gstr, sizeof(gstr), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, msg, __GetIP(playerid));
-		broadcast_admin(RED, gstr);
+	  	format(gstr2, sizeof(gstr2), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, gstr, __GetIP(playerid));
+		broadcast_admin(RED, gstr2);
 
         SCM(playerid, RED, "Advertising is not allowed!");
         return 1;
 	}
 
-	format(gstr, sizeof(gstr), ""white"["lb_e"VIP CHAT"white"] {%06x}%s"white"(%i): %s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, msg);
-	broadcast_vip(-1, gstr);
+	format(gstr2, sizeof(gstr2), ""white"["lb_e"VIP CHAT"white"] {%06x}%s"white"(%i): %s", GetPlayerColor(playerid) >>> 8, __GetName(playerid), playerid, gstr);
+	broadcast_vip(-1, gstr2);
 	return 1;
 }
 
@@ -1910,9 +1907,8 @@ YCMD:asay(playerid, params[], help)
 
 	    if(strlen(text) > 100 || strlen(text) < 3) return SCM(playerid, -1, ""er"Length: 3-100");
 
-		new string[200];
-		format(string, sizeof(string), ""yellow"** "red"Admin %s(%i): %s", __GetName(playerid), playerid, text);
-		SCMToAll(-1, string);
+		format(gstr, sizeof(gstr), ""yellow"** "red"Admin %s(%i): %s", __GetName(playerid), playerid, text);
+		SCMToAll(-1, gstr);
 	}
 	else
 	{
@@ -1941,19 +1937,18 @@ YCMD:warn(playerid, params[], help)
 
 	 	if(IsPlayerAvail(player) && player != playerid)
 	 	{
-	 	    new string[144];
 			PlayerData[player][iWarnings]++;
 			if(PlayerData[player][iWarnings] == MAX_WARNINGS)
 			{
-				format(string, sizeof(string), ""yellow"** "red"%s(%i) has been kicked. [Reason: %s] [Warning: %i/%i] [Warn by: %s(%i)]", __GetName(player), player, reason, PlayerData[player][iWarnings], MAX_WARNINGS, __GetName(playerid), playerid);
-				SCMToAll(-1, string);
-				print(string);
+				format(gstr, sizeof(gstr), ""yellow"** "red"%s(%i) has been kicked. [Reason: %s] [Warning: %i/%i] [Warn by: %s(%i)]", __GetName(player), player, reason, PlayerData[player][iWarnings], MAX_WARNINGS, __GetName(playerid), playerid);
+				SCMToAll(-1, gstr);
+				print(gstr);
 				Kick(player);
 			}
 			else
 			{
-				format(string, sizeof(string), ""yellow"** "red"Admin %s(%i) has given %s(%i) a kick warning. [Reason: %s] [Warning: %i/%i]", __GetName(playerid), playerid, __GetName(player), player, reason, PlayerData[player][iWarnings], MAX_WARNINGS);
-				SCMToAll(-1, string);
+				format(gstr, sizeof(gstr), ""yellow"** "red"Admin %s(%i) has given %s(%i) a kick warning. [Reason: %s] [Warning: %i/%i]", __GetName(playerid), playerid, __GetName(player), player, reason, PlayerData[player][iWarnings], MAX_WARNINGS);
+				SCMToAll(-1, gstr);
 			}
 		}
 		else
@@ -2220,10 +2215,9 @@ YCMD:announce(playerid, params[], help)
 	    if(strfind(text, "%", true) != -1) return SCM(playerid, -1, ""er"'%' is not allowed in announce.");
 	    if(strlen(text) > 50 || strlen(text) < 1) return SCM(playerid, -1, ""er"Length 1-50");
 
-		new string[144];
-		format(string, sizeof(string), "%s: %s", __GetName(playerid), text);
+		format(gstr, sizeof(gstr), "%s: %s", __GetName(playerid), text);
 
-		GameTextForAll(string, 4000, 3);
+		GameTextForAll(gstr, 4000, 3);
     }
 	else
 	{
@@ -2309,18 +2303,17 @@ YCMD:sethealth(playerid, params[], help)
 
  		if(IsPlayerAvail(player))
 		{
-			new string[128];
 			if(player != playerid)
 			{
-				format(string, sizeof(string), "Admin %s(%i) has set your health to %f.", __GetName(playerid), playerid, amount);
-				SCM(player, YELLOW, string);
-				format(string, sizeof(string), "You have set %s's health to %f.", __GetName(player), amount);
-				SCM(playerid, YELLOW, string);
+				format(gstr, sizeof(gstr), "Admin %s(%i) has set your health to %f.", __GetName(playerid), playerid, amount);
+				SCM(player, YELLOW, gstr);
+				format(gstr, sizeof(gstr), "You have set %s's health to %f.", __GetName(player), amount);
+				SCM(playerid, YELLOW, gstr);
 			}
 			else
 			{
-				format(string, sizeof(string), "You have set your health to %f.", amount);
-				SCM(playerid, YELLOW, string);
+				format(gstr, sizeof(gstr), "You have set your health to %f.", amount);
+				SCM(playerid, YELLOW, gstr);
 			}
 			SetPlayerHealth(player, amount);
 		}
@@ -3774,7 +3767,7 @@ YCMD:pm(playerid, params[], help)
     SCM(player, YELLOW, gstr);
 	format(gstr, sizeof(gstr), ">>>[PM] to %s(%i): %s", __GetName(player), player, msg);
 	SCM(playerid, YELLOW, gstr);
-	PlayerData[player][iLastPM] = playerid;
+	PlayerData[PlayerData[playerid][iLastPM]][iLastPM] = playerid;
 	
 	PlaySound(playerid, 1057);
 	PlaySound(player, 1057);
@@ -3786,7 +3779,7 @@ YCMD:pm(playerid, params[], help)
 
 YCMD:r(playerid, params[], help)
 {
-    if(PlayerData[player][iLastPM] == INVALID_PLAYER_ID)
+    if(PlayerData[playerid][iLastPM] == INVALID_PLAYER_ID)
 	{
 		return SCM(playerid, -1, ""er"Nobody has send you a message yet");
 	}
@@ -3805,21 +3798,21 @@ YCMD:r(playerid, params[], help)
         return 1;
 	}
 
-	if(!IsPlayerAvail(PlayerData[player][iLastPM]))
+	if(!IsPlayerAvail(PlayerData[playerid][iLastPM]))
 	{
 		return SCM(playerid, -1, ""er"Player is not connected!");
 	}
 
 	format(gstr, sizeof(gstr), "***[PM] from %s(%i): %s", __GetName(playerid), playerid, msg);
-    SCM(PlayerData[player][iLastPM], YELLOW, gstr);
-	format(gstr, sizeof(gstr), ">>>[PM] to %s(%i): %s", __GetName(PlayerData[player][iLastPM]), PlayerData[player][iLastPM], msg);
+    SCM(PlayerData[playerid][iLastPM], YELLOW, gstr);
+	format(gstr, sizeof(gstr), ">>>[PM] to %s(%i): %s", __GetName(PlayerData[playerid][iLastPM]), PlayerData[playerid][iLastPM], msg);
 	SCM(playerid, YELLOW, gstr);
-	PlayerData[player][iLastPM] = playerid;
+	PlayerData[PlayerData[playerid][iLastPM]][iLastPM] = playerid;
 
 	PlaySound(playerid, 1057);
-	PlaySound(PlayerData[player][iLastPM], 1057);
+	PlaySound(PlayerData[playerid][iLastPM], 1057);
 
-	format(gstr, sizeof(gstr), ""grey"[PM] from %s(%i) to %s(%i): %s", __GetName(playerid), playerid, __GetName(PlayerData[player][iLastPM]), PlayerData[player][iLastPM], msg);
+	format(gstr, sizeof(gstr), ""grey"[PM] from %s(%i) to %s(%i): %s", __GetName(playerid), playerid, __GetName(PlayerData[playerid][iLastPM]), PlayerData[playerid][iLastPM], msg);
 	broadcast_admin(GREY, gstr);
 	return 1;
 }
