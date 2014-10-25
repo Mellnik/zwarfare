@@ -3847,7 +3847,7 @@ SQL_Connect()
 
     if(mysql_errno(g_pSQL) == 0)
     {
-		Log(LOG_INIT, "MySQL: Connected @ "SQL_HOST":%i", SQL_PORT);
+		Log(LOG_INIT, "MySQL: Connected @ ["SQL_HOST"]:%i", SQL_PORT);
     }
     else
     {
@@ -5438,7 +5438,7 @@ server_load_textdraws()
 
 server_fetch_mapdata()
 {
-	mysql_tquery(g_pSQL, "SELECT `maps`.*, `accounts`.`name` FROM `maps` INNER JOIN `accounts` ON `accounts`.`author` = `maps`.`id` LIMIT "MAX_MAPS_STRING";", "OnMapDataLoad");
+	mysql_tquery(g_pSQL, "SELECT `maps`.*, `accounts`.`name` FROM `maps` INNER JOIN `accounts` ON `accounts`.`id` = `maps`.`author` LIMIT "MAX_MAPS_STRING";", "OnMapDataLoad");
 }
 
 Map_Load(index)
