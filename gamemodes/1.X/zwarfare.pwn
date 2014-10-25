@@ -2178,9 +2178,8 @@ YCMD:ncrecords(playerid, params[], help)
 	}
 	else
 	{
-		new query[255];
-		format(query, sizeof(query), "SELECT * FROM `ncrecords` WHERE `oldname` = '%s' OR `newname` = '%s';", name, name);
-		mysql_tquery(g_pSQL, query, "OnNCReceive2", "is", playerid, name);
+		mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT * FROM `ncrecords` WHERE `oldname` = '%e' OR `newname` = '%e';", name, name);
+		mysql_tquery(g_pSQL, gstr, "OnNCReceive2", "is", playerid, name);
 	}
 	return 1;
 }
@@ -2832,17 +2831,16 @@ YCMD:ban(playerid, params[], help)
 		 	if(IsPlayerAvail(player) && player != playerid && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 			{
                 PlayerData[player][bOpenSeason] = true;
-				new string[255];
 
 	   			SQL_CreateBan(__GetName(player), __GetName(playerid), reason);
                 SQL_BanIP(__GetIP(player));
 
-				format(string, sizeof(string), ""yellow"** "red"%s(%i) has been banned by Admin %s(%i) [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, reason);
-				SCMToAll(YELLOW, string);
-				print(string);
+				format(gstr2, sizeof(gstr2), ""yellow"** "red"%s(%i) has been banned by Admin %s(%i) [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, reason);
+				SCMToAll(YELLOW, gstr2);
+				print(gstr2);
 
-	    		format(string, sizeof(string), ""red"You have been banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on "URL"", __GetName(playerid), reason);
-	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Notice", string, "OK", "");
+	    		format(gstr2, sizeof(gstr2), ""red"You have been banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\n\nIf you think that you have been banned wrongly,\nwrite a ban appeal on "URL"", __GetName(playerid), reason);
+	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Notice", gstr2, "OK", "");
 	    		KickEx(player);
 
 	    		PlayerPlaySound(playerid, 1184, 0.0, 0.0, 0.0);
@@ -2921,16 +2919,15 @@ YCMD:tban(playerid, params[], help)
 		 	if(IsPlayerAvail(player) && player != playerid && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 			{
 			    PlayerData[player][bOpenSeason] = true;
-				new string[255];
 
 	   			SQL_CreateBan(__GetName(player), __GetName(playerid), reason, gettime() + (mins * 60));
 
-				format(string, sizeof(string), ""yellow"** "red"%s(%i) has been time banned for %i minutes by Admin %s(%i) [Reason: %s]", __GetName(player), player, mins, __GetName(playerid), playerid, reason);
-				SCMToAll(YELLOW, string);
-				print(string);
+				format(gstr2, sizeof(gstr2), ""yellow"** "red"%s(%i) has been time banned for %i minutes by Admin %s(%i) [Reason: %s]", __GetName(player), player, mins, __GetName(playerid), playerid, reason);
+				SCMToAll(YELLOW, gstr2);
+				print(gstr2);
 
-	    		format(string, sizeof(string), ""red"You have been time banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\nExpires:\t\t%s\nIf you think that you have been banned wrongly,\nwrite a ban appeal on "URL"", __GetName(playerid), reason, UTConvert(gettime() + (mins * 60)));
-	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Notice", string, "OK", "");
+	    		format(gstr2, sizeof(gstr2), ""red"You have been time banned!"white"\n\nAdmin:\t\t%s\nReason:\t\t%s\nExpires:\t\t%s\nIf you think that you have been banned wrongly,\nwrite a ban appeal on "URL"", __GetName(playerid), reason, UTConvert(gettime() + (mins * 60)));
+	    		ShowPlayerDialog(player, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Notice", gstr2, "OK", "");
 	    		KickEx(player);
 
 	    		PlayerPlaySound(playerid, 1184, 0.0, 0.0, 0.0);
@@ -3746,9 +3743,8 @@ YCMD:pm(playerid, params[], help)
 
 	if(IsAd(msg))
 	{
-		new string[255];
-	  	format(string, sizeof(string), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, msg, __GetIP(playerid));
-		broadcast_admin(RED, string);
+	  	format(gstr2, sizeof(gstr2), ""yellow"** "red"Suspicion advertising | Player: %s(%i) Advertised IP: %s - PlayerIP: %s", __GetName(playerid), playerid, msg, __GetIP(playerid));
+		broadcast_admin(RED, gstr2);
 
         SCM(playerid, RED, "Advertising is not allowed!");
         return 1;
@@ -4024,9 +4020,8 @@ function:ZMP_RescueCountDown()
 {
 	if(iRescue > 0)
 	{
-        new string[255];
-        format(string, sizeof(string), "~w~Rescue in: ~r~~h~~h~%s", ZMP_ConvertTime(iRescue));
-        TextDrawSetString(txtRescue, string);
+        format(gstr, sizeof(gstr), "~w~Rescue in: ~r~~h~~h~%s", ZMP_ConvertTime(iRescue));
+        TextDrawSetString(txtRescue, gstr);
 	        
 	    iRescue--;
 	}
@@ -5312,8 +5307,7 @@ FuckOffGayAssFaggotNigger()
 IsAd(const text[])
 {
 	new is1 = 0,
-		r = 0,
-		strR[255];
+		r = 0;
 
  	while(strlen(text[is1]))
  	{
@@ -5330,8 +5324,8 @@ IsAd(const text[])
 				}
  				else
   				{
-				   	strmid(strR[r], text, is1, is2, sizeof(strR));
-				   	if(strval(strR[r]) < sizeof(strR)) r++;
+				   	strmid(gstr2[r], text, is1, is2, sizeof(gstr2));
+				   	if(strval(gstr2[r]) < sizeof(gstr2)) r++;
 				    is1 = is2;
 				    p = 1;
 				}
