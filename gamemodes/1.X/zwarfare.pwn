@@ -63,7 +63,7 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define VERSION                         "1.0.0"
 #define URL                     		"www.zwarfare.com"
 #define FANCY_URL                       "www.zwarfare.com"
-#if defined RUS_BUILD
+#if RUS_BUILD == true
 #define HOSTNAME                        "[RUS] « "ZWAR_NAME" v"VERSION" (0.3z) »"
 #else
 #define HOSTNAME                        "[ENG] « "ZWAR_NAME" v"VERSION" (0.3z) »"
@@ -5137,7 +5137,7 @@ trans(col)
 RequestRegistration(playerid)
 {
     format(gstr, sizeof(gstr), ""zwar" Registration - %s", __GetName(playerid));
-	format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"white" to Zombie "red"Warfare"white"!\n\nEnter a password for your new account below:", __GetName(playerid));
+	format(gstr2, sizeof(gstr2), ""white"Welcome "grey"%s"red" to Zombie "white"Warfare"white"!\n\nEnter a password for your new account below:", __GetName(playerid));
 	ShowPlayerDialog(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, gstr, gstr2, "Register", "");
 	return 1;
 }
@@ -5376,7 +5376,7 @@ server_load_textdraws()
 	TextDrawSetProportional(txtZMPLogo[0], 1);
 	TextDrawSetSelectable(txtZMPLogo[0], 0);
 
-	txtZMPLogo[1] = TextDrawCreate(324.000000, 99.000000, "zombie~r~~h~~h~warfare~w~.com");
+	txtZMPLogo[1] = TextDrawCreate(324.000000, 99.000000, "~r~~h~~h~zombie~w~warfare.com");
 	TextDrawBackgroundColor(txtZMPLogo[1], 255);
 	TextDrawFont(txtZMPLogo[1], 1);
 	TextDrawLetterSize(txtZMPLogo[1], 0.299999, 1.699999);
@@ -5394,7 +5394,7 @@ server_load_textdraws()
 	TextDrawSetProportional(txtZMPLogo[2], 1);
 	TextDrawSetSelectable(txtZMPLogo[2], 0);
 
-	txtHealthOverlay = TextDrawCreate(546.000000, 67.000000, "~w~Zombie~r~~h~~h~warfare~w~.com");
+	txtHealthOverlay = TextDrawCreate(546.000000, 67.000000, "~r~~h~~h~Z~w~Warfare.com");
 	TextDrawBackgroundColor(txtHealthOverlay, 255);
 	TextDrawFont(txtHealthOverlay, 1);
 	TextDrawLetterSize(txtHealthOverlay, 0.240000, 0.799999);
