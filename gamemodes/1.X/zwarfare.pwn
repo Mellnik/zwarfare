@@ -4376,9 +4376,9 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	        {
 	            PlayerData[playerid][iAccountID] = cache_get_row_int(0, 0);
 
-				mysql_format(g_pSQL, gstr, sizeof(gstr), "SELECT accounts.name, bans.reason, bans.lift, bans.date, UNIX_TIMESTAMP() FROM bans INNER JOIN accounts ON accounts.admin_id = bans.id WHERE bans.id = %i LIMIT 1;",
+				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT accounts.name, bans.reason, bans.lift, bans.date, UNIX_TIMESTAMP() FROM bans INNER JOIN accounts ON accounts.admin_id = bans.id WHERE bans.id = %i LIMIT 1;",
 							PlayerData[playerid][iAccountID]);
-				mysql_pquery(g_pSQL, gstr, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_BANNED);
+				mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_BANNED);
 	        }
 			return 1;
 	    }
