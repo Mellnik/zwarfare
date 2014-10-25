@@ -5376,7 +5376,7 @@ server_load_textdraws()
 	TextDrawSetProportional(txtZMPLogo[0], 1);
 	TextDrawSetSelectable(txtZMPLogo[0], 0);
 
-	txtZMPLogo[1] = TextDrawCreate(324.000000, 99.000000, "~r~~h~~h~zombie~w~warfare.com");
+	txtZMPLogo[1] = TextDrawCreate(324.000000, 99.000000, "~r~~h~~h~z~w~warfare.com");
 	TextDrawBackgroundColor(txtZMPLogo[1], 255);
 	TextDrawFont(txtZMPLogo[1], 1);
 	TextDrawLetterSize(txtZMPLogo[1], 0.299999, 1.699999);
@@ -5394,7 +5394,7 @@ server_load_textdraws()
 	TextDrawSetProportional(txtZMPLogo[2], 1);
 	TextDrawSetSelectable(txtZMPLogo[2], 0);
 
-	txtHealthOverlay = TextDrawCreate(546.000000, 67.000000, "~r~~h~~h~Z~w~Warfare.com");
+	txtHealthOverlay = TextDrawCreate(546.000000, 67.000000, "~r~~h~~h~Z~w~warfare.com");
 	TextDrawBackgroundColor(txtHealthOverlay, 255);
 	TextDrawFont(txtHealthOverlay, 1);
 	TextDrawLetterSize(txtHealthOverlay, 0.240000, 0.799999);
