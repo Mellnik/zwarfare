@@ -105,6 +105,7 @@ Float:GetDistanceBetweenPlayers(playerid1, playerid2);
 #define SALT_LENGTH                     (32)
 
 // Scripting
+#define DEPRECATED                      stock
 #define INVALID_TIMER                   (-1)
 #define SCM SendClientMessage
 #define SPD ShowPlayerDialog
@@ -317,7 +318,8 @@ enum E_MAP_DATA
 	Float:e_shop_z,
 	e_times_played,
 	e_require_preload,
-	e_world
+	e_world,
+	e_countdown
 };
 
 enum
@@ -4612,6 +4614,7 @@ function:OnMapDataLoad()
 	    g_Maps[i][e_times_played] = cache_get_row_int(i, 12);
 	    g_Maps[i][e_require_preload] = cache_get_row_int(i, 13);
 		g_Maps[i][e_world] = cache_get_row_int(i, 14);
+		g_Maps[i][e_countdown] = cache_get_row_int(i, 15);
 	    cache_get_row(i, 15, g_Maps[i][e_author], g_pSQL, MAX_PLAYER_NAME + 1);
 	}
 	Log(LOG_ONLINE, "Retrieved %i maps", cache_get_row_count());
@@ -5033,8 +5036,8 @@ ZMP_EndGame()
 	{
 		if(IsPlayerAvail(i))
 		{
-	    	if(!PlayerData[i][bIsDead]) TogglePlayerControllable(i, false);
-	    	PlayAudio(i, "http://zwarfare.com/re.mp3");
+	    	if(!PlayerData[i][bIsDead])
+				TogglePlayerControllable(i, false);
 		}
 	}
 
@@ -5110,7 +5113,7 @@ ZMP_BeginNewGame()
 	return 1;
 }
 
-PlayAudio(playerid, url[])
+DEPRECATED PlayAudio(playerid, url[])
 {
 	if(!PlayerData[playerid][bSoundsDisabled] && !IsPlayerOnDesktop(playerid, 3000))
 	{
