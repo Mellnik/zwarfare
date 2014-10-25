@@ -4376,7 +4376,7 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	        {
 	            PlayerData[playerid][iAccountID] = cache_get_row_int(0, 0);
 
-				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT accounts.name, bans.reason, bans.lift, bans.date, UNIX_TIMESTAMP() FROM bans INNER JOIN accounts ON accounts.admin_id = bans.id WHERE bans.id = %i LIMIT 1;",
+				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT accounts.name, bans.reason, bans.lift, bans.date, UNIX_TIMESTAMP() FROM bans INNER JOIN accounts ON accounts.id = bans.admin_id WHERE bans.id = %i LIMIT 1;",
 							PlayerData[playerid][iAccountID]);
 				mysql_pquery(g_pSQL, gstr2, "OnPlayerAccountRequest", "iii", playerid, YHash(__GetName(playerid)), ACCOUNT_REQUEST_BANNED);
 	        }
@@ -4616,8 +4616,10 @@ function:OnMapDataLoad()
 		g_Maps[i][e_world] = cache_get_row_int(i, 14);
 		g_Maps[i][e_countdown] = cache_get_row_int(i, 15);
 	    cache_get_row(i, 15, g_Maps[i][e_author], g_pSQL, MAX_PLAYER_NAME + 1);
+
+        g_MapCount++;
 	}
-	Log(LOG_ONLINE, "Retrieved %i maps", cache_get_row_count());
+	Log(LOG_ONLINE, "Retrieved %i maps", g_MapCount);
 	return 1;
 }
 
