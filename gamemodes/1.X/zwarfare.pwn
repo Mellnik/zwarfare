@@ -1851,24 +1851,13 @@ YCMD:stats(playerid, params[], help)
 	{
 		new	string1[500],
 			string2[355],
-			vip[5],
 			pDeaths,
-			finstring[sizeof(string1) + sizeof(string2) + sizeof(vip) + 35];
+			finstring[sizeof(string1) + sizeof(string2) + 5 + 35];
 
  		if(PlayerData[player1][iDeaths] == 0)
-	 	{
 	 		pDeaths = 1;
-	 	}
 	 	else
-	 	{
 	 		pDeaths = PlayerData[player1][iDeaths];
-	 	}
-	 	
-		if(PlayerData[player1][iVIP] != 0)
-		{
-		    strmid(vip, "Yes", 0, 5, 5);
-		}
-		else strmid(vip, "No", 0, 5, 5);
 
  		format(string1, sizeof(string1), ""blue"Stats of the player: "white"%s\n\n\
 	 	Kills: %i\nDeaths: %i\nK/D: %0.2f\nScore: %i\nMoney: $%s\n",
@@ -1881,7 +1870,7 @@ YCMD:stats(playerid, params[], help)
 
         format(string2, sizeof(string2), "Playing Time: %s\nVIP: %s\nMedkits: %i\nRegister Date: %s\nLast log in: %s",
             GetPlayingTimeFormat(player1),
-			vip,
+			PlayerData[player1][iVIP] == 0 ? ("No") : ("Yes"),
 			PlayerData[player1][iMedkits],
 			UTConvert(PlayerData[player1][iRegisterDate]),
 			UTConvert(PlayerData[player1][iLastLogin]));
@@ -5067,7 +5056,7 @@ ZMP_BeginNewGame()
 			break;
         }
 
-   		g_CurrentMap = random_int(0, g_MapCount);
+   		g_CurrentMap = CPRNG_Generate(0, g_MapCount - 1);
 
         if(g_CurrentMap != iOldMap)
         {
@@ -5285,6 +5274,13 @@ UTConvert(unixtime)
 
     format(u_date, sizeof(u_date), "%02i/%02i/%i %02i:%02i:%02i", u_day, u_month, u_year, u_hour, u_minute, u_second);
 	return u_date;
+}
+
+CPRNG_Generate(min, max_deduct)
+{
+	if(min == max_deduct)
+	    return min;
+	return random_int(min, max_deduct);
 }
 
 number_format(integer)
