@@ -268,7 +268,6 @@ enum (+= 10)
 	ACCOUNT_REQUEST_BANNED,
 	ACCOUNT_REQUEST_IP_BANNED,
 	ACCOUNT_REQUEST_AUTO_LOGIN,
-	ACCOUNT_REQUST_VERIFY_REGISTER,
 	ACCOUNT_REQUEST_LOAD,
 	ACCOUNT_REQUEST_GANG_LOAD,
 	ACCOUNT_REQUEST_ACHS_LOAD,
@@ -1184,36 +1183,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				    SCM(playerid, -1, ""er"Length 3 - 32");
 					return RequestLogin(playerid);
 				}
-				
+
 				mysql_format(g_pSQL, gstr2, sizeof(gstr2), "SELECT `hash`, `salt` FROM `accounts` WHERE `id` = %i LIMIT 1;", PlayerData[playerid][iAccountID]);
-				
-				new db_hash[SHA3_LENGTH + 1], db_salt[SALT_LENGTH + 1],
-					Cache:query = mysql_query(g_pSQL, gstr2, true),
-					hash[SHA3_LENGTH + 1],
-					validate[sizeof(hash) + SALT_LENGTH + 1];
-
-				cache_get_row(0, 0, db_hash, g_pSQL, sizeof(db_hash));
-				cache_get_row(0, 1, db_salt, g_pSQL, sizeof(db_salt));
-				cache_delete(query);
-				
-				format(validate, sizeof(validate), "%s%s", password, db_salt);
-				sha3(validate, hash, sizeof(hash));
-
-				if(strcmp(validate, hash))
-				{
-				    SCM(playerid, -1, ""er"Login failed, incorrect password!");
-				    RequestLogin(playerid);
-				}
-				else
-				{
-					PlayerData[playerid][bLogged] = true;
-					PlayerData[playerid][bFirstSpawn] = true;
-					PlayerData[playerid][iExitType] = EXIT_LOGGED;
-					PlayerData[playerid][iLastLogin] = gettime();
-					TogglePlayerSpectating(playerid, false);
-					SQL_UpdateAccount(playerid);
-					SQL_LoadAccount(playerid);
-				}
+				mysql_tquery(g_pSQL, gstr2, "OnPlayerLoginAttempt", "iis", playerid, YHash(__GetName(playerid)), password);
 			    return true;
 			}
 	        case DIALOG_REGISTER:
@@ -1249,14 +1221,14 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					}
 					case 2:
 					{
-					    ShowPlayerDialog(playerid, DIALOG_SHOP + 3, DIALOG_STYLE_LIST, ""zwar" - Shop > V.I.P Packages", ""white"[FREE]\tUZI\n$300\tSawn-Off\n[FREE]\tJizzy\n[FREE]\tKatana", "Select", "Back");
+					    ShowPlayerDialog(playerid, DIALOG_SHOP + 3, DIALOG_STYLE_LIST, ""zwar" - Shop > V.I.P Packages", ""white"FREE\tUZI\n$300\tSawn-Off\nFREE\tJizzy\nFREE\tKatana", "Select", "Back");
 					}
 					case 3:
 					{
 			            if(GetPlayerMoneyEx(playerid) < 900) return nocash(playerid);
 			            PlayerData[playerid][iMedkits]++;
 			            GivePlayerMoneyEx(playerid, -900);
-			            SCM(playerid, -1, ""er"Use /mk to consume a medkit!");
+			            SCM(playerid, -1, ""er"Use /med to consume a medkit!");
 					}
 				}
 				return true;
@@ -3092,7 +3064,7 @@ YCMD:help(playerid, params[], help)
     return 1;
 }
 
-YCMD:mk(playerid, params[], help)
+YCMD:med(playerid, params[], help)
 {
 	if(gTeam[playerid] == gZOMBIE) return SCM(playerid, -1, ""er"Not useable as zombie");
 	
@@ -4526,6 +4498,41 @@ function:OnPlayerAccountRequest(playerid, namehash, request)
 	return 0;
 }
 
+function:OnPlayerLoginAttempt(playerid, namehash, password[])
+{
+	if(namehash != YHash(__GetName(playerid)))
+		return 0;
+		
+	if(cache_get_row_count() != 1)
+	    return SCM(playerid, -1, ""er"Fatal login error, account key not found or multiple results.");
+
+	new db_hash[SHA3_LENGTH + 1], db_salt[SALT_LENGTH + 1];
+	new hash[SHA3_LENGTH + 1], validate[sizeof(db_hash) + sizeof(db_salt) + 1];
+
+	cache_get_row(0, 0, db_hash, g_pSQL, sizeof(db_hash));
+	cache_get_row(0, 1, db_salt, g_pSQL, sizeof(db_salt));
+	
+	format(validate, sizeof(validate), "%s%s", password, db_salt);
+	sha3(validate, hash, sizeof(hash));
+	
+	if(strcmp(db_hash, hash))
+	{
+	    SCM(playerid, -1, ""er"Login failed, incorrect password!");
+	    RequestLogin(playerid);
+	}
+	else
+	{
+		PlayerData[playerid][bLogged] = true;
+		PlayerData[playerid][bFirstSpawn] = true;
+		PlayerData[playerid][iExitType] = EXIT_LOGGED;
+		PlayerData[playerid][iLastLogin] = gettime();
+		TogglePlayerSpectating(playerid, false);
+		SQL_UpdateAccount(playerid);
+		SQL_LoadAccount(playerid);
+	}
+	return 1;
+}
+
 function:OnPlayerRegister(playerid, namehash, hash[], playername[], ip_address[], serial[])
 {
 	new salt[SALT_LENGTH + 1], tosave[sizeof(salt) + SHA3_LENGTH + 1], query[512];
@@ -5283,12 +5290,12 @@ CPRNG_Generate(min, max_deduct)
 	return random_int(min, max_deduct);
 }
 
-number_format(integer)
+number_format(num)
 {
     new szStr[16];
-    format(szStr, sizeof(szStr), "%i", integer);
+    format(szStr, sizeof(szStr), "%i", num);
 
-    for(new iLen = strlen(szStr) - 3; iLen > 0; iLen -= 3)
+    for(new iLen = strlen(szStr) - (num < 0 ? 4 : 3); iLen > 0; iLen -= 3)
     {
         strins(szStr, ",", iLen);
     }
@@ -5392,7 +5399,7 @@ server_load_textdraws()
 	TextDrawSetProportional(txtZMPLogo[2], 1);
 	TextDrawSetSelectable(txtZMPLogo[2], 0);
 
-	txtHealthOverlay = TextDrawCreate(546.000000, 67.000000, "~r~~h~~h~Z~w~warfare.com");
+	txtHealthOverlay = TextDrawCreate(546.000000, 67.000000, " ~r~~h~~h~Z~w~warfare.com");
 	TextDrawBackgroundColor(txtHealthOverlay, 255);
 	TextDrawFont(txtHealthOverlay, 1);
 	TextDrawLetterSize(txtHealthOverlay, 0.240000, 0.799999);
