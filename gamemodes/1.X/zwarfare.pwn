@@ -2076,7 +2076,7 @@ YCMD:unmute(playerid, params[], help)
 
 		if(IsPlayerAvail(player) && player != playerid)
 		{
-			if(!PlayerData[player][iMute] == 0)
+			if(PlayerData[player][iMute] == 0)
 			{
 				return SCM(playerid, -1, ""er"This player is not muted");
 			}
@@ -2635,10 +2635,9 @@ YCMD:kick(playerid, params[], help)
 		{
 		    PlayerData[player][bOpenSeason] = true;
 
-		    new string[144];
-			format(string, sizeof(string), ""yellow"** "red"%s(%i) has been kicked by Admin %s(%i) [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, reason);
-			SCMToAll(YELLOW, string);
-			print(string);
+			format(gstr, sizeof(gstr), ""yellow"** "red"%s(%i) has been kicked by Admin %s(%i) [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, reason);
+			SCMToAll(YELLOW, gstr);
+			print(gstr);
 
   			KickEx(player);
 		}
@@ -2947,19 +2946,17 @@ YCMD:setvip(playerid, params[], help)
 
 		if(IsPlayerAvail(player))
 		{
-		    new str[144];
 		    if(PlayerData[player][iVIP] == 1)
 		    {
-				format(str, sizeof(str), ""zwar" Admin %s(%i) has removed %s(%i) VIP status.", __GetName(playerid), playerid, __GetName(player), player);
-				SCMToAll(-1, str);
+				format(gstr, sizeof(gstr), ""zwar" Admin %s(%i) has removed %s(%i) VIP status.", __GetName(playerid), playerid, __GetName(player), player);
 				PlayerData[player][iVIP] = 0;
 		    }
 		    else
 		    {
-				format(str, sizeof(str), ""zwar" Admin %s(%i) has given %s(%i) VIP status.", __GetName(playerid), playerid, __GetName(player), player);
-				SCMToAll(-1, str);
+				format(gstr, sizeof(gstr), ""zwar" Admin %s(%i) has given %s(%i) VIP status.", __GetName(playerid), playerid, __GetName(player), player);
 				PlayerData[player][iVIP] = 1;
 		    }
+		    SCMToAll(-1, gstr);
 		    SQL_SaveAccount(player);
 		}
 	}
@@ -3531,19 +3528,17 @@ YCMD:report(playerid, params[], help)
 	{
 		if(strlen(reason) < 4) return SCM(playerid, -1, ""er"Please write more");
 
-		new time[3],
-			string[144];
-
+		new time[3];
 		gettime(time[0], time[1], time[2]);
 
-		format(string, sizeof(string), ""YELLOW_E"Report(%02i:%02i:%02i) "RED_E"%s(%i) -> %s(%i) -> %s", time[0], time[1], time[2], __GetName(playerid), playerid, __GetName(player), player, reason);
+		format(gstr, sizeof(gstr), ""YELLOW_E"Report(%02i:%02i:%02i) "RED_E"%s(%i) -> %s(%i) -> %s", time[0], time[1], time[2], __GetName(playerid), playerid, __GetName(player), player, reason);
 		for(new i = 1; i < MAX_REPORTS - 1; i++)
 		{
 			g_sReports[i] = g_sReports[i + 1];
 		}
-		g_sReports[MAX_REPORTS - 1] = string;
+		g_sReports[MAX_REPORTS - 1] = gstr;
 
-        broadcast_admin(-1, string);
+        broadcast_admin(-1, gstr);
 
 		SCM(playerid, YELLOW, "Your report has been sent to online Admins");
 		PlayerData[playerid][tickLastReport] = tick;
@@ -3619,7 +3614,7 @@ YCMD:id(playerid, params[], help)
 {
 	if(isnull(params))
 	{
-		return SCM(playerid, NEF_GREEN, "Usage: /id <nick/part of nick>");
+		return SCM(playerid, YELLOW, "Usage: /id <nick/part of nick>");
 	}
 
 	new found, playername[MAX_PLAYER_NAME + 1];
@@ -3628,7 +3623,7 @@ YCMD:id(playerid, params[], help)
 
 	for(new i = 0; i < MAX_PLAYERS; i++)
 	{
-		if(IsPlayerAvail(i) && PlayerData[playerid][bOnlineAdmin])
+		if(IsPlayerAvail(i))
 		{
 	  		GetPlayerName(i, playername, MAX_PLAYER_NAME+1);
 			new namelen = strlen(playername), bool:searched = false;
@@ -4077,10 +4072,9 @@ function:ProcessTick()
 				    // Kick afk players
 				    PlayerData[i][bOpenSeason] = true;
 
-				    new string[144];
-					format(string, sizeof(string), ""yellow"** "red"%s(%i) has been auto-kicked by BitchOnDuty [Reason: Critical AFK time]", __GetName(i), i);
-					SCMToAll(YELLOW, string);
-					print(string);
+					format(gstr, sizeof(gstr), ""yellow"** "red"%s(%i) has been auto-kicked by BitchOnDuty [Reason: Critical AFK time]", __GetName(i), i);
+					SCMToAll(YELLOW, gstr);
+					print(gstr);
 
 		  			KickEx(i);
 				}
@@ -4752,8 +4746,7 @@ __GetVersion(playerid)
 
 GetUptime()
 {
-    new Result[128],
-        Remaining = gettime() - g_iStartTime,
+    new	Remaining = gettime() - g_iStartTime,
         Time[4];
 
     Time[0] = Remaining % 60;
@@ -4766,21 +4759,21 @@ GetUptime()
 
     if(Time[3])
     {
-        format(Result, sizeof(Result), ""white"Server is up for %i days, %i hours, %i minutes and %i seconds", Time[3], Time[2], Time[1], Time[0]);
+        format(gstr, sizeof(gstr), ""white"Server is up for %i days, %i hours, %i minutes and %i seconds", Time[3], Time[2], Time[1], Time[0]);
 	}
     else if(Time[2])
     {
-        format(Result, sizeof(Result), ""white"Server is up for %i hours, %i minutes and %i seconds", Time[2], Time[1], Time[0]);
+        format(gstr, sizeof(gstr), ""white"Server is up for %i hours, %i minutes and %i seconds", Time[2], Time[1], Time[0]);
 	}
     else if(Time[1])
     {
-        format(Result, sizeof(Result), ""white"Server is up for %i minutes and %i seconds", Time[1], Time[0]);
+        format(gstr, sizeof(gstr), ""white"Server is up for %i minutes and %i seconds", Time[1], Time[0]);
 	}
     else
     {
-        format(Result, sizeof(Result), ""white"Server is up for %i seconds", Time[0]);
+        format(gstr, sizeof(gstr), ""white"Server is up for %i seconds", Time[0]);
 	}
-    return Result;
+    return gstr;
 }
 
 ZMP_PlayerStatsUpdate(playerid)
