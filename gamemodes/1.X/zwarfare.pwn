@@ -227,15 +227,14 @@ enum E_PLAYER_DATA
 	tickLastPW,
 	iLastDeathTime,
 	iDeathCountThreshold,
-	tMute,
 	tLoadMap,
 	tMedkit,
 	iMedkitTime,
+	iMute,
 	Text3D:t3dVIPLabel,
 	iExitType,
 	bool:bIsDead,
 	bool:bLoadMap,
-	bool:bMuted,
 	bool:bLogged,
 	bool:bFirstSpawn,
 	bool:bSoundsDisabled,
@@ -434,7 +433,7 @@ static const g_szRandomServerMessages[9][] =
 	""yellow_e"- Server - "grey"Saw a cheater? Use /report and don't write in chat",
 	""yellow_e"- Server - "grey"Please follow the /rules",
 	""yellow_e"- Server - "grey"View changelogs on our forums "URL"",
-	""yellow_e"- Server - "grey"Great VIP features are waiting for you (/vip). Constantly updating.",
+	""yellow_e"- Server - "grey"Great VIP features are waiting for you (/vip). Constantly updating!",
 	""yellow_e"- Server - "grey"Welcome on Zombie Warfare "VERSION""
 };
 
@@ -626,9 +625,6 @@ public OnPlayerDisconnect(playerid, reason)
     }
 	
 	gTeam[playerid] = gNONE;
-	
-	if(PlayerData[playerid][bMuted])
-		KillTimer(PlayerData[playerid][tMute]);
 		
     ResetPlayerVars(playerid);
 	return 1;
@@ -648,6 +644,7 @@ public OnPlayerSpawn(playerid)
 	    SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
 	    SetCameraBehindPlayer(playerid);
 	    StopAudioStreamForPlayer(playerid);
+	    
 		TextDrawShowForPlayer(playerid, txtHealthOverlay);
 		PlayerTextDrawShow(playerid, TXTMoneyOverlay[playerid]);
 		PlayerTextDrawShow(playerid, TXTPlayerStats[playerid]);
@@ -826,11 +823,12 @@ public OnPlayerText(playerid, text[])
 	    return 0;
 	}
 
-	if(PlayerData[playerid][bMuted])
+	if(gettime() < PlayerData[playerid][iMute])
 	{
-	    SCM(playerid, RED, "You are muted! Please wait until the time is over!");
+	    SCM(playerid, RED, "You are muted! Wait until the time is over.");
 	    return 0;
 	}
+	PlayerData[playerid][iMute] = 0;
 
 	if(strfind(text, "/q", true) != -1 || strfind(text, "/ q", true) != -1)
 	{
@@ -2063,21 +2061,20 @@ YCMD:mute(playerid, params[], help)
 
 	    if(player == INVALID_PLAYER_ID) return SCM(playerid, -1, ""er"Invalid player!");
 		if(!IsPlayerConnected(player)) return SCM(playerid, -1, ""er"Player not connected!");
-
-		if(time < 1) return SCM(playerid, -1, ""er"seconds > 0 bitch please :p");
+		if(time < 1) return SCM(playerid, -1, ""er"Seconds must be greather than 0.");
 
 		if(IsPlayerAvail(player) && player != playerid && PlayerData[player][iAdminLevel] != MAX_ADMIN_LEVEL)
 		{
-			if(PlayerData[player][bMuted])
+			if(PlayerData[player][iMute] != 0)
 			{
 				return SCM(playerid, -1, ""er"This player is already muted");
 			}
 
-  			PlayerData[player][bMuted] = true;
 	    	format(gstr, sizeof(gstr), ""yellow"** "red"%s(%i) has been muted by Admin %s(%i) for %i seconds [Reason: %s]", __GetName(player), player, __GetName(playerid), playerid, time, reason);
             SCMToAll(YELLOW, gstr);
             print(gstr);
-			PlayerData[player][tMute] = SetTimerEx("player_unmute", time * 1000, 0, "i", player);
+            
+			PlayerData[player][iMute] = gettime() + (time * 1000);
 		}
 		else
 		{
@@ -2106,17 +2103,16 @@ YCMD:unmute(playerid, params[], help)
 
 		if(IsPlayerAvail(player) && player != playerid)
 		{
-			if(!PlayerData[player][bMuted])
+			if(!PlayerData[player][iMute] == 0)
 			{
 				return SCM(playerid, -1, ""er"This player is not muted");
 			}
-			
-			PlayerData[player][bMuted] = false;
-			KillTimer(PlayerData[player][tMute]);
-			SCM(player, RED, "You have been unmuted!");
 
 			format(gstr, sizeof(gstr), ""yellow"** "red"%s(%i) has been unmuted by Admin %s(%i)", __GetName(player), player, __GetName(playerid), playerid);
 			SCMToAll(RED, gstr);
+            SCM(player, RED, "You have been unmuted!");
+
+            PlayerData[player][iMute] = 0;
 		}
 		else
 		{
@@ -3689,9 +3685,9 @@ YCMD:id(playerid, params[], help)
 
 YCMD:pm(playerid, params[], help)
 {
-	if(PlayerData[playerid][bMuted])
+	if(PlayerData[playerid][iMute] != 0)
 	{
-	    SCM(playerid, RED, "You are muted! Please wait until the time is over!");
+	    SCM(playerid, RED, "You are muted! Wait until the time is over!");
 	    return 0;
 	}
 	
@@ -4194,13 +4190,6 @@ function:player_free(playerid, namehash)
 		}
 	}
 	return 1;
-}
-
-function:player_unmute(playerid)
-{
-    PlayerData[playerid][bMuted] = false;
-    PlayerData[playerid][tMute] = -1;
-    return 1;
 }
 
 function:p_medkit(playerid)
@@ -5576,7 +5565,6 @@ ResetPlayerVars(playerid)
     PlayerData[playerid][iWarnings] = 0;
     PlayerData[playerid][iMedkits] = 0;
     PlayerData[playerid][iCookies] = 0;
-    PlayerData[playerid][bMuted] = false;
     PlayerData[playerid][bLogged] = false;
    	PlayerData[playerid][iLastLogin] = 0;
    	PlayerData[playerid][iLastNC] = 0;
@@ -5594,7 +5582,7 @@ ResetPlayerVars(playerid)
 	PlayerData[playerid][bOpenSeason] = false;
 	PlayerData[playerid][tLoadMap] = INVALID_TIMER;
 	PlayerData[playerid][tMedkit] = INVALID_TIMER;
-	PlayerData[playerid][tMute] = INVALID_TIMER;
+	PlayerData[playerid][iMute] = 0;
 	PlayerData[playerid][iTimesHit] = 0;
 	PlayerData[playerid][iLastPM] = INVALID_PLAYER_ID;
 	g_bPlayerHit[playerid] = false;
