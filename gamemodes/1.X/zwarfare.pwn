@@ -396,7 +396,7 @@ new	g_pSQL = -1,
 	iInfestaion = DEFAULT_INFESTATION_TIME,
 	tRescue = INVALID_TIMER,
 	iRescue = DEFAULT_RESCUE_TIME,
-	iOldMap;
+	iOldMap = -1;
 	
 static const zedskins[7] =
 {
@@ -728,7 +728,6 @@ public OnPlayerDeath(playerid, killerid, reason)
 			if(ZMP_GetHumans() == 0)
 			{
 		        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
-
 		        GameTextForAll("~w~Zombies win!", 10000, 5);
 
 				ZMP_EndGame();
@@ -780,7 +779,6 @@ public OnPlayerDeath(playerid, killerid, reason)
 		if(ZMP_GetHumans() == 0)
 		{
 	        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
-
 	        GameTextForAll("~w~Zombies win!", 10000, 5);
 
 			ZMP_EndGame();
@@ -4214,10 +4212,8 @@ function:OnOfflineBanAttempt(playerid, ban[], reason[])
 	}
 	else
 	{
-	    new query[128];
-	    format(query, sizeof(query), "SELECT `adminlevel`, `ip` FROM `accounts` WHERE `name` = '%s';", ban);
-
-	    mysql_tquery(g_pSQL, query, "OnOfflineBanAttempt2", "iss", playerid, ban, reason);
+	    format(gstr, sizeof(gstr), "SELECT `adminlevel`, `ip` FROM `accounts` WHERE `name` = '%s';", ban);
+	    mysql_tquery(g_pSQL, gstr, "OnOfflineBanAttempt2", "iss", playerid, ban, reason);
 	}
 	return 1;
 }
@@ -4996,7 +4992,7 @@ ZMP_BeginNewGame()
 
    		g_CurrentMap = CPRNG_Generate(0, g_MapCount - 1);
 
-        if(g_CurrentMap != iOldMap)
+        if(g_CurrentMap != iOldMap || g_MapCount == 1 )
         {
             iOldMap = g_CurrentMap;
             bFound = true;
@@ -5607,13 +5603,6 @@ IsPlayerAvail(playerid)
 	}
 	return 0;
 }
-/*
-MAKEVERSION(major = VERSION_MAJOR, minor = VERSION_MINOR, patch = VERSION_PATCH)
-{
-	new szVersion[16];
-	format(szVersion, sizeof(szVersion), "%i.%i.%i", major, minor, patch);
-	return szVersion;
-}*/
 
 /*
 1. Do not map objects away from the mainland or the map gets bugged
