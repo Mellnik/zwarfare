@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: ::1
--- Generation Time: Oct 24, 2014 at 09:03 PM
+-- Generation Time: Nov 02, 2014 at 04:42 PM
 -- Server version: 5.5.37-MariaDB
 -- PHP Version: 5.4.16
 
@@ -131,8 +131,16 @@ CREATE TABLE IF NOT EXISTS `maps` (
   `shopz` float(14,4) NOT NULL,
   `timesplayed` int(10) unsigned NOT NULL,
   `preload` tinyint(1) unsigned NOT NULL,
-  `world` int(10) NOT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+  `world` int(10) NOT NULL,
+  `countdown` smallint(6) unsigned NOT NULL
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `maps`
+--
+
+INSERT INTO `maps` (`id`, `mapname`, `author`, `spawnx`, `spawny`, `spawnz`, `spawna`, `weather`, `time`, `shopx`, `shopy`, `shopz`, `timesplayed`, `preload`, `world`, `countdown`) VALUES
+(1, 'SWAMP', 1, -679.6306, -1867.9468, 14.2094, 270.0000, 9, 2, -759.6046, -1972.6356, 7.3822, 0, 0, 1337, 70);
 
 -- --------------------------------------------------------
 
@@ -235,7 +243,7 @@ MODIFY `id` int(10) unsigned NOT NULL AUTO_INCREMENT;
 -- AUTO_INCREMENT for table `maps`
 --
 ALTER TABLE `maps`
-MODIFY `id` mediumint(6) unsigned NOT NULL AUTO_INCREMENT;
+MODIFY `id` mediumint(6) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=2;
 --
 -- Constraints for dumped tables
 --
