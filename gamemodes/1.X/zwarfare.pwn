@@ -373,7 +373,6 @@ new	g_pSQL = -1,
     g_ForceMap = -1,
 	g_sReports[MAX_REPORTS][144],
 	g_iStartTime,
-	bool:g_bAllowEnd = true,
 	bool:g_bMapLoaded = false,
 	bool:g_bPlayerHit[MAX_PLAYERS] = {false, ...},
 	bool:bGlobalShutdown = false,
@@ -485,7 +484,7 @@ public OnPlayerRequestClass(playerid, classid)
     if(bGlobalShutdown)
 		return 0;
     
-    TogglePlayerControllable(playerid, true);
+    TogglePlayerControllable(playerid, 1);
     
     SetTimerEx("ForceClassSpawn", 15, 0, "ii", playerid, YHash(__GetName(playerid)));
 	return 1;
@@ -580,9 +579,6 @@ public OnPlayerDisconnect(playerid, reason)
 
 					ZMP_EndGame();
 
-			        KillTimer(tRescue);
-			        KillTimer(tInfestation);
-
 			        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 			        SCMToAll(-1, gstr);
 				}
@@ -599,8 +595,7 @@ public OnPlayerDisconnect(playerid, reason)
 					Map_Unload();
 					g_GlobalStatus = e_Status_Inactive;
 					
-			        KillTimer(tRescue);
-			        KillTimer(tInfestation);
+					KillGameTimers();
 				}
 	            else if(ZMP_GetPlayers() == 1)
 	            {
@@ -609,9 +604,6 @@ public OnPlayerDisconnect(playerid, reason)
 			        if(!bInfestationArrived) GameTextForAll("~w~Humans win!", 10000, 5);
 
 					ZMP_EndGame();
-
-			        KillTimer(tRescue);
-			        KillTimer(tInfestation);
 
 			        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 			        SCMToAll(-1, gstr);
@@ -658,7 +650,6 @@ public OnPlayerSpawn(playerid)
 		case e_Status_Inactive: // Server was probably empty and this player is the first one
 		{
 		    ZMP_BeginNewGame();
-		    return 1;
 		}
 		case e_Status_Prepare: // Round is in prepare phase
 		{
@@ -667,7 +658,6 @@ public OnPlayerSpawn(playerid)
 			
 			TextDrawShowForPlayer(playerid, txtInfestationArrival);
 			LoadMap(playerid);
-		    return 1;
 		}
 		case e_Status_Playing: // Round already started
 		{
@@ -680,14 +670,12 @@ public OnPlayerSpawn(playerid)
 
 			TextDrawShowForPlayer(playerid, txtRescue);
 			LoadMap(playerid);
-		    return 1;
 		}
-		case e_Status_RoundEnd:
+		case e_Status_RoundEnd: // Rounde ended and is scheduled for restart
 		{
 			SetPlayerPos(playerid, g_Maps[g_CurrentMap][e_spawn_x], g_Maps[g_CurrentMap][e_spawn_y], g_Maps[g_CurrentMap][e_spawn_z] + 4.0);
 			SetPlayerFacingAngle(playerid, g_Maps[g_CurrentMap][e_spawn_a]);
-			TogglePlayerControllable(playerid, false);
-		    return 1;
+			TogglePlayerControllable(playerid, 0);
 		}
 	}
 	return 1;
@@ -725,8 +713,8 @@ public OnPlayerDeath(playerid, killerid, reason)
 	{
 		KillTimer(PlayerData[playerid][tLoadMap]);
 		PlayerData[playerid][tLoadMap] = -1;
-		TogglePlayerControllable(playerid, 1);
 		PlayerData[playerid][bLoadMap] = false;
+		TogglePlayerControllable(playerid, 1);
 		TextDrawHideForPlayer(playerid, txtLoading);
 	}
     
@@ -745,9 +733,6 @@ public OnPlayerDeath(playerid, killerid, reason)
 
 				ZMP_EndGame();
 
-		        KillTimer(tRescue);
-		        KillTimer(tInfestation);
-		        
 		        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 		        SCMToAll(-1, gstr);
 			}
@@ -799,9 +784,6 @@ public OnPlayerDeath(playerid, killerid, reason)
 	        GameTextForAll("~w~Zombies win!", 10000, 5);
 
 			ZMP_EndGame();
-
-	        KillTimer(tRescue);
-	        KillTimer(tInfestation);
 
 	        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 	        SCMToAll(-1, gstr);
@@ -1028,9 +1010,6 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 				        GameTextForAll("~w~Zombies win!", 10000, 5);
 
 						ZMP_EndGame();
-
-				        KillTimer(tRescue);
-				        KillTimer(tInfestation);
 
 				        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 				        SCMToAll(-1, gstr);
@@ -1635,9 +1614,6 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 
 				ZMP_EndGame();
 
-		        KillTimer(tRescue);
-		        KillTimer(tInfestation);
-
 		        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
 		        SCMToAll(-1, gstr);
 			}
@@ -1668,23 +1644,21 @@ YCMD:shutdown(playerid, params[], help)
 
 YCMD:vips(playerid, params[], help)
 {
-	new tempstring[128], finstring[1024], count = 0;
+	new finstring[1024], count = 0;
 	format(finstring, sizeof(finstring), ""yellow"ID:\t\tName:\n"white"");
 
 	for(new i = 0; i < MAX_PLAYERS; i++)
 	{
 	    if(!IsPlayerAvail(i)) continue;
+	    
 	    if(PlayerData[i][iVIP] == 1)
 	    {
             if(IsPlayerOnDesktop(i))
-            {
-				format(tempstring, sizeof(tempstring), "%i\t\t%s | [AFK]\n", i, __GetName(i));
-			}
+				format(gstr, sizeof(gstr), "%i\t\t%s | [AFK]\n", i, __GetName(i));
 			else
-			{
-			    format(tempstring, sizeof(tempstring), "%i\t\t%s\n", i, __GetName(i));
-			}
-			strcat(finstring, tempstring);
+			    format(gstr, sizeof(gstr), "%i\t\t%s\n", i, __GetName(i));
+
+			strcat(finstring, gstr);
 			count++;
 	    }
 	}
@@ -1694,8 +1668,8 @@ YCMD:vips(playerid, params[], help)
 	}
 	else
 	{
-	    format(tempstring, sizeof(tempstring), "\n\n"white"Total of "blue"%i "white"aVIPs online!", count);
-	    strcat(finstring, tempstring);
+	    format(gstr, sizeof(gstr), "\n\n"white"Total of "blue"%i "white"aVIPs online!", count);
+	    strcat(finstring, gstr);
 		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - VIPs", finstring, "OK", "");
 	}
 	return 1;
@@ -1944,15 +1918,14 @@ YCMD:slap(playerid, params[], help)
 		        case gNONE: return SCM(playerid, -1, ""er"You can't use this command on that player now");
 		    }
   			new Float:Health,
-			  	Float:POS[3],
-			  	string[128];
+			  	Float:POS[3];
 
   			GetPlayerHealth(player, Health);
 			SetPlayerHealth(player, floatsub(Health, 25.0));
 			GetPlayerPos(player, POS[0], POS[1], POS[2]);
 			SetPlayerPos(player, POS[0], POS[1], floatadd(POS[2], 10.0));
-			format(string, sizeof(string), "You have slapped %s(%i)", __GetName(player), player);
-			SCM(playerid, BLUE, string);
+			format(gstr, sizeof(gstr), "You have slapped %s(%i)", __GetName(player), player);
+			SCM(playerid, BLUE, gstr);
 		}
 		else
 		{
@@ -2343,18 +2316,17 @@ YCMD:setcash(playerid, params[], help)
 
 		if(IsPlayerAvail(player))
 		{
-			new string[128];
 			if(player != playerid)
 			{
-				format(string, sizeof(string), "Admin %s(%i) has set your cash to $%s.", __GetName(playerid), playerid, number_format(amount));
-				SCM(player, YELLOW, string);
-				format(string, sizeof(string), "You have set %s's cash to $%s.", __GetName(player), number_format(amount));
-				SCM(playerid, YELLOW, string);
+				format(gstr, sizeof(gstr), "Admin %s(%i) has set your cash to $%s.", __GetName(playerid), playerid, number_format(amount));
+				SCM(player, YELLOW, gstr);
+				format(gstr, sizeof(gstr), "You have set %s's cash to $%s.", __GetName(player), number_format(amount));
+				SCM(playerid, YELLOW, gstr);
 			}
 			else
 			{
-				format(string, sizeof(string), "You have set your cash to $%s.", number_format(amount));
-				SCM(playerid, YELLOW, string);
+				format(gstr, sizeof(gstr), "You have set your cash to $%s.", number_format(amount));
+				SCM(playerid, YELLOW, gstr);
 			}
 			SetPlayerMoneyEx(player, amount);
 		}
@@ -2575,11 +2547,11 @@ YCMD:get(playerid, params[], help)
 			{
 				SetPlayerPos(player, floatadd(POS[0], 2), POS[1], POS[2]);
 			}
-			new string[128];
-			format(string, sizeof(string), "You have been teleported to Admin %s's location", __GetName(playerid));
-			SCM(player, BLUE, string);
-			format(string, sizeof(string), "You have teleported %s(%i) to your location", __GetName(player), player);
-			SCM(playerid, BLUE, string);
+
+			format(gstr, sizeof(gstr), "You have been teleported to Admin %s's location", __GetName(playerid));
+			SCM(player, BLUE, gstr);
+			format(gstr, sizeof(gstr), "You have teleported %s(%i) to your location", __GetName(player), player);
+			SCM(playerid, BLUE, gstr);
 		}
 		else
 		{
@@ -2612,8 +2584,7 @@ YCMD:go(playerid, params[], help)
 
 	 	if(player != playerid)
 	 	{
-			new Float:POS[3],
-				string[128];
+			new Float:POS[3];
 
 			GetPlayerPos(player, POS[0], POS[1], POS[2]);
 			SetPlayerInterior(playerid, GetPlayerInterior(player));
@@ -2628,8 +2599,8 @@ YCMD:go(playerid, params[], help)
 			{
 				SetPlayerPos(playerid, floatadd(POS[0], 2), POS[1], POS[2]);
 			}
-			format(string, sizeof(string), "You have teleported to %s(%i)", __GetName(player), player);
-			SCM(playerid, BLUE, string);
+			format(gstr, sizeof(gstr), "You have teleported to %s(%i)", __GetName(player), player);
+			SCM(playerid, BLUE, gstr);
 		}
 		else
 		{
@@ -2812,9 +2783,8 @@ YCMD:ban(playerid, params[], help)
 		}
 		else
 		{
-		    new warnstring[128];
-		    format(warnstring, sizeof(warnstring), "OMGLOL: %s just tried to ban you with reason: %s", __GetName(playerid), reason);
-		    SCM(player, RED, warnstring);
+		    format(gstr, sizeof(gstr), "OMGLOL: %s just tried to ban you with reason: %s", __GetName(playerid), reason);
+		    SCM(player, RED, gstr);
 		    SCM(playerid, RED, "I hope that was a joke");
 		}
 	}
@@ -2899,9 +2869,8 @@ YCMD:tban(playerid, params[], help)
 		}
 		else
 		{
-		    new warnstring[128];
-		    format(warnstring, sizeof(warnstring), "OMGLOL: %s just tried to ban you with reason: %s", __GetName(playerid), reason);
-		    SCM(player, RED, warnstring);
+		    format(gstr, sizeof(gstr), "OMGLOL: %s just tried to ban you with reason: %s", __GetName(playerid), reason);
+		    SCM(player, RED, gstr);
 		    SCM(playerid, RED, "I hope that was a joke");
 		}
 	}
@@ -3098,7 +3067,7 @@ YCMD:unstuck(playerid, params[], help)
 {
 	if(g_GlobalStatus == e_Status_Playing)
 	{
-	    TogglePlayerControllable(playerid, true);
+	    TogglePlayerControllable(playerid, 1);
 	}
 	return 1;
 }
@@ -3614,23 +3583,21 @@ YCMD:reports(playerid, params[], help)
 
 YCMD:admins(playerid, params[], help)
 {
-	new tempstring[128], finstring[2048], count = 0;
+	new finstring[2048], count = 0;
 	format(finstring, sizeof(finstring), ""blue"Admins:\n"white"");
 
 	for(new i = 0; i < MAX_PLAYERS; i++)
 	{
 	    if(!IsPlayerAvail(i)) continue;
+	    
 	    if(PlayerData[i][iAdminLevel] > 0)
 	    {
 	        if(IsPlayerOnDesktop(i))
-	        {
-				format(tempstring, sizeof(tempstring), "%s(%i) | Level: %i | [AFK]\n", __GetName(i), i, PlayerData[i][iAdminLevel]);
-			}
+				format(gstr, sizeof(gstr), "%s(%i) | Level: %i | [AFK]\n", __GetName(i), i, PlayerData[i][iAdminLevel]);
 			else
-			{
-			    format(tempstring, sizeof(tempstring), "%s(%i) | Level: %i\n", __GetName(i), i, PlayerData[i][iAdminLevel]);
-			}
-			strcat(finstring, tempstring);
+			    format(gstr, sizeof(gstr), "%s(%i) | Level: %i\n", __GetName(i), i, PlayerData[i][iAdminLevel]);
+
+			strcat(finstring, gstr);
 			count++;
 	    }
 	}
@@ -3641,8 +3608,8 @@ YCMD:admins(playerid, params[], help)
 	}
 	else
 	{
-	    format(tempstring, sizeof(tempstring), "\n"white"Total of "blue"%i "white"Admins online!", count);
-	    strcat(finstring, tempstring);
+	    format(gstr, sizeof(gstr), "\n"white"Total of "blue"%i "white"Admins online!", count);
+	    strcat(finstring, gstr);
 		ShowPlayerDialog(playerid, NO_DIALOG_ID, DIALOG_STYLE_MSGBOX, ""zwar" - Admins", finstring, "OK", "");
 	}
 	return 1;
@@ -3650,19 +3617,20 @@ YCMD:admins(playerid, params[], help)
 
 YCMD:id(playerid, params[], help)
 {
-	if(!strlen(params))
+	if(isnull(params))
 	{
-		SCM(playerid, YELLOW, "Usage: /id <nick/part of nick>");
-		return 1;
+		return SCM(playerid, NEF_GREEN, "Usage: /id <nick/part of nick>");
 	}
-	new found, string[128], playername[MAX_PLAYER_NAME + 1];
-	format(string, sizeof(string), "Searched for: %s ", params);
-	SCM(playerid, GREEN, string);
+
+	new found, playername[MAX_PLAYER_NAME + 1];
+	format(gstr, sizeof(gstr), "Searched for: %s", params);
+	SCM(playerid, GREEN, gstr);
+
 	for(new i = 0; i < MAX_PLAYERS; i++)
 	{
-		if(IsPlayerAvail(i))
+		if(IsPlayerAvail(i) && PlayerData[playerid][bOnlineAdmin])
 		{
-	  		GetPlayerName(i, playername, MAX_PLAYER_NAME + 1);
+	  		GetPlayerName(i, playername, MAX_PLAYER_NAME+1);
 			new namelen = strlen(playername), bool:searched = false;
 	    	for(new pos = 0; pos < namelen; pos++)
 			{
@@ -3670,9 +3638,8 @@ YCMD:id(playerid, params[], help)
 				{
 					if(strfind(playername, params, true) == pos)
 					{
-		                found++;
-						format(string, sizeof(string), "%i. %s (ID %i)", found, playername, i);
-						SCM(playerid, GREEN, string);
+						format(gstr, sizeof(gstr), "%i. %s (ID %i)", ++found, playername, i);
+						SCM(playerid, GREEN, gstr);
 						searched = true;
 					}
 				}
@@ -3990,36 +3957,23 @@ function:ZMP_RescueCountDown()
 	    {
 	        TextDrawSetString(txtRescue, "~w~Rescue arrived!");
 	        GameTextForAll("~w~Humans win!", 10000, 5);
-			ZMP_EndGame();
-			
-	        KillTimer(tRescue);
-	        KillTimer(tInfestation);
-	        
-	        new str[144];
-	        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
-	        SCMToAll(-1, str);
 		}
 		else
 		{
 	        TextDrawSetString(txtRescue, "~w~Rescue abandoned!");
 	        GameTextForAll("~w~Zombies win!", 10000, 5);
-			ZMP_EndGame();
-			
-	        KillTimer(tRescue);
-	        KillTimer(tInfestation);
-
-	        new str[144];
-	        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
-	        SCMToAll(-1, str);
 		}
+		
+		ZMP_EndGame();
+
+        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+        SCMToAll(-1, gstr);
 	}
 	return 1;
 }
 
 function:ZMP_SwitchMap()
 {
-    g_bAllowEnd = true;
-    
     ZMP_BeginNewGame();
     return 1;
 }
@@ -4709,7 +4663,7 @@ LoadMap(playerid)
 	{
 		Streamer_Update(playerid);
 		PlayerData[playerid][bLoadMap] = true;
-		TogglePlayerControllable(playerid, false);
+		TogglePlayerControllable(playerid, 0);
 		TextDrawShowForPlayer(playerid, txtLoading);
 
 		switch(GetPlayerPing(playerid))
@@ -4897,12 +4851,8 @@ ZMP_RandomInfection()
 
 		ZMP_EndGame();
 
-        KillTimer(tRescue);
-        KillTimer(tInfestation);
-
-        new str[144];
-        format(str, sizeof(str), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
-        SCMToAll(-1, str);
+        format(gstr, sizeof(gstr), ""zwar" Round end! Humans left: "lb_e"%i "white"| Zombies: "lb_e"%i", ZMP_GetHumans(), ZMP_GetZombies());
+        SCMToAll(-1, gstr);
 
 	    // Server empty or what? lol | this shouldn't even be called lul
 	    printf("[DEBUG] RI = %i Z = %i", Iter_Count(count), ZMP_GetZombies());
@@ -4928,9 +4878,8 @@ ZMP_RandomInfection()
 	        pid = Iter_Random(count2);
 		}
 
-		new string[128];
-		format(string, sizeof(string), ""zwar" "yellow"%s(%i) has been infected by the infestation!", __GetName(pid), pid);
-		SCMToAll(-1, string);
+		format(gstr, sizeof(gstr), ""zwar" "yellow"%s(%i) has been infected by the infestation!", __GetName(pid), pid);
+		SCMToAll(-1, gstr);
 
         ZMP_SetPlayerZombie(pid, false);
         PlayInfectSound();
@@ -4961,7 +4910,7 @@ ZMP_SetPlayerHuman(playerid)
 
 	PlayerData[playerid][iTimesHit] = 0;
 
-    TogglePlayerControllable(playerid, true);
+    TogglePlayerControllable(playerid, 1);
 }
 
 ZMP_SetPlayerZombie(playerid, bool:homespawn = true)
@@ -5006,25 +4955,25 @@ ZMP_SetPlayerZombie(playerid, bool:homespawn = true)
 		}
     }
 
-	TogglePlayerControllable(playerid, true);
+	TogglePlayerControllable(playerid, 1);
+}
+
+KillGameTimers()
+{
+    KillTimer(tRescue);
+    KillTimer(tInfestation);
 }
 
 ZMP_EndGame()
 {
-	if(!g_bAllowEnd)
-	{
-	    printf("also es wurde jetzt ZMP_EndGame() aufgerufen obwohls nicht frei ist");
-	    return 1;
-	}
-
-	g_bAllowEnd = false;
+	KillGameTimers();
 
 	for(new i = 0; i < MAX_PLAYERS; i++)
 	{
 		if(IsPlayerAvail(i))
 		{
 	    	if(!PlayerData[i][bIsDead])
-				TogglePlayerControllable(i, false);
+				TogglePlayerControllable(i, 0);
 		}
 	}
 
